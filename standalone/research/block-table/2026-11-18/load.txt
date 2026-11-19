@@ -1,0 +1,2 @@
+18:24  up 413 days, 22:20, 1 user, load averages: 6.49 10.81 8.90
+18:31  up 413 days, 22:27, 1 user, load averages: 7.59 9.39 8.91

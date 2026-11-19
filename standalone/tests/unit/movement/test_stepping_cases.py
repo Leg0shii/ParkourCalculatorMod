@@ -25,7 +25,8 @@ def generated(data):
     scene = prepare_scene(data['request'])
     by_id = {b['id']: b for b in scene['blocks']}
     choices = list(generate_choices('ceiling' if data['case'] == 'grind' else 'stepping',
-        dict(scene=scene, source=by_id['start'], target=by_id['goal'], cases=[data['case']], maxInputs=40)))
+        dict(scene=scene, source=by_id['start'], target=by_id['goal'], cases=[data['case']], maxInputs=40,
+             interactionGate=None)))
     choice = choices[data['choice']]
     edge = dict(source='start', target='goal', profileKind=choice['profileKind'], profile=choice['profile'],
                 entryFace=choice.get('entryFace'), exitFace=None)
@@ -181,8 +182,7 @@ class SteppingNumericalTests(unittest.TestCase):
                     compiled = compile_block_path(scene, ['start', 'goal'], [edge])
                     result = solve_contact_branches(compiled['route'], compiled['profiles'],
                         floor_checks(scene, ['start', 'goal'], compiled['profiles']), compiler,
-                        seconds=10, candidate_seconds=1, retries=0, max_branches=16,
-                        geometry=scene['collisionScene'], motion_bound=dict(movementAfterSupportCheck=.8, storedSpeedNorm=.6),
+                        seconds=10, candidate_seconds=1, retries=0, geometry=scene['collisionScene'], motion_bound=dict(movementAfterSupportCheck=.8, storedSpeedNorm=.6),
                         python_executable=os.environ['PKC_IPOPT_PYTHON'])
                     self.assertEqual(result['status'], 'feasible', result)
                     best = result['best']
@@ -215,8 +215,7 @@ class SteppingNumericalTests(unittest.TestCase):
                 compiled = compile_block_path(scene, ['start', 'goal'], [edge])
                 result = solve_contact_branches(compiled['route'], compiled['profiles'],
                     floor_checks(scene, ['start', 'goal'], compiled['profiles']), compiler,
-                    seconds=8, candidate_seconds=1, retries=0, max_branches=16,
-                    geometry=scene['collisionScene'], motion_bound=dict(movementAfterSupportCheck=.8, storedSpeedNorm=.6),
+                    seconds=8, candidate_seconds=1, retries=0, geometry=scene['collisionScene'], motion_bound=dict(movementAfterSupportCheck=.8, storedSpeedNorm=.6),
                     python_executable=os.environ['PKC_IPOPT_PYTHON'])
                 self.assertEqual(result['status'], 'feasible', result)
                 best = result['best']
@@ -225,7 +224,7 @@ class SteppingNumericalTests(unittest.TestCase):
                     candidate[key] = [row[::-1] for row in candidate[key]]
                 plan = copy.deepcopy(best['plan'])
                 for contact in plan['sceneContacts']:
-                    contact['box'] = swap_box(contact['box'])
+                    contact['boxes'] = [swap_box(box) for box in contact['boxes']]
                     if contact['axis'] in (0, 2):
                         contact['axis'] = 2 - contact['axis']
                 geometry = copy.deepcopy(scene['collisionScene'])
@@ -258,7 +257,7 @@ class SteppingNumericalTests(unittest.TestCase):
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             result = solve_contact_branches(compiled['route'], compiled['profiles'],
                 floor_checks(scene, ['start', 'goal'], compiled['profiles']), compiler,
-                seconds=8, candidate_seconds=1, retries=0, max_branches=8, geometry=scene['collisionScene'],
+                seconds=8, candidate_seconds=1, retries=0, geometry=scene['collisionScene'],
                 motion_bound=dict(movementAfterSupportCheck=.8, storedSpeedNorm=.6),
                 python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'], 'feasible', result)
@@ -300,3 +299,76 @@ class SteppingNumericalTests(unittest.TestCase):
             graph = build_transition_graph(limited, compiler, seconds=6)
             self.assertTrue(any(not g['complete'] for g in graph['steppingGeneration']))
             self.assertTrue(graph['profileLimitReached'])
+
+
+class ExposureTests(unittest.TestCase):
+    def sides(self, solids, case):
+        from parkour_solver.movement.stepping import open_stepping_choices
+        from parkour_solver.physics.vertical import REST_CARRY
+        scene = dict(collisionScene=dict(solids=solids),
+                     blocks=[dict(id='b' + str(i), sourceBlock='b' + str(i), solidIndex=i, top=b[4]) for i, b in enumerate(solids)])
+        state = dict(position=1., velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
+        found = set()
+        for choice in open_stepping_choices(dict(scene=scene, state=state, maxInputs=10, threshold=0., cases=[case],
+                                                   interactionGate=None)):
+            event, = choice['profile']['caseEvents']
+            if event['boxes'] == [solids[1]]:
+                found.add(tuple(sorted((r['mode'], r['cmp']) for r in choice['profile']['positionConstraints']
+                                       if r['name'] in ('case:outside', 'case:cross_x'))))
+        return found
+
+    def test_a_side_flush_against_a_neighbour_offers_no_step(self):
+        start, target, wall = [-2, 0, -2, 2, 1, 4], [2, 0, 0, 3, 1.5, 2], [2, 0, 2, 3, 1.5, 3]
+        open_sides = self.sides([start, target], 'normal_step')
+        flush = self.sides([start, target, wall], 'normal_step')
+        self.assertIn((('Z', 'GE'),), open_sides)
+        self.assertEqual(flush, open_sides - {(('Z', 'GE'),)})
+
+    def test_a_departed_block_gets_no_feet_case_and_no_reachability_query(self):
+        from parkour_solver.movement.ceiling_generation import open_ceiling_choices
+        from parkour_solver.movement.program import boundary_state, empty_program
+        from parkour_solver.movement.stepping import open_stepping_choices
+
+        class Gate:
+            def __init__(self):
+                self.owners = []
+
+            def query(self, context, bounds, tick, *, label, jumping, phases):
+                self.owners.append(label['owner'])
+                return dict(ruledOut=False)
+
+        def run(name, block, reject):
+            scene = prepare_scene(fixture(name)['request'])
+            program = empty_program(scene['initial'], threshold=0.)
+            gate = Gate()
+            context = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=20,
+                           threshold=0., interactionGate=gate)
+            if reject:
+                context['feetAllowed'] = lambda b: b['id'] != block
+            solid = next(scene['collisionScene']['solids'][b['solidIndex']] for b in scene['blocks'] if b['id'] == block)
+            touched = {event['case'] for choice in open_stepping_choices(context)
+                       for event in choice['profile'].get('caseEvents', [])
+                       if solid in event.get('boxes', []) + [event.get('lowerBox')]}
+            return touched, gate.owners
+
+        for name, block, cases in [
+                ('blip', 'goal', {'normal_step', 'slab_boost', 'corner_jump_cancel', 'blip', 'corner_blip_up'}),
+                ('blip_up', 'higher', {'blip_up'}), ('blip_up', 'goal', {'blip_up'}),
+                ('corner_blip_up', 'higher', {'blip', 'corner_blip_up'})]:
+            self.assertEqual(run(name, block, False)[0], cases)
+            touched, owners = run(name, block, True)
+            self.assertEqual(touched, set())
+            self.assertNotIn(block, owners)
+        scene = prepare_scene(fixture('grind')['request'])
+        program = empty_program(scene['initial'], threshold=0.)
+        grinds = list(open_ceiling_choices(dict(mode='open', scene=scene, program=program, state=boundary_state(program),
+                                                maxInputs=20, threshold=0., feetAllowed=lambda block: False,
+                                                interactionGate=None)))
+        self.assertEqual({e['case'] for c in grinds for e in c['profile']['caseEvents']}, {'grind'})
+
+    def test_a_flush_seam_is_not_a_corner(self):
+        start, target, wall = [-2, 0, -2, 2, 1, 4], [2, 0, 0, 3, 1.5, 2], [2, 0, 2, 3, 1.5, 3]
+        open_corners = self.sides([start, target], 'corner_jump_cancel')
+        seam = self.sides([start, target, wall], 'corner_jump_cancel')
+        self.assertTrue(seam < open_corners)
+        self.assertFalse(any(('Z', 'GE') in rows for rows in seam))

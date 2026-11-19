@@ -33,45 +33,57 @@ def first_descent(trace, top):
 
 def event_choice(context, kind, initial, duration, *, jumping=False, vertical=(), finite=(), cases=(),
                  constraints=(), units=None, ladder=None, sneak=None, ladder_events=(), support=None,
-                 landing_phase='post'):
+                 landing_phase='post', region_choices=()):
     trace = replay(initial, duration, jumping=jumping, contacts=vertical, finite=finite,
                    ladder=ladder, sneak=sneak, threshold=context.get('threshold', .005))
     if trace['status'] == 'invalid':
         return None
     return movement_choice(kind, initial, trace, contacts=finite, cases=cases, constraints=constraints,
-                           units=units, ladder_events=ladder_events, support=support, landing_phase=landing_phase)
+                           units=units, ladder_events=ladder_events, support=support, landing_phase=landing_phase,
+                           region_choices=region_choices)
 
 
-def named_choice(context, kind, initial, event, *, jumping=False, constraints=(), finite=(), support=None):
+def named_choice(context, kind, initial, event, *, jumping=False, constraints=(), finite=(), support=None,
+                 region_choices=()):
     event = copy.deepcopy(event)
     event['type'] = kind
     contact = {k: v for k, v in event.items() if k in ('case', 'plane', 'lowerHeight', 'higherHeight', 'clearance')}
     contact.update(state=event['input'] + 1, direction=-1)
     return event_choice(context, kind, initial, event['input'] + 1, jumping=jumping,
-                        vertical=[contact], finite=finite, cases=[event], constraints=constraints, support=support)
+                        vertical=[contact], finite=finite, cases=[event], constraints=constraints, support=support,
+                        region_choices=region_choices)
+
+
+def feet_allowed(context, block):
+    allowed = context.get('feetAllowed')
+    return allowed is None or allowed(block)
 
 
 def normal_choices(context):
-    from parkour_solver.movement.cases import region_rows
+    from parkour_solver.movement.contact_combinations import (contact_event, reachable_option, region_choices,
+                                                              scene_contact_options)
+    from parkour_solver.reachability.service import candidate_blocks
     for initial, jumping, trace in approaches(context):
-        for block in context['scene']['blocks']:
+        for block in candidate_blocks(context):
             if context.get('checkBudget'):
                 context['checkBudget']()
             if context.get('supportAllowed') is not None and not context['supportAllowed'](block):
                 continue
+            if not feet_allowed(context, block):
+                continue
             t = first_descent(trace, block['top'])
             if t is None:
                 continue
-            box = context['scene']['collisionScene']['solids'][block['solidIndex']]
-            from parkour_solver.reachability.service import interaction_allowed
-            if not interaction_allowed(context, box, t, jumping=jumping, phases=('Y',)):
-                continue
-            finite = [dict(leg=0, offset=t, axis='Y', direction=-1, plane=block['top'], box=box, role='landing')]
-            choice = event_choice(context, 'normal', initial, t + 1, jumping=jumping,
-                vertical=[dict(state=t + 1, direction=-1, plane=block['top'])], finite=finite,
-                constraints=region_rows(block, t, 'normal:landing'), support=block['id'], landing_phase='pre')
-            if choice:
-                yield choice
+            for option in scene_contact_options(context['scene'], 1, 1, members=[block['solidIndex']]):
+                option = reachable_option(context, option, t, jumping=jumping, label=dict(owner=block['id'], role='landing'))
+                if option is None:
+                    continue
+                event = contact_event(option, 'Y', -1, t, 'landing')
+                choice = event_choice(context, 'normal', initial, t + 1, jumping=jumping,
+                    vertical=[dict(state=t + 1, direction=-1, plane=block['top'])], finite=[event],
+                    support=block['id'], landing_phase='pre', region_choices=region_choices(context, event, block['id']))
+                if choice:
+                    yield choice
         if context.get('normalGap', False):
             choice = event_choice(context, 'normal', initial, context.get('normalGapInputs', 1), jumping=jumping)
             if choice:

@@ -69,18 +69,13 @@ def prepare_scene(request):
     for key, default, lo, hi in [('maxJumps', 4, 1, 12), ('maxPrefixes', 200, 1, 100000),
                                  ('maxQueuedPrefixes', 4000, 1, 100000),
                                  ('maxRunTicksPerJump', 6, 0, 1000), ('maxTotalRunTicks', 12, 0, 1000),
-                                 ('maxFlightInputs', 200, 2, 200), ('maxContactBranches', 16, 1, 256)]:
+                                 ('maxFlightInputs', 200, 2, 200)]:
         integer(scene.setdefault(key, default), key, lo, hi)
-    if solid_scene:
-        integer(scene.setdefault('maxBlockagesPerObstacle', 3), 'maxBlockagesPerObstacle', 0, 3)
-        integer(scene.setdefault('maxHorizontalBlockagesPerObstacle', 2), 'maxHorizontalBlockagesPerObstacle', 0, 2)
-        integer(scene.setdefault('maxVerticalBlockagesPerObstacle', 2), 'maxVerticalBlockagesPerObstacle', 0, 2)
-        integer(scene.setdefault('maxPassageCandidates', 128), 'maxPassageCandidates', 1, 4096)
-    elif any(key in scene for key in ('maxBlockagesPerObstacle', 'maxPassageCandidates',
-                                     'maxHorizontalBlockagesPerObstacle', 'maxVerticalBlockagesPerObstacle',
-                                     'maxWallHits', 'maxWallHitCandidates', 'ceilingHits',
-                                     'maxContactCombinations', 'maxCombinedEvents')):
-        raise ValueError('Blockage limits require collision_boxes geometry')
+    # Accepted only to read source-era scenes; these removed local caps have
+    # no normalized/runtime policy. New cases should omit them.
+    for key in ('maxContactBranches', 'maxBlockagesPerObstacle', 'maxPassageCandidates',
+                'maxHorizontalBlockagesPerObstacle', 'maxVerticalBlockagesPerObstacle'):
+        scene.pop(key, None)
     ordered = [blocks[ids.index(scene['startBlock'])]] + [b for b in blocks if b['id'] != scene['startBlock']]
     checked = prepare_route({'version': scene.get('version'), 'initial': scene.get('initial'),
                              'blocks': ordered, 'airtimes': [12] * (len(blocks) - 1),

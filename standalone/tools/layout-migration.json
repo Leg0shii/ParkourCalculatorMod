@@ -5,7 +5,8 @@
       "old": "autonomy/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md",
       "new": "docs/design/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md",
       "originalSha256": "3615ad05cfa054c53509101e3c5079190f79110ed712d36c18b590c65cebf80e",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/ANCHOR_POLICY_DECISIONS.md",
@@ -17,31 +18,36 @@
       "old": "autonomy/BLOCK_ROUTE_SEARCH.md",
       "new": "docs/design/BLOCK_ROUTE_SEARCH.md",
       "originalSha256": "b6a07a1e938d8fcb3e9700aa0a6038127b108118eb38d37ef768c591dee2ae5e",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/BLOCK_SOLVER_PLAN.md",
       "new": "docs/design/BLOCK_SOLVER_PLAN.md",
       "originalSha256": "6b8234acea68fa778f0cd606e160972ebdbc2288d9b4be1ff1a446e0819c5235",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/CELL_ROUTE_EXPERIMENT_PLAN.md",
       "new": "docs/design/CELL_ROUTE_EXPERIMENT_PLAN.md",
       "originalSha256": "d3c4dcb640f0736766cfe2890c2ba826e2def2bb3e0864cb97ae946297e74b27",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/COMPACTION_HANDOFF.md",
       "new": "docs/history/COMPACTION_HANDOFF.md",
       "originalSha256": "75a2e4bba9646895106058c7cbf840b098482ff2eab21038db98eff28e6d70c9",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/CONSTRAINT_GENERATION_RUNBOOK.md",
       "new": "docs/design/CONSTRAINT_GENERATION_RUNBOOK.md",
       "originalSha256": "4c2d958cdb288c0d366b8fdcb22f06c1926492aff029d7b5d4fa1f78f1ebba2f",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/CONTACT_COMBINATIONS.md",
@@ -53,37 +59,43 @@
       "old": "autonomy/CONTINUOUS_DECISION_RELAXATION.md",
       "new": "docs/design/CONTINUOUS_DECISION_RELAXATION.md",
       "originalSha256": "852c11b39e01337d60b837a1ced572075283907aaab00efda0e72e15d36386e7",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/CONVEX_ROUTE_GUIDANCE_PLAN.md",
       "new": "docs/design/CONVEX_ROUTE_GUIDANCE_PLAN.md",
       "originalSha256": "82f09da7daca204fc1689d4a480e29694e5054f2c60a7ed62cba854a25f78e6e",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/CORRIDOR_CONSTRAINT_FIX_PLAN.md",
       "new": "docs/design/CORRIDOR_CONSTRAINT_FIX_PLAN.md",
       "originalSha256": "c39e84f893cf832f6eef7737ae9b7ebe442887fdef5b17e00db3e32b70c3a011",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/DFS_INTERACTION_IMPLEMENTATION_PLAN.md",
       "new": "docs/design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md",
       "originalSha256": "f152ff1565f9a700e806bc8bd02ae505d8472b4c6f36718d02610875574c7286",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/DYNAMIC_CONTACT_DECISIONS.md",
       "new": "docs/design/DYNAMIC_CONTACT_DECISIONS.md",
       "originalSha256": "31ef33548ba70d7f7c8309adef88864c66fc03ba0ee60c201985ecb0d05c2de0",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/GENERATION_PERFORMANCE_PLAN.md",
       "new": "docs/design/GENERATION_PERFORMANCE_PLAN.md",
       "originalSha256": "e4035dcda6d1e8935943e5ee267dacf3d76217bb6a1c70f59ce79120808b765f",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/GENERATION_RELEVANCE_PLAN.md",
@@ -101,13 +113,15 @@
       "old": "autonomy/GENERIC_COMPOSITION_PLAN.md",
       "new": "docs/design/GENERIC_COMPOSITION_PLAN.md",
       "originalSha256": "8220e510bc506ee01551fb7faebacbda1adcccfd6f3b7a274c4cb39e92d2bc41",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md",
       "new": "docs/design/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md",
       "originalSha256": "9bdfba3de723fc9283bc8e8b02f22588d4c06eaf4b95c45cfe7e366f1e1cb2f0",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/GENERIC_ROUTE_DISCOVERY_RESEARCH.md",
@@ -119,7 +133,8 @@
       "old": "autonomy/GEOMETRIC_DECISION_GUIDANCE.md",
       "new": "docs/design/GEOMETRIC_DECISION_GUIDANCE.md",
       "originalSha256": "21fcb36ec50637e3a180ea90fa914244c773723dadfdd246750f094d09f98649",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/HEURISTIC_SOURCE_REVIEW.md",
@@ -131,19 +146,22 @@
       "old": "autonomy/LADDER_CEILING_PLAN.md",
       "new": "docs/design/LADDER_CEILING_PLAN.md",
       "originalSha256": "aaed6b4fde30733ebe8974091f6191aa6b9d1ceea1b5b98486339d6d8c3ef7eb",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/LADDER_COMPLETION.md",
       "new": "docs/design/LADDER_COMPLETION.md",
       "originalSha256": "e7d6d77c679a9900adc0754457c7333eb81685d6ec92c52fb1700f2c4086a581",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/LADDER_COMPOSITION_PLAN.md",
       "new": "docs/design/LADDER_COMPOSITION_PLAN.md",
       "originalSha256": "3077e17de25fcf113b3d2ccdc87e8a254009baa95c7e61e7a9d32ef852a50b5f",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/LADDER_STRATEGY_PLAN.md",
@@ -155,7 +173,8 @@
       "old": "autonomy/LONG_LADDER_VALIDATION.md",
       "new": "docs/design/LONG_LADDER_VALIDATION.md",
       "originalSha256": "34cdfeebd5addf9a5755f7ea78e883669fe0e7721f77ef96bf3d1f6234f7627f",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/MIXED_INTEGER_RESEARCH.md",
@@ -173,13 +192,15 @@
       "old": "autonomy/MOVEMENT_REFACTOR_STATUS.md",
       "new": "docs/design/MOVEMENT_REFACTOR_STATUS.md",
       "originalSha256": "eea6a5a1626b2e84b562d44461cdd823a993a6ced7f8d3e071f904dd8ea78b5c",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/MOVEMENT_TYPE_REFACTOR_PLAN.md",
       "new": "docs/design/MOVEMENT_TYPE_REFACTOR_PLAN.md",
       "originalSha256": "3f071083377a884c21def93eaac3c36f3669baa55bfcff3668f701a08a066765",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/MOVEMENT_UNITS.md",
@@ -191,7 +212,8 @@
       "old": "autonomy/NO_THRESHOLD_DECISION_MODEL.md",
       "new": "docs/design/NO_THRESHOLD_DECISION_MODEL.md",
       "originalSha256": "fbf72039074c4292b7901f579fd8a9f993eaee08ca553c9f50fcd2719cabca79",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/OBSTACLES_AND_BLOCKAGES.md",
@@ -215,19 +237,22 @@
       "old": "autonomy/ONE_TICK_CONTACT_PLAN.md",
       "new": "docs/design/ONE_TICK_CONTACT_PLAN.md",
       "originalSha256": "3da7bc99def1f16f060a9651f85cd25bb4930830d1d19d65f3b097d29dec6347",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/ORCHESTRATOR_IMPLEMENTATION_PLAN.md",
       "new": "docs/design/ORCHESTRATOR_IMPLEMENTATION_PLAN.md",
       "originalSha256": "bf9f1b6c44820a0aaf8e8061b821c92eff947c76158ef6c7575b7e9e56fcfbcf",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/PROVISIONAL_ROUTE_GUIDANCE.md",
       "new": "docs/design/PROVISIONAL_ROUTE_GUIDANCE.md",
       "originalSha256": "2950dfdca77b5dc50d4c8dd8617df886f488500112506968a798fc5d426c50c8",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/PRUNING_IMPROVEMENTS_BACKLOG.md",
@@ -245,25 +270,29 @@
       "old": "autonomy/PRUNING_RESEARCH_HANDOFF.md",
       "new": "docs/research/PRUNING_RESEARCH_HANDOFF.md",
       "originalSha256": "84ac347766b81687488b5768ac6641e5a7c7beccba852c4182c65afa060421e1",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/PRUNING_RESEARCH_HISTORY.md",
       "new": "docs/research/PRUNING_RESEARCH_HISTORY.md",
       "originalSha256": "37ce36e5812811a3c42db502450d1c2a5ba9bc5d5b7b10e2acfcef5e0d913fb0",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/README.md",
       "new": "docs/history/AUTONOMY_README.md",
       "originalSha256": "964bae686079a6df6b32b18e14b6b82cfa9f60996c6e215a2627989e427c617e",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/REFERENCE_STRATEGY_EVALUATION.md",
       "new": "docs/design/REFERENCE_STRATEGY_EVALUATION.md",
       "originalSha256": "9b172ee0618789456af3dc4e40cc13ff00b1452ddd68f0f2c8ade2d0096cb98b",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/REVISIT_DISCOVERY_DEFERRED_PLAN.md",
@@ -275,31 +304,36 @@
       "old": "autonomy/ROUTE_BASELINE_GUIDANCE.md",
       "new": "docs/design/ROUTE_BASELINE_GUIDANCE.md",
       "originalSha256": "907b461d7149648ff1ac397d327e7bb80b471bda81b4804d32d51c8e68648b79",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/ROUTE_MIP_RELAXATION.md",
       "new": "docs/design/ROUTE_MIP_RELAXATION.md",
       "originalSha256": "71ff9006b52b022734d6b43e776a8efa289db40d116435ec198980c2e56543c9",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/RUN_OFF_OBSTACLES.md",
       "new": "docs/design/RUN_OFF_OBSTACLES.md",
       "originalSha256": "2b909a78ac4d8adf361e6fa9f2cf2d9121791395477a79595ab343941499d09b",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/RUN_TICKS_PLAN.md",
       "new": "docs/design/RUN_TICKS_PLAN.md",
       "originalSha256": "d1bdf401d5756594b7bb4bc0f785e9132cbd4d90a2c08dcd05b170cb42a3a737",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/SEARCH_CONTINUATION_FIX_PLAN.md",
       "new": "docs/design/SEARCH_CONTINUATION_FIX_PLAN.md",
       "originalSha256": "2981b730d06e496f6aa68d1074e1c2116c78b13da8000572f4fdd1b71843157f",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/SEARCH_OBJECTIVE.md",
@@ -311,7 +345,8 @@
       "old": "autonomy/SPATIAL_CORRIDOR_REFACTOR_PLAN.md",
       "new": "docs/design/SPATIAL_CORRIDOR_REFACTOR_PLAN.md",
       "originalSha256": "31c8aba28a56307e48defd829e9454f50e6ce379bf0439ca1ad42182c81110bc",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/SPATIAL_ROUTE_RESEARCH.md",
@@ -323,7 +358,8 @@
       "old": "autonomy/STATE_PROTECTION_IMPLEMENTATION_PLAN.md",
       "new": "docs/design/STATE_PROTECTION_IMPLEMENTATION_PLAN.md",
       "originalSha256": "f830964705c285b18cdc624ce35a74b7e2aa342104978c9a8d67aee665e93f66",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/STEPPING_CASES.md",
@@ -335,13 +371,15 @@
       "old": "autonomy/STEPPING_IMPLEMENTATION.md",
       "new": "docs/design/STEPPING_IMPLEMENTATION.md",
       "originalSha256": "2700a11da597a30a8f726d4f5135e5572ba6de0a5c02a9100eb0249d3a692e56",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/STEPPING_PLAN.md",
       "new": "docs/design/STEPPING_PLAN.md",
       "originalSha256": "2c20f5931f2e4886d85f3d910e1436207be6c55a4b1dee23d887ec098777c52e",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/STRATFINDER_INVESTIGATION.md",
@@ -359,13 +397,15 @@
       "old": "autonomy/TIME_PROGRESS_IMPLEMENTATION_PLAN.md",
       "new": "docs/design/TIME_PROGRESS_IMPLEMENTATION_PLAN.md",
       "originalSha256": "94b47e2866548b9fd1761daa32410a5c97f36c00c3780390aca25dd693f31f43",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/UPFRONT_BRANCH_COMPILATION_PLAN.md",
       "new": "docs/design/UPFRONT_BRANCH_COMPILATION_PLAN.md",
       "originalSha256": "2af47a51532c27af11026bf098f1a5c76238eb4d252d2735a49daf07c32fe74c",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "autonomy/block_contacts.py",
@@ -6869,19 +6909,22 @@
       "old": "ipopt/AUTONOMOUS_AGENT_HANDOFF.md",
       "new": "docs/reference/AUTONOMOUS_AGENT_HANDOFF.md",
       "originalSha256": "941eb4ae3dc0a437745577e386f59249c43b3d382dbd06a08a96dd7af838172b",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "ipopt/FINDINGS.md",
       "new": "docs/reference/FINDINGS.md",
       "originalSha256": "f8a6d967cac49db9e782b104e410c74f8bf639e1809ef489e6de9903787473c0",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "ipopt/MOD_INTEGRATION_PLAN.md",
       "new": "docs/reference/MOD_INTEGRATION_PLAN.md",
       "originalSha256": "a3bb0e4cc76b798014f4976f48ec211e325a1e57ca50eae81c0479cb5a741419",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "ipopt/MOVEMENT_PORT.md",
@@ -6899,7 +6942,8 @@
       "old": "ipopt/RECENT_REPLAY_HANDOFF.md",
       "new": "docs/reference/RECENT_REPLAY_HANDOFF.md",
       "originalSha256": "053f01191bea2d90b4f3740231d0665cca346ea39f99ca9e50d99fa9e2bb2311",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "ipopt/REPLAY.md",
@@ -6911,7 +6955,8 @@
       "old": "ipopt/RUN_TICKS_PHYSICS_HANDOFF.md",
       "new": "docs/reference/RUN_TICKS_PHYSICS_HANDOFF.md",
       "originalSha256": "59f058867f2310400247d968c10c51713e5eb7fda306b16fadb1f446dcf5a998",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-16"
     },
     {
       "old": "ipopt/capture.py",

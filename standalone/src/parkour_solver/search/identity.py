@@ -42,7 +42,7 @@ def solve_scope(scene, program, supplied=None):
     if purpose == 'complete' and (through != n or len(solids) != len(scene['collisionScene']['solids'])):
         raise ValueError('Complete solves must model the full declared scene and horizon')
     active = {tuple(scene['collisionScene']['solids'][i]) for i in solids}
-    if any(e['offset'] < through and tuple(e['box']) not in active
+    if any(e['offset'] < through and any(tuple(b) not in active for b in e['boxes'])
            for e in program['profile'].get('contactEvents', [])):
         raise ValueError('Selected contacts must belong to the modeled scene')
     return dict(version=1, purpose=purpose, through=through, solidIndices=solids,

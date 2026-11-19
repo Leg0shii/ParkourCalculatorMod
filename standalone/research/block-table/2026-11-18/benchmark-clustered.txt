@@ -1,0 +1,7 @@
+solids     7 table False items     80 prepared     80 phaseChecks     1440 variants 1 seconds 0.034
+solids     7 table True  items     10 prepared     10 phaseChecks      180 variants 1 seconds 0.006
+solids    25 table False items    260 prepared   1034 phaseChecks    18612 variants 1 seconds 0.474
+solids    25 table True  items     10 prepared     10 phaseChecks      180 variants 1 seconds 0.005
+solids    50 table True  items     10 prepared     10 phaseChecks      180 variants 1 seconds 0.007
+solids   100 table True  items     10 prepared     10 phaseChecks      180 variants 1 seconds 0.005
+solids  1000 table True  items     10 prepared     10 phaseChecks      180 variants 1 seconds 0.012

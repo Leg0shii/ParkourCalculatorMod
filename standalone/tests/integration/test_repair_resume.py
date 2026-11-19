@@ -12,16 +12,60 @@ from parkour_solver.search.engine import _key
 from parkour_solver.movement.program import compile_program, program_physics_key
 from parkour_solver.search.movement import iter_movement_programs
 from parkour_solver.search.repair_state import compatible, context
+from parkour_solver.search.work import SearchWork
 from tests.support.checkpoint_guidance import flat_scene, programs
 
 
 class RepairResumeTests(RepairHarness, unittest.TestCase):
+    def test_exhausted_call_budget_keeps_unstarted_branch_pending_without_unknown_retry(self):
+        rows=[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=v) for v in (1,2)]
+        def filter_candidate(*args):return dict(accepted=False,alternatives=[[r] for r in rows])
+        seeded=self.invoke(route(),lambda *a,**k:outcome(),filter_candidate)
+        work=SearchWork(1)
+        work.before_solve({})
+        first=self.invoke(route(),lambda *a,**k:self.fail('Dispatched beyond the run budget'),filter_candidate,
+            work=work,resume_state=json.loads(json.dumps(seeded['repairState'])),retry_unresolved=False)
+        self.assertEqual(first['termination'],'numerical_call_limit')
+        self.assertEqual(len(first['repairState']['pending']),2)
+        self.assertEqual(first['repairState']['unresolved'],[])
+        self.assertEqual(first['repairState']['completed'],seeded['repairState']['completed'])
+        requests=[]
+        def solve(request,*args,**kwargs):
+            requests.append(request['constraints'])
+            return outcome()
+        resumed=self.invoke(route(),solve,lambda *a:dict(accepted=True),
+            resume_state=json.loads(json.dumps(first['repairState'])),retry_unresolved=False)
+        self.assertEqual(requests,[[rows[0]]])
+        self.assertEqual(resumed['status'],'feasible')
+
+    def test_generation_expiry_preserves_new_branch_before_dispatch(self):
+        row=dict(leg=0,offset=1,mode='X',cmp='GE',rhs=1)
+        clock=[100.]
+        def variants():
+            clock[0]+=2.
+            yield dict(rows=[row])
+        with patch('time.monotonic',side_effect=lambda:clock[0]):
+            first=self.invoke(route(),lambda *a,**k:self.fail('Dispatched after generation expired'),
+                lambda *a:dict(accepted=True),initial_variants=variants(),work=SearchWork(2,deadline=101.))
+        self.assertEqual(first['termination'],'deadline')
+        self.assertTrue(any(b['rows']==[row] for b in first['repairState']['pending']))
+        self.assertEqual(first['repairState']['unresolved'],[])
+        requests=[]
+        def solve(request,*args,**kwargs):
+            requests.append(request['constraints'])
+            return outcome()
+        resumed=self.invoke(route(),solve,lambda *a:dict(accepted=True),
+            resume_state=json.loads(json.dumps(first['repairState'])),retry_unresolved=False)
+        self.assertEqual(requests,[[row]])
+        self.assertEqual(resumed['status'],'feasible')
+
     def test_extended_program_keeps_guess_without_copying_exact_old_problem_work(self):
         scene=flat_scene()
         parent=next(p for p in programs(scene,2) if p['profile']['jump'][0])
         parent['guideSeedYaw']=[12.,13.]
         parent['repairState']=dict(context=dict(scope=dict(solveIdentity='old-exact-problem')),pending=[dict(rows=[])])
-        generator=iter_movement_programs(scene,checkpoint_tick=4,threshold=0.,initial_programs=[parent])
+        generator=iter_movement_programs(scene,checkpoint_tick=4,threshold=0.,initial_programs=[parent],
+                                         context_adapter=lambda c:c.update(interactionGate=None))
         child=next(generator);generator.close()
         self.assertNotIn('repairState',child)
         self.assertEqual(child['guideSeedYaw'],[12.,13.])
@@ -33,6 +77,42 @@ class RepairResumeTests(RepairHarness, unittest.TestCase):
                            resume_state=json.loads(json.dumps(first['repairState'])))
         self.assertEqual(second['status'],'feasible')
         self.assertEqual(second['attempts'],[])
+
+    def test_collision_repair_source_survives_global_stop_without_repeating_completed_root(self):
+        from parkour_solver.constraints.variants import ConstraintVariants
+        row = dict(leg=0, offset=1, mode='X', cmp='GE', rhs=-1.)
+        response = outcome()
+        response['best']['plan'].update(events=[dict(jump=0, landed=0, landing=2, runTicks=0)], walls=[], contacts=[])
+        geometry = dict(solids=[[0., 0., 0., 1., 3., 1.]])
+        requests = []
+        def solve(request, *args, **kwargs):
+            requests.append(copy.deepcopy(request['constraints']))
+            return copy.deepcopy(response)
+        def clipped(*args, **kwargs):
+            return dict(feasible=bool(requests[-1]), solidIndex=0, tick=0, reason='unselected_collision')
+        class Source:
+            def __init__(self):
+                self.state = dict(cursor=0, metrics={}, uncertainInteractions=[])
+            def __iter__(self): return self
+            def __next__(self):
+                if self.state['cursor']:
+                    raise StopIteration
+                self.state['cursor'] = 1
+                return dict(rows=[row], selectedPassages=[], score=1)
+        with patch('parkour_solver.search.repair.check_geometry', side_effect=clipped):
+            first = self.invoke(route(), solve, lambda *a: dict(accepted=True), geometry=geometry)
+            saved = json.loads(json.dumps(first['repairState'], allow_nan=False))
+            self.assertEqual(len(saved['repairSources']), 1)
+            self.assertEqual(len(saved['completed']), 1)
+            from parkour_solver.search.feasibility import outcome as classify
+            self.assertEqual(classify(first, 'model', dict(oracleRejection=True))['status'], 'suspended')
+            with patch.object(ConstraintVariants, 'for_plan', return_value=Source()):
+                second = self.invoke(route(), solve, lambda *a: dict(accepted=True),
+                                     geometry=geometry, resume_state=saved, retry_unresolved=False)
+        self.assertEqual(requests, [[], [row]])
+        self.assertEqual(second['status'], 'feasible')
+        self.assertTrue(second['repairResume']['exact'])
+        self.assertEqual(second['repairState']['repairSources'][0]['state']['cursor'], 1)
 
     def test_worker_interruption_restores_the_inflight_branch(self):
         checkpoints=[]
@@ -156,7 +236,8 @@ class RepairResumeTests(RepairHarness, unittest.TestCase):
         retained=retain_unresolved(first,state)
         self.assertEqual(program_physics_key(first),program_physics_key(retained))
         self.assertEqual(_key(first),_key(retained))
-        generator=iter_movement_programs(scene,checkpoint_tick=4,threshold=0.,initial_programs=[retained],deadline=time.monotonic()+2)
+        generator=iter_movement_programs(scene,checkpoint_tick=4,threshold=0.,initial_programs=[retained],deadline=time.monotonic()+2,
+                                         context_adapter=lambda c:c.update(interactionGate=None))
         extended=next(generator);generator.close()
         self.assertEqual(extended['repairState'],state)
         self.assertEqual(extended['guideSeedYaw'],[1,2])
@@ -167,6 +248,78 @@ class RepairResumeTests(RepairHarness, unittest.TestCase):
         self.assertFalse(compatible(ctx,new_ctx))
         self.assertNotIn('positions',retained)
         self.assertNotIn('velocity',retained)
+
+    def climb(self, order, value, *, solves=100, **kwargs):
+        # Each variant's single row encodes its family and switch tick; value(family, tick) is the objective.
+        requests=[]
+        def solve(request,*args,**options):
+            family,tick=divmod(int(request['constraints'][0]['rhs']),100)
+            requests.append((family,tick))
+            result=value(family,tick)
+            return dict(status='unknown',termination='done',attempts=[],best=None) if result is None else outcome(result)
+        variants=kwargs.pop('variants',None) or iter([dict(rows=[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=100.*f+t)],
+            selectedPassages=[],family='family:'+str(f),switches=[t],score=i) for i,(f,t) in enumerate(order)])
+        kwargs.setdefault('climb_families',True)
+        result=self.invoke(route(),solve,lambda *a:dict(accepted=True),initial_variants=variants,
+                           work=SearchWork(solves),**kwargs)
+        return result,requests
+
+    def test_switch_tick_family_climbs_from_its_first_point_to_the_peak(self):
+        result,requests=self.climb([(0,t) for t in (2,1,3,4,5,6)],lambda f,t:-(t-2)**2)
+        self.assertEqual(requests,[(0,2),(0,1),(0,3)])
+        self.assertEqual(result['best']['candidate']['objective'],0)
+        self.assertEqual(result['avoidanceMetrics']['heldUnsolved'],3)
+
+    def test_unknown_point_counts_as_infeasible_and_the_climb_moves_on(self):
+        result,requests=self.climb([(0,t) for t in (1,2,3,4)],lambda f,t:None if t==1 else -(t-2)**2)
+        self.assertEqual(requests,[(0,1),(0,2),(0,3)])
+        self.assertEqual([b['rows'][0]['rhs'] for b in result['repairState']['unresolved']],[1.])
+
+    def test_climb_waits_for_a_neighbour_the_generator_emits_later(self):
+        result,requests=self.climb([(0,t) for t in (2,5,6,3,4,1)],lambda f,t:-(t-3)**2)
+        self.assertEqual(requests,[(0,2),(0,3),(0,4)])
+        self.assertEqual(result['best']['candidate']['objective'],0)
+
+    def test_every_family_is_climbed_and_the_best_across_families_wins(self):
+        order=[(f,t) for f in (0,1) for t in (2,1,3,4)]
+        result,requests=self.climb(order,lambda f,t:5*f-(t-2)**2)
+        self.assertEqual(sorted(requests),sorted((f,t) for f in (0,1) for t in (1,2,3)))
+        self.assertEqual(result['best']['candidate']['objective'],5)
+
+    def test_fallbacks_keep_at_most_two_close_losers_with_the_same_ticks(self):
+        values={0:10,1:9.9,2:9.8,3:9.75,4:9.5}
+        def value(f,t):
+            if f==5:
+                return dict(outcome(10.1)['best'],plan=dict(ticks=3,events=[]))
+            return values[f]
+        requests=[]
+        def solve(request,*args,**options):
+            family=int(request['constraints'][0]['rhs'])//100
+            requests.append(family)
+            found=value(family,0)
+            return dict(status='feasible',termination='done',attempts=[],best=found) if isinstance(found,dict) else outcome(found)
+        variants=iter([dict(rows=[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=100.*f)],selectedPassages=[],
+                            family='family:'+str(f),switches=[],score=f) for f in range(6)])
+        result=self.invoke(route(),solve,lambda *a:dict(accepted=True),initial_variants=variants,
+                           work=SearchWork(100),climb_families=True)
+        self.assertEqual(sorted(requests),list(range(6)))
+        self.assertEqual(result['best']['candidate']['objective'],10)
+        self.assertEqual([v['best']['candidate']['objective'] for v in result['repairState']['fallbackVariants']],[9.9,9.8])
+
+    def test_resumed_climb_solves_nothing_twice(self):
+        order=[(0,t) for t in (2,1,3,4,5,6)]
+        variants=iter([dict(rows=[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=100.*f+t)],selectedPassages=[],
+                            family='family:'+str(f),switches=[t],score=i) for i,(f,t) in enumerate(order)])
+        first,before=self.climb(order,lambda f,t:-(t-2)**2,solves=2,variants=variants)
+        self.assertEqual(first['termination'],'numerical_call_limit')
+        saved=json.loads(json.dumps(first['repairState']))
+        second,after=self.climb(order,lambda f,t:-(t-2)**2,variants=variants,resume_state=saved)
+        self.assertEqual(before+after,[(0,2),(0,1),(0,3)])
+        self.assertEqual(second['best']['candidate']['objective'],0)
+
+    def test_without_climbing_every_alternative_is_solved(self):
+        _,requests=self.climb([(0,t) for t in (2,1,3,4,5,6)],lambda f,t:-(t-2)**2,climb_families=False)
+        self.assertEqual(requests,[(0,t) for t in (2,1,3,4,5,6)])
 
 
 if __name__=='__main__':

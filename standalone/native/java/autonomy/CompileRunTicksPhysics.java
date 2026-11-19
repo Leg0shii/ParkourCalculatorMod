@@ -52,7 +52,6 @@ public final class CompileRunTicksPhysics {
         int axis;
         int direction;
         double plane;
-        double[] box;
         double[][] boxes;
         boolean step;
         String movementCase;
@@ -156,20 +155,23 @@ public final class CompileRunTicksPhysics {
                 if (event.state != t + 1) continue;
                 if (event.movementCase != null) {
                     boolean trigger = false;
-                    for (StaticScene.Clip clip : hit.stepTriggers)
-                        if (clip.axis != 1 && event.box != null && sameBox(clip.obstacle, event.box)) trigger = true;
-                    if (!hit.stepped || !sceneHasBox(request.scene, event.box) || !trigger
+                    if (event.boxes != null) for (double[] member : event.boxes)
+                        for (StaticScene.Clip clip : hit.stepTriggers)
+                            if (clip.axis != 1 && sameBox(clip.obstacle, member) && sceneHasBox(request.scene, member))
+                                trigger = true;
+                    if (!hit.stepped || !trigger
                             || event.axis != 1 || StrictMath.abs(hit.position.y - event.plane) > 1e-7)
                         contactMismatch = true;
                     continue;
                 }
                 if (event.step) {
-                    boolean known = sceneHasBox(request.scene, event.box);
-                    if (!hit.stepped || event.axis != 1 || event.direction != -1 || !known
-                            || StrictMath.abs(hit.position.y - event.plane) > 1e-7
-                            || event.box == null || event.box[4] != event.plane
-                            || hit.box.max.x <= event.box[0] || hit.box.min.x >= event.box[3]
-                            || hit.box.max.z <= event.box[2] || hit.box.min.z >= event.box[5]) contactMismatch = true;
+                    boolean supported = false;
+                    if (event.boxes != null) for (double[] member : event.boxes)
+                        if (sceneHasBox(request.scene, member) && member[4] == event.plane
+                                && hit.box.max.x > member[0] && hit.box.min.x < member[3]
+                                && hit.box.max.z > member[2] && hit.box.min.z < member[5]) supported = true;
+                    if (!hit.stepped || event.axis != 1 || event.direction != -1 || !supported
+                            || StrictMath.abs(hit.position.y - event.plane) > 1e-7) contactMismatch = true;
                     continue;
                 }
                 StaticScene.Clip last = null;
@@ -227,16 +229,9 @@ public final class CompileRunTicksPhysics {
     }
 
     private static boolean matchesFace(JsonObject scene, AABB box, PlannedContact contact, AABB before, StaticScene.Contact hit) {
-        if (contact.box == null && contact.boxes == null) return true;
-        double[][] choices = contact.boxes == null ? new double[][]{contact.box} : contact.boxes;
-        for (double[] values : choices) {
-            PlannedContact candidate = new PlannedContact();
-            candidate.axis = contact.axis;
-            candidate.direction = contact.direction;
-            candidate.plane = contact.plane;
-            candidate.box = values;
-            if (sceneHasBox(scene, values) && (sameBox(box, values) || sameFace(box, candidate, before, hit))) return true;
-        }
+        if (contact.boxes == null) return true;
+        for (double[] values : contact.boxes)
+            if (sceneHasBox(scene, values) && (sameBox(box, values) || sameFace(box, contact, values, before, hit))) return true;
         return false;
     }
 
@@ -245,7 +240,7 @@ public final class CompileRunTicksPhysics {
                 && box.min.z == values[2] && box.max.x == values[3] && box.max.y == values[4] && box.max.z == values[5];
     }
 
-    private static boolean sameFace(AABB box, PlannedContact contact, AABB before, StaticScene.Contact hit) {
+    private static boolean sameFace(AABB box, PlannedContact contact, double[] expected, AABB before, StaticScene.Contact hit) {
         double lo = contact.axis == 0 ? box.min.x : contact.axis == 2 ? box.min.z : box.min.y;
         double hi = contact.axis == 0 ? box.max.x : contact.axis == 2 ? box.max.z : box.max.y;
         double width = contact.axis == 1 ? StaticScene.HEIGHT : StaticScene.HALF_WIDTH;
@@ -253,7 +248,6 @@ public final class CompileRunTicksPhysics {
         double x = contact.axis == 2 ? hit.position.x : (before.min.x + before.max.x) / 2;
         double y = hit.position.y;
         double z = (before.min.z + before.max.z) / 2;
-        double[] expected = contact.box;
         double expectedLo = expected[contact.axis];
         double expectedHi = expected[contact.axis + 3];
         double expectedPlane = contact.direction > 0 ? expectedLo - width

@@ -7,7 +7,8 @@ import unittest
 from parkour_solver.search.support_profiles import build_transition_graph, compile_block_path
 from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.movement.profiles import normal_jump_height
-from parkour_solver.constraints.avoidance import DEFAULT_CAPS, blockage_counts, blockage_usage, compile_passages, faces, gate_timeline, outside, passage_options, passage_y_valid, within_caps
+from parkour_solver.constraints.avoidance import blockage_counts, blockage_usage, compile_passages, gate_timeline, outside, passage_y_valid
+from tests.support.obstacle_faces import faces
 from parkour_solver.scene.geometry import BODY_HEIGHT, expanded_box
 from parkour_solver.scene.route import HALF_WIDTH, prepare_route, schedule
 from parkour_solver.search.ranking import passage_seed
@@ -91,50 +92,9 @@ class ObstacleGeometryTests(unittest.TestCase):
 
 
 class BlockageTests(unittest.TestCase):
-    def test_default_caps_and_tightening_are_per_physical_block(self):
-        result = prepare_scene(scene())
-        self.assertEqual(result['maxBlockagesPerObstacle'], 3)
-        self.assertEqual(result['maxHorizontalBlockagesPerObstacle'], 2)
-        self.assertEqual(result['maxVerticalBlockagesPerObstacle'], 2)
-        for name, maximum in [('maxBlockagesPerObstacle', 3), ('maxHorizontalBlockagesPerObstacle', 2),
-                              ('maxVerticalBlockagesPerObstacle', 2)]:
-            request = scene()
-            request[name] = maximum + 1
-            with self.assertRaises(ValueError):
-                prepare_scene(request)
 
-    def test_horizontal_vertical_and_combined_limits_all_apply(self):
-        def chain(axes):
-            return [{'axis': a, 'direction': 1, 'plane': 1} for a in axes]
 
-        def passage(axes, block='A', solid=1):
-            return {'leg': 0, 'blockId': block, 'solidIndex': solid, 'faces': chain(axes),
-                    'gates': list(range(len(axes) - 1))}
 
-        self.assertEqual(blockage_counts(chain('XZYX')), {'horizontal': 1, 'vertical': 2, 'total': 3})
-        self.assertTrue(within_caps([passage('XZYX')], DEFAULT_CAPS))
-        self.assertTrue(within_caps([passage('XZX'), passage('ZXZ', 'B', 2)], DEFAULT_CAPS))
-        self.assertFalse(within_caps([passage('XZXZ')], DEFAULT_CAPS))
-        self.assertFalse(within_caps([passage('XYXY')], DEFAULT_CAPS))
-        self.assertFalse(within_caps([passage('XZX'), passage('XYX', solid=2)], DEFAULT_CAPS))
-
-    def test_multipart_blocks_share_the_cap_across_separate_passages_and_legs(self):
-        chain = [{'axis': axis, 'direction': 1, 'plane': 1} for axis in 'XZX']
-        first = {'leg': 0, 'blockId': 'wall', 'solidIndex': 1, 'faces': chain, 'gates': [2, 5]}
-        second = {'leg': 1, 'blockId': 'wall', 'solidIndex': 2, 'faces': chain[:2], 'gates': [3]}
-        self.assertEqual(blockage_usage([first, second])[('block', 'wall')], {'horizontal': 3, 'vertical': 0, 'total': 3})
-        self.assertFalse(within_caps([first, second], DEFAULT_CAPS))
-        second['blockId'] = 'another_wall'
-        self.assertTrue(within_caps([first, second], DEFAULT_CAPS))
-
-    def test_generator_keeps_mixed_three_blockages_and_respects_all_three_caps(self):
-        _, route, profile, plan, witness, bound = passage_case()
-        result = passage_options([1.7, 0, .25, 2, 1.7, .75], 1, 0, profile, route, plan, witness, bound,
-                                 max_candidates=1024)
-        options = [item['passage'] for item in result['options']]
-        self.assertTrue(any(p['blockageCounts']['total'] == 3 for p in options))
-        self.assertTrue(all(within_caps([p], DEFAULT_CAPS) for p in options))
-        self.assertGreater(result['budgetPruned'], 0)
 
     def test_interleaved_blocks_keep_independent_intervals_on_one_retimed_timeline(self):
         _, route, profile, _, _, _ = passage_case()
@@ -160,16 +120,6 @@ class BlockageTests(unittest.TestCase):
             self.assertEqual({r['name'] for r in rows}, {'blockage:1', 'blockage:2'})
             self.assertTrue(all(passage_y_valid(p, plan['events'][0], profile) for p in route['passages']))
 
-    def test_refining_one_part_reserves_the_other_parts_budget_without_resetting_the_block(self):
-        _, route, profile, plan, witness, bound = passage_case()
-        route['passages'] = [{'leg': 0, 'blockId': 'wall', 'solidIndex': 2,
-                              'faces': [{'axis': axis, 'direction': 1, 'plane': 1} for axis in 'XZX'],
-                              'gates': [2, 5]}]
-        result = passage_options([2.2, 3.85, -2, 2.8, 5, 2], 1, 0, profile, route, plan, witness, bound,
-                                 max_candidates=512, block_id='wall')
-        self.assertTrue(result['options'])
-        self.assertTrue(all(item['passage']['blockageCounts']['horizontal'] == 0 for item in result['options']))
-        self.assertTrue(all(within_caps(route['passages'] + [item['passage']], DEFAULT_CAPS) for item in result['options']))
 
     def test_later_passage_seed_keeps_the_earlier_prefix_guess_and_adds_no_facing_pins(self):
         _, route, _, _, _, _ = passage_case()
@@ -213,26 +163,7 @@ class BlockageTests(unittest.TestCase):
                 self.assertEqual(not failures and horizontal_ok and passage_y_valid(passage, event, profile),
                                  case['directClippedAxis'] == 'none')
 
-    def test_wide_neo_generates_both_sides_and_height_prunes_every_vertical_face(self):
-        request, route, profile, plan, witness, bound = passage_case()
-        result = passage_options(request['collisionScene']['solids'][1], 1, 0, profile, route, plan, witness, bound,
-                                 max_candidates=256)
-        self.assertEqual(result['verticalFacesPruned'], 2)
-        wide = [o['passage'] for o in result['options'] if o['passage']['kind'] == 'wide_neo']
-        self.assertTrue(wide)
-        self.assertEqual({p['faces'][1]['direction'] for p in wide}, {-1, 1})
-        self.assertTrue(all(f['axis'] != 'Y' for p in wide for f in p['faces']))
-        self.assertTrue(all(p['blockageCount'] == 2 for p in wide))
-        self.assertGreater(result['reachPruned'], 0)
 
-    def test_reachable_top_and_suspended_bottom_keep_vertical_and_horizontal_candidates(self):
-        request, route, profile, plan, witness, bound = passage_case()
-        for box, direction in [([1.7, 0, .25, 2, 1.7, .75], 1),
-                               ([1.7, 3, .25, 2, 4, .75], -1)]:
-            result = passage_options(box, 1, 0, profile, route, plan, witness, bound, max_candidates=512)
-            options = [o['passage'] for o in result['options']]
-            self.assertTrue(any(any(f['axis'] == 'Y' and f['direction'] == direction for f in p['faces']) for p in options))
-            self.assertTrue(any(p['kind'] in ('cross_neo', 'wide_neo') for p in options))
 
     def test_gate_intervals_retime_with_runs_and_do_not_make_one_face_a_permanent_wall(self):
         _, route, profile, _, _, _ = passage_case()
@@ -269,12 +200,6 @@ class BlockageTests(unittest.TestCase):
         passage['gates'] = [6]
         self.assertFalse(passage_y_valid(passage, plan['events'][0], profile))
 
-    def test_caps_are_visible_and_never_silently_expand_the_blockage_family(self):
-        request, route, profile, plan, witness, bound = passage_case()
-        result = passage_options(request['collisionScene']['solids'][1], 1, 0, profile, route, plan, witness, bound,
-                                 max_blockages=1, max_candidates=1)
-        self.assertTrue(all(p['passage']['blockageCount'] <= 1 for p in result['options']))
-        self.assertLessEqual(len(result['options']), 1)
 
 
 if __name__ == '__main__':

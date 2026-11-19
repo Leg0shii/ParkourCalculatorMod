@@ -2,13 +2,13 @@ from parkour_solver.movement.settings import movement_settings
 import copy
 import heapq
 import json
-import math
 import time
 
 from parkour_solver.schema import integer, number
 from parkour_solver.movement.cases import entry_possible
 from parkour_solver.movement.program import append_choice, boundary_state, compile_program, empty_program, truncate_program, program_search_key
 from parkour_solver.movement.generation import GENERATORS, generate_choices, propose_choices, assess_proposal
+from parkour_solver.search.anchors.policy import launch
 from parkour_solver.search.comparison import compare_candidates
 
 
@@ -162,7 +162,7 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
                             box = scene['collisionScene']['solids'][goal['solidIndex']]
                             at = child['profile']['airtime']-1
                             events = child['profile']['contactEvents']+child['profile']['caseEvents']
-                            if any(e.get('offset', e.get('input')) == at and e.get('box') == box for e in events):
+                            if any(e.get('offset', e.get('input')) == at and box in e.get('boxes', ()) for e in events):
                                 child['terminalSupport'] = scene['goalBlock']
                     if child is None or not entry_possible(child['profile'], initial_bounds):
                         continue
@@ -226,11 +226,8 @@ def find_movement_blocks(request, compiler, *, seconds=60, candidate_seconds=2, 
     cfg = movement_settings(scene)
     started = time.monotonic()
     deadline = started + seconds
-    sample = compiler.compile(dict(scene, sharedMovement=True), dict(grounded=[True, True, False], jump=[False, True, False]), seconds)
-    speed = max(math.hypot(scene['initial']['velocity'][0], scene['initial']['velocity'][2]),
-                max(f * m / (1 - f) for m, f in zip(sample['magnitude'], sample['friction'])))
-    motion_bound = dict(storedSpeedNorm=speed + 1e-8, movementAfterSupportCheck=speed + max(sample['magnitude']) + 1e-8,
-                        groundMagnitude=sample['magnitude'][0])
+    from parkour_solver.reachability.intervals import motion_bound
+    motion = motion_bound(scene, compiler, seconds)
     owners = {b['solidIndex']: b['sourceBlock'] for b in scene['blocks']}
     report, attempts, best = {}, [], None
     from parkour_solver.reachability.service import InteractionGate
@@ -239,6 +236,7 @@ def find_movement_blocks(request, compiler, *, seconds=60, candidate_seconds=2, 
         if context_adapter is not None:
             context_adapter(context)
         gate.context(context)
+        context['launchOwner'] = (launch(scene, context['program']) or (None, None))[1]
     def screen(program):
         return screen_program(scene,program,compiler,max(.001,deadline-time.monotonic()),gate=gate)
     for program in iter_movement_programs(scene, settings=cfg, deadline=deadline, cancel_event=cancel_event,
@@ -251,12 +249,10 @@ def find_movement_blocks(request, compiler, *, seconds=60, candidate_seconds=2, 
         result = solve_contact_branches(compiled['route'], compiled['profiles'],
             floor_checks(scene, [scene['startBlock'], scene['goalBlock']], compiled['profiles']), compiler,
             seconds=min(route_seconds, max(.001, deadline - time.monotonic())), candidate_seconds=candidate_seconds,
-            retries=retries, max_branches=scene['maxContactBranches'], improve=improve,
+            retries=retries, improve=improve,
             rank_equal_cost=True, optimize_goal=True, python_executable=python_executable,
             cancel_event=cancel_event, geometry=scene['collisionScene'],
-            motion_bound=motion_bound,
-            max_blockages=scene['maxBlockagesPerObstacle'], max_horizontal=scene['maxHorizontalBlockagesPerObstacle'],
-            max_vertical=scene['maxVerticalBlockagesPerObstacle'], max_passage_candidates=scene['maxPassageCandidates'],
+            motion_bound=motion,
             solid_blocks=[owners[i] for i in range(len(owners))], max_wall_hits=scene['maxWallHits'],
             max_wall_candidates=scene['maxWallHitCandidates'], candidate_filter=candidate_filter, work=work)
         attempt = dict(ticks=program['profile']['airtime'], status=result['status'], termination=result['termination'],

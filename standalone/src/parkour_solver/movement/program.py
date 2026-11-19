@@ -44,7 +44,8 @@ def boundary_state(program, on_ladder=False):
                                              program['initial']['previousHorizontalCollision']))
 
 
-def profile_from_trace(trace, *, contacts=(), cases=(), constraints=(), units=None, landing_phase='post'):
+def profile_from_trace(trace, *, contacts=(), cases=(), constraints=(), units=None, landing_phase='post',
+                       region_choices=()):
     n = trace['ticks']
     profile = dict(airtime=n, position=trace['position'], velocity=trace['velocity'], grounded=trace['onGround'],
         jump=[v is not None for v in trace['vertical']['jumpVelocity']], sneak=trace['sneak'],
@@ -53,17 +54,19 @@ def profile_from_trace(trace, *, contacts=(), cases=(), constraints=(), units=No
         positionConstraints=copy.deepcopy(list(constraints)), landingPhase=landing_phase,
         composition='movement_program')
     profile['generatedUnits'] = copy.deepcopy(units) if units is not None else profile_program(profile)
+    if region_choices:
+        profile['regionChoices'] = copy.deepcopy(list(region_choices))
     if trace['vertical']['threshold'] != .005:
         profile['threshold'] = trace['vertical']['threshold']
     return profile
 
 
 def movement_choice(kind, initial, trace, *, contacts=(), cases=(), constraints=(), units=None,
-                    ladder_events=(), support=None, landing_phase='post'):
+                    ladder_events=(), support=None, landing_phase='post', region_choices=()):
     if trace['status'] == 'invalid':
         return None
     profile = profile_from_trace(trace, contacts=contacts, cases=cases, constraints=constraints,
-                                 units=units, landing_phase=landing_phase)
+                                 units=units, landing_phase=landing_phase, region_choices=region_choices)
     events = list(contacts)+list(cases)
     owner = max((e.get('offset', e.get('input', -1))+1 for e in events), default=0)
     profile['constraintOwners'] = [owner]*len(profile['positionConstraints'])
@@ -158,6 +161,10 @@ def append_choice(program, choice, *, max_inputs=200):
         event['anchors'] = {k: v + cut for k, v in event.get('anchors', {}).items()}
         cases.append(event)
     constraints = old['positionConstraints'] + [dict(row, t1=cut + row['t1']) for row in tail['positionConstraints']]
+    region_choices = old.get('regionChoices', []) + [
+        dict(entry, offset=cut + entry['offset'], options=[[dict(row, offset=cut + row['offset']) for row in rows]
+                                                         for rows in entry['options']])
+        for entry in tail.get('regionChoices', [])]
     units = copy.deepcopy(old['generatedUnits']) + [shifted_unit(unit, cut) for unit in tail['generatedUnits']]
     events = _events(program['ladderEvents'] + [_shift_event(e, cut) for e in choice.get('ladderEvents', [])], trace)
     if events is None:
@@ -186,7 +193,7 @@ def append_choice(program, choice, *, max_inputs=200):
         s['ladderCeilingEvents'] = [copy.deepcopy(c) for c in contacts if c.get('effect') == 'ladder_ceiling'
             and c.get('ownerRegion') == event['column']['id'] and max(0, s['entryState'] - 1) <= c['offset'] < s['exitState']]
     profile = profile_from_trace(trace, contacts=contacts, cases=cases, constraints=constraints,
-                                 units=units, landing_phase=tail['landingPhase'])
+                                 units=units, landing_phase=tail['landingPhase'], region_choices=region_choices)
     profile['constraintOwners'] = old.get('constraintOwners', [0]*len(old['positionConstraints'])) + [
         cut+owner if owner else 0 for owner in tail.get('constraintOwners', [0]*len(tail['positionConstraints']))]
     masks = compile_units(profile['airtime'], units)
@@ -222,6 +229,9 @@ def truncate_program(program, ticks):
     profile['contacts'] = [c for c in profile['contacts'] if c['state'] <= ticks]
     profile['contactEvents'] = [c for c in profile['contactEvents'] if c['offset'] < ticks]
     profile['caseEvents'] = [c for c in profile['caseEvents'] if c['input'] < ticks]
+    region_choices = [c for c in profile.pop('regionChoices', []) if c['offset'] <= ticks]
+    if region_choices:
+        profile['regionChoices'] = region_choices
     for event in profile['caseEvents']:
         event['anchors'] = {k: v for k, v in event.get('anchors', {}).items() if v <= ticks}
     rows = [(r, owner) for r, owner in zip(profile['positionConstraints'],

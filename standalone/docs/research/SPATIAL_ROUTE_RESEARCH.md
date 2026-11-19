@@ -2,7 +2,7 @@
 
 2026-10-31. Research response to the user's question: given relevant blocks as AABBs or another reasonable geometric representation, how can we automatically derive the broad path choices that precede local movement/timing optimization? Input serialization is deliberately outside this design. This is a proposed abstraction and source review, not an implementation or measured performance result.
 
-Latest user clarification, 2026-11-03: support progression and 3D passage choices distinguish spatial routes. In particular overflight and landing then running off a block are different routes even with identical X/Z projections. This supersedes the older optional-contact grouping in this research note. Timing, run duration and facings within the same spatial/contact itinerary remain local. See the requested [concrete refactor plan](../design/SPATIAL_CORRIDOR_REFACTOR_PLAN.md) for current implementation direction; historical research and measurements below remain preserved.
+Latest user clarification, 2026-11-03: support progression and 3D passage choices distinguish spatial routes. In particular overflight and landing then running off a block are different routes even with identical X/Z projections. This supersedes the older optional-contact grouping in this research note. Timing, run duration and facings within the same spatial/contact itinerary remain local. See the requested concrete refactor plan for current implementation direction; historical research and measurements below remain preserved.
 
 ## General cell-decomposition context, researched 2026-10-31
 
@@ -96,7 +96,7 @@ Use the player's foot position as the reference point. For an upright player of 
 [xmin-r, xmax+r] x [ymin-h, ymax] x [zmin-r, zmax+r]
 ```
 
-This is a translational configuration-space construction, not a replacement for tick collision simulation. Retain boundary contact patches explicitly. A legal landing or wall hit can lie on a boundary; a blanket positive clearance or deleting all boundaries would remove tight valid interactions. The existing `obstacle_geometry.expanded_box` already encodes this geometric expansion.
+This is a translational configuration-space construction, not a replacement for tick collision simulation. Retain boundary contact patches explicitly. A legal landing or wall hit can lie on a boundary; a blanket positive clearance or deleting all boundaries would remove tight valid interactions. The existing `scene.geometry.expanded_box` already encodes this geometric expansion.
 
 Compute geometric unions where useful to remove irrelevant internal obstacle seams, while retaining provenance back to physical boxes/blocks for contact semantics and per-block caps. Do not replace a nonrectangular union by its bounding box or bridge real gaps.
 
@@ -251,7 +251,7 @@ Local loops that build momentum in one neighborhood can stay in its local moveme
 
 ## Small route shortlist: individual optimization and lower bounds
 
-Status update, 2026-10-31: the user has now deferred new bound work. The bounding discussion below is retained as research context, not the next implementation. Follow [CELL_ROUTE_EXPERIMENT_PLAN.md](../design/CELL_ROUTE_EXPERIMENT_PLAN.md) for the current geometry/routes/local-decisions benchmark plan.
+Bounds discussed below are research context; the implemented bounds are in `search/bounds/` and the [anchor policy](../design/ANCHOR_POLICY_DECISIONS.md).
 
 2026-10-31. User clarification: spatial route enumeration should already yield a small enough pool that every selected route can be optimized individually, obtaining its best found time and equal-time objective before comparison. They question the value of a detailed estimated route cost and suggest an optimistic hit/avoid/constraint choice as a possible, potentially weak, lower bound. The main architecture should not require a strong learned or estimated cost merely to evaluate the chosen routes.
 
@@ -334,7 +334,3 @@ Current code already has the geometric ingredients: expanded boxes, physical-blo
 A first abstract study should use boxes with: a wall with west/east passages; a low intermediate block offering overflight or landing/run-off; a stacked-floor/ceiling case that defeats a flat projection; and an airborne ladder transfer without an intermediate support. Check that it creates distinct broad passages, groups local variants, preserves finite contact patches and exposes the right movement opportunities. Add an equivalent collision union represented by differently split AABBs to check that incidental tessellation does not multiply route families. Include a useful revisit/momentum loop.
 
 Measure graph construction cost, raw versus compressed cell/portal count, distinct signature count, shortlist diversity and useful-route retention under the same proposal budget. These studies and movement solves have not been run. This research selects a concrete abstraction to test; it does not assert a proven node-count reduction or production implementation.
-
-## Active experiment plan, 2026-10-31
-
-The user has deferred bounds and requested a staged implementation/benchmark plan. [CELL_ROUTE_EXPERIMENT_PLAN.md](../design/CELL_ROUTE_EXPERIMENT_PLAN.md) is the current next-work specification: isolate code in a new branch/worktree; build the cell/portal/contact representation; generate spatial routes; condition existing local movement generation on those routes; compare current generic search with prescribed-spatial-route and automatic-cell-route arms. Measure residual contact/mask/timing branching and real numerical work before deciding whether another interaction abstraction or later bounding work is warranted. This planning turn adds no implementation or measurements.

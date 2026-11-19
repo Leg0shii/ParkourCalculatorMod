@@ -2,7 +2,7 @@
 
 For current physical-anchor search use the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). It separates a consumed proposal, admitted program, constraint variant, evaluation, solver wrapper and worker launch; these counters must not be interchanged. A strict finish-bound exclusion is different from a recoverable peer deferral, a resource cap, an analytical absence proof, exact operational oracle rejection or suspended work.
 
-Current saved evidence: `DFS.transferTimeBounds`, `timeBoundExclusions`, `comparisonWork`, `comparisonDecisions` and the single `minimumRunExclusions` compatibility table; frame-local `tickPeers`; `interactionGate.metrics`; and the profiled arms' `requests.json` invocation fingerprints/stop/worker status. Use [matched results](../research/hard-jump-comparisons/README.md) for source provenance. A common-case rejection before side fan-out creates no side programs/workers. A rejected unused tail cannot label its valid owned anchor prefix infeasible.
+Current saved evidence: `DFS.transferTimeBounds`, `timeBoundExclusions`, `comparisonWork`, `comparisonDecisions` and the single `minimumRunExclusions` compatibility table; frame-local `tickPeers`; `interactionGate.metrics`; and the profiled arms' `requests.json` invocation fingerprints/stop/worker status/owning routes and `summary.json` `stop` report ([solve reports](#solve-reports)). Use [matched results](../research/hard-jump-comparisons/README.md) for source provenance. A common-case rejection before side fan-out creates no side programs/workers. A rejected unused tail cannot label its valid owned anchor prefix infeasible.
 
 Start with [architecture](ARCHITECTURE.md) for call flow, [runbook](RUNBOOK.md) for execution, and [Real11 guide](REAL11_GUIDE.md) for the existing corpus. Do not launch a new long solve just to answer a question already logged.
 
@@ -13,7 +13,7 @@ Start with [architecture](ARCHITECTURE.md) for call flow, [runbook](RUNBOOK.md) 
 | Cell / portal / corridor | Spatial decomposition region / opening / selected broad route through regions. No intrinsic tick cost or fixed dynamic state. |
 | Prefix inputs | Number and identities of already modeled **input ticks**, not estimated arrival at a common spatial goal. Old priority incorrectly favored shorter prefixes. |
 | Program | Concrete discrete movement/input/contact history, scalar vertical trace, constraints and provenance; horizontal facings are still variables. |
-| Passage description | Signed face chain and switch/gate ticks used to build obstacle clearance rows. Many descriptions can yield one effective row set. |
+| Passage description | The phase cover chosen for one box encounter within a landing segment (`constraints/encounters.py`) and the clearance rows it implies. Many descriptions can yield one effective row set. |
 | Constraint variant | One concrete hard row/contact alternative for a fixed program. A schedule can require many such trials. |
 | Branch | One handled constraint alternative. It may be screened or stopped before worker dispatch. |
 | Solver wrapper / worker launch | The Python solve API may return a validated feasible seed without IPOPT in early-stop mode. A worker launch starts a subprocess numerical solve. One worker can have multiple internal phases/iterations/callbacks. |
@@ -55,6 +55,64 @@ PY
 
 Do not dump complete multi-MB reports to the conversation. Use tables/counters and link exact provenance. Resume snapshots repeat history; count identity deltas, not list lengths summed across files. Logs do not always align one-to-one: the saved Real11 corpus has two missing post-validation records with ambiguous possible branch placements. Preserve that ambiguity.
 
+## Solve reports
+
+A profiled run (commands in the [runbook](RUNBOOK.md#run-a-solve-and-report-it))
+writes these files to its output directory:
+
+| File | Contents |
+| --- | --- |
+| `report.md` | The readable report: outcome, why the search stopped, the route tree, and one section per partial route. |
+| `routes.json` | The same per-route trace as data. |
+| `summary.json` | Best route, timings, work counters, replay verdicts and the `stop` report. |
+| `requests.json` | Every solver request with its fingerprint, status, IPOPT status, wall seconds and `owners`. |
+| `report.json.gz` | The full saved search state; read it with `read_report` (paired `.store.sqlite3`). |
+| `provenance.json`, `profile.json`, `bookkeeping.json` | Source revision and hashes, fixture, interpreter; timing buckets. |
+
+`report.md` names routes by what they do, never by hash: route `F.N` is route N of
+frame F, grouped under its movement (jump ticks, the blocks it starts on, lands on
+and runs across, ceiling hits, wall touches and named cases), and each route lists
+the obstacles it passes with the sides taken (for example `B5+B6+B7: Z- then X-`; an obstacle is a
+cluster of touching blocks, and a corner side reads `X+Z+`).
+Each partial route in `report.md` and `routes.json` has:
+
+- its parent route, the constraint rows inherited from the parent's solved route
+  (what `retain_prefix` copies) and whether its starting facings were seeded from it;
+- the choices the movement generators ruled out by reachability before building them
+  (the `InteractionGate` exclusions, tagged with the frame and the generator's block and
+  contact kind): the choice, the player-centre area checked, the ticks, the check, how
+  often it was ruled out and the first reason; a frame whose generators built nothing
+  still gets this section;
+- the avoidance alternative accepted for it. Routes from one movement program share
+  a single repair run, kept on the first route of that program;
+- on that route: every prepared obstacle encounter (possible phases, already-clear
+  phases, the sides ruled out at each phase, vertical-clear and uncertain phases);
+  the decisions to make (the sides to keep around each obstacle in reach, and which
+  rectangle of a contacted face of several rectangles to touch or land on); every option rejected
+  before solving, with its decision, rows, the check
+  (interval, travel-distance, single-row or linear-relaxation reachability) and
+  where it failed; duplicate and dominated options; every alternative sent to the
+  solver with its outcome, its solves (request number, status, IPOPT status, seconds)
+  and scene validation; an alternative without a solution is `infeasible (<check>)`
+  when the pre-solve check on its compiled problem proved every attempt infeasible,
+  `infeasible (IPOPT local)` when IPOPT reported local infeasibility for every solve
+  (the search counts both as infeasible and never retries them) and `unknown` only when
+  it is kept for a retry; the movement's total solver seconds; a families table (the
+  alternatives that differ only in when they switch obstacle sides, each switch
+  named by its input, with the switches the climb solved, the best one and how many
+  were never solved); the kept alternative and its fallbacks (the last leg keeps
+  none); and the unresolved or pending alternatives.
+
+A request's `owners` are the routes whose repair log holds its problem hash; an
+empty list means no saved route kept that solve. The `stop` report lists suspended
+frames with their unresolved and pending alternatives, the routes closed because
+every alternative is infeasible, and the owners of every request without a solution.
+The `Linear pre-checks` line under it counts the linear control relaxation LPs of the
+run (`interactionGate.linear`, also `summary.json` `linearChecks`, split by whether the
+LP carried IPOPT's objective): solved, served from cache, proved infeasible, undecided
+by the LP solver (counted as not ruled out) and retried with interior point. The trace is a pure
+function of the saved search state, so regenerating it never changes a run.
+
 ## Failure investigation workflow
 
 1. Fix the claim and context: cold discovery, seeded control, prefix, terminal objective or actual replay? Record fixture revision, allowed choices, scope and source hash.
@@ -74,7 +132,7 @@ Use existing `generation_diagnostic`, `audit_generation`, `CountingCompiler` and
 Preserve plain/gzip JSON, exact constraints, source hashes, command/settings, wall and worker time, and any replay checks. Gzip evidence should use deterministic `mtime=0`; JSON must reject NaN/Infinity. Never round coordinates before re-evaluating a tight constraint. New outputs belong in new paths, with a manifest when archived. Historical source hashes are not updated just because explanatory documentation changes.
 
 
-## Current DFS reports (schema5)
+## DFS reports
 
 `result.searchState` contains `stack`, archived `frames`, `suspended`, deferred `refinements`, ordered `transitions`, `initialRoots`, cumulative calls and the incumbent. Frames name their shared spatial goal and retain parents, a symbolic generator/cursor, unscored `ready` programs, scored `records` and `inFlight`. A frame may be archived as history, but has only one execution owner among active/suspended/refinement queues. Reports' old `windows` fields are selected-goal diagnostics, not breadth barriers.
 

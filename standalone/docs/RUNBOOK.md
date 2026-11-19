@@ -63,9 +63,9 @@ From `standalone/` with the environment above:
 "$PKC_IPOPT_PYTHON" -B -m unittest discover -s tests -t .
 ```
 
-The explicit gate preserves the earlier600-test module scope and package/profiler
-checks; added regressions increase the total (611 in the latest longer-Real11
-gate). Full discovery additionally includes dedicated ladder/climbable/vine
+The explicit gate maintains the selected native module scope plus package,
+profiling and avoidance-generation/continuation controls; added regressions
+increase the total. Full discovery additionally includes dedicated ladder/climbable/vine
 capabilities and their recorded baseline; it is a different scope. Native
 variables absent means skips, not native acceptance. See [testing](TESTING.md).
 Use a new gate directory; its report records source hashes, source stability,
@@ -97,6 +97,30 @@ includes each face's normal, plane, exact rectangle cover and source parts. The
 preserve original member regions, internal-face clipping, holes and catalog
 identity. These physical covers are separate from the player-expanded bounds.
 
+## Run a solve and report it
+
+Set the environment above, then run the profiled solve into a new directory. It
+writes `report.md` (the readable per-route report) next to its JSON outputs:
+
+```sh
+"$PKC_IPOPT_PYTHON" -B -m tools.profiling.run \
+  --input cases/real11/physical-anchors.json --output runs/<new-name> \
+  --seconds 300 --profile-mode bookkeeping
+```
+
+Regenerate `report.md` and `routes.json` for a finished profiled run, or write
+them for a saved report from `python -m parkour_solver`:
+
+```sh
+"$PKC_IPOPT_PYTHON" -B -m tools.profiling.trace runs/<run-name>
+"$PKC_IPOPT_PYTHON" -B -m tools.profiling.trace /path/to/report.json.gz --output /path/to/dir
+```
+
+A report written from a bare solve report has no request numbers or IPOPT
+statuses, which only the profiler records. [Results and debugging](RESULTS_AND_DEBUGGING.md#solve-reports)
+explains every output. `runs/` is ignored by git; copy evidence worth keeping
+into `research/` with its provenance.
+
 ## Current physical-anchor solve, profile and resume
 
 [Execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) describes current
@@ -124,6 +148,19 @@ settings, instrumentation/source/configuration hashes, work counters and
 independent retained-witness replay; inclusive timings overlap. Profiling overhead
 and local solver behavior affect the work fitting a time budget. No archived
 facings or trajectories are seeded into a cold profile.
+
+Physical anchor mode uses `seconds` and `max_solver_calls` for the whole session,
+and `candidate_seconds` for each numerical request. Legacy `score_seconds`,
+`score_call_limit` and `final_call_limit` settings remain accepted for older input
+files but do not limit anchor search. Non-anchor modes retain their existing
+service budgets. Changing these budgets does not change physical model identities
+or invalidate compatible checkpoints; it can change work reached before timeout.
+
+Avoidance uses global budgets as well: obsolete local repair/passage fields are
+removed during normalization. Constraint policy12/state8 and repair assembly13
+change the continuation context; old face-generator queues require their original
+source checkout. Current generated descriptions use phase spans and actual rows,
+as described in the [avoidance contract](design/AVOIDANCE_PASSAGES.md).
 
 `--resume` restores saved search state only when its exact context matches.
 Compatible JSON/shared-store identities are preserved by this folder move; solver

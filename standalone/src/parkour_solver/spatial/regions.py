@@ -9,6 +9,7 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass, field
 
+from parkour_solver.scene.geometry import thin
 from parkour_solver.spatial.cells import Cell, cell_portals, contains, dimension, intersection, merge_boxes, subtract_open
 
 
@@ -22,10 +23,11 @@ def geometry_key(value):
 
 
 def canonical_cover(boxes):
-    """Canonical closed planar X/Z union, retaining uncovered lines/points.
+    """Canonical closed planar X/Z union of the rectangles that are not thin.
 
     Sweep X strips, union their Z intervals, merge equal consecutive coverage.
-    This removes encoding seams without filling holes or concavities.
+    This removes encoding seams without filling holes or concavities. Lines,
+    points and slivers narrower than the minimum free width are artifacts.
     """
     boxes = sorted(set(tuple(b) for b in boxes))
     if not boxes:
@@ -49,40 +51,8 @@ def canonical_cover(boxes):
             strips[-1] = (strips[-1][0], xx, coverage)
         elif coverage:
             strips.append((x, xx, coverage))
-    result = [(x, height, z, xx, height, zz) for x, xx, intervals in strips for z, zz in intervals]
-    # Preserve lower-dimensional free strata not covered by the area union.
-    # Sweep each line at all union endpoints before discarding covered pieces.
-    lines = {}
-    points = []
-    for b in boxes:
-        if b[0] < b[3] and b[2] < b[5]:
-            continue
-        axis = 0 if b[0] < b[3] else 2
-        if b[axis] == b[axis + 3]:
-            points.append(b)
-        else:
-            other = 2 if axis == 0 else 0
-            lines.setdefault((axis, b[other]), []).append((b[axis], b[axis+3]))
-    for (axis, fixed), intervals in sorted(lines.items()):
-        other = 2 if axis == 0 else 0
-        cuts = sorted({v for lohi in intervals for v in lohi} |
-                      {b[a] for b in result if b[other] <= fixed <= b[other+3] for a in (axis, axis+3)})
-        kept = []
-        for lo, hi in zip(cuts, cuts[1:]):
-            if not any(a <= lo and hi <= b for a, b in intervals):
-                continue
-            if any(b[other] <= fixed <= b[other+3] and b[axis] <= lo and hi <= b[axis+3] for b in result):
-                continue
-            if kept and kept[-1][1] == lo:
-                kept[-1] = (kept[-1][0], hi)
-            else:
-                kept.append((lo, hi))
-        for lo, hi in kept:
-            b = [fixed, height, fixed, fixed, height, fixed]
-            b[axis], b[axis+3] = lo, hi
-            result.append(tuple(b))
-    result.extend(b for b in points if not any(contains(a, b[:3]) for a in result))
-    return tuple(sorted(set(result)))
+    return tuple(sorted({(x, height, z, xx, height, zz) for x, xx, intervals in strips for z, zz in intervals
+                         if not thin(xx-x) and not thin(zz-z)}))
 
 
 @dataclass(frozen=True)
@@ -354,14 +324,13 @@ def annotate_normal_proposals(scene, graph, compiler, *, seconds):
     from parkour_solver.movement.generation import generate_choices
     from parkour_solver.movement.settings import movement_settings
     from parkour_solver.movement.normal import approaches, first_descent
+    from parkour_solver.reachability.intervals import motion_bound, travel_radii
     deadline=time.monotonic()+seconds
     def remaining():
         if time.monotonic()>=deadline:
             raise TimeoutError('spatial_proposal_deadline')
         return deadline-time.monotonic()
-    sample=compiler.compile(dict(scene,sharedMovement=True),dict(grounded=[True,True,False],jump=[False,True,False]),remaining())
-    speed=max(math.hypot(*scene['initial']['velocity'][::2]),
-              max(f*m/(1-f) for m,f in zip(sample['magnitude'],sample['friction'])))+1e-8
+    speed=motion_bound(scene,compiler,remaining())['storedSpeedNorm']
     horizon=movement_settings(scene)['maxInputs']
     bounds={s.key:[(b[0],b[3],b[2],b[5]) for b in s.cover] for s in graph.supports}
     flights={}
@@ -376,14 +345,12 @@ def annotate_normal_proposals(scene, graph, compiler, *, seconds):
         key=(tuple(grounded),tuple(jump))
         if key not in flights:
             flight=compiler.compile(dict(scene,sharedMovement=True),dict(grounded=grounded,jump=jump),remaining())
-            radius=0.;carry=speed
-            for magnitude,friction in zip(flight['magnitude'],flight['friction']):
-                move=carry+magnitude;radius+=move;carry=move*friction
+            radius=travel_radii(speed,flight['magnitude'],flight['friction'])[-1]
             flights[key]=radius+1e-7*(1+radius)
         return flights[key]
     for source in graph.supports:
         state=dict(position=source.height,velocity=REST_CARRY,onGround=True,previousHorizontalCollision=False)
-        ctx=dict(mode='open',scene=scene,state=state,maxInputs=horizon,threshold=0.,checkBudget=remaining)
+        ctx=dict(mode='open',scene=scene,state=state,maxInputs=horizon,threshold=0.,checkBudget=remaining,interactionGate=None)
         air=dict(maxY=source.height,normalFinish=False,evidence='normal_proposal_only')
         for _,jumping,trace in approaches(ctx):
             air['maxY']=max(air['maxY'],max(trace['position']))

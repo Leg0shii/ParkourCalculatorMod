@@ -1,7 +1,13 @@
 # Anchor search: combinations, pruning and IPOPT dispatch
 
-Current runtime: `dd738c98` (2026-11-11). This is the current execution reference
-for physical required-anchor search. The [detailed implementation record](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
+Avoidance follow-up: [geometry-driven phase covers](design/AVOIDANCE_PASSAGES.md)
+replace full-horizon permutations and local repair/passage caps, carrying tightened
+bounds into downstream generation. Constraint policy12/state8 and repair assembly13
+are current. The measured source-era tables below retain their original settings;
+[replacement evidence](../research/geometry-passages/README.md) records the new run.
+
+Runtime described: `perf/early-passage-screen` at `7e4d85d4`; measured tables keep their source revisions. This is the current execution reference
+for physical required-anchor search. The [detailed implementation record](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
 contains the design/caller migration; [measured evidence](../research/hard-jump-comparisons/README.md)
 contains source hashes, fixtures and validation. Historical supplied-corridor,
 virtual-finish and common-clock experiments retain their own policies.
@@ -35,12 +41,12 @@ service before wall/call/catalogue caps. IPOPT never chooses these discrete meth
 | `S → air → E` or run-off/continuation | Normal free movement from the actual scalar boundary; ordinary grounded approaches consider jump and nonjump outcomes, airborne ones do not invent grounded impulses. | Scalar landing clock, supports and reachability. A completed hard transfer must have exactly one transfer jump, so pure run-off cannot satisfy it. | Eligible selected meaningful landing/contact or anchor query; no per-air-input NLP. |
 | Named stepping: normal step, slab boost, corner cancel, blip/up/corner variants | Existing case builders fix the contact outcome and corresponding physical rows; enabled cases depend on scene/generator settings. | Cheap height/owner checks, shared approach reachability, then the common joint outcome before side/corner fan-out where applicable. Unknown named probe heights retain coverage. | Surviving selected cases can reach numerical evaluation in generic/unlatched movement or permitted source preparation. Completed stepped transfers cannot establish/satisfy a hard latch. |
 | Lower/higher blip pair with 8 wall choices or 4 corner choices | First build one shared scalar outcome per case and test its jointly required contacts/rows. | If the conjunction is ruled out, build no side variants for that case. B3@28 rejects both common outcomes before the old8+4 fan-out. | No worker for a rejected common outcome. Surviving variants still require fixed-model screening/selection. |
-| Ceiling clip or launch grind | Existing ceiling family when enabled; fixed contact/case history. | Shared eligibility and scene checks. A possible/unknown shortening ceiling disables the ordinary-flight contribution for that transfer. | Eligible selected choices can reach a worker. Real11's current fixture enables normal/stepping, not the ceiling generator. |
-| Go left/right around an obstacle; different switch/contact times | `ConstraintVariants` and repair enumerate physical avoidance/contact alternatives, not only landing blocks. | Scoped relevance removes absent unwanted contacts; canonicalization merges identical effective models; new rows get new reachability checks. | A surviving concrete variant may produce a numerical call. No discrete side/corner variable is left for IPOPT to select. |
+| Ceiling clip or launch grind | Existing ceiling family when enabled; fixed contact/case history. | Shared eligibility and scene checks. A possible/unknown shortening ceiling disables the ordinary-flight contribution for that transfer. | Eligible selected choices can reach a worker. The maintained Real11 case enables normal, stepping and ceiling movement. |
+| Go left/right around an obstacle; different phase timings | `constraints/encounters.py` prepares one phase cover per box encounter and landing segment; `ConstraintVariants` conditions later domains on earlier rows. Upfront generation and collision repair share this builder. | Scoped relevance removes absent unwanted contacts; canonicalization merges identical effective models; new rows get new reachability checks. | A surviving concrete variant may produce a numerical call. No discrete side/corner variable is left for IPOPT to select. |
 | Compound choice arriving at E before an unused tail ends | Derive the actual owned E prefix, with only its committed rows/events and its own T/J/R/A. | Check owned prefix separately. Rejection of an unused extension is scoped to the extension. | Valid owned arrival remains eligible; an impossible tail does not force its rejection. Legacy fixed-checkpoint controls retain their full-first checks. |
 | `S → C → S`, or revisiting a departed owner | Not generated in the current physical-anchor domain. Same-owner patches are tracked by physical owner. | Departed-owner filter plus emitted-program audit. Repeated required anchors are also unsupported. | No. Current-owner `S→S` hops are different and remain legal. |
 | Arbitrary intentional wall-hit combinations | Deferred feature; named cases can still carry their required finite contact. | No new intentional-hit generator in this feature. | Not an additional search family. |
-| First jump at9/10/11 rather than0/8 | The maintained Real11 case has no whitelist; archived controls retain `[0,8]`. | Shared physical screening, hard-anchor peer deferral and strict finish bounds choose work. Explicit `initialJumpInputs` remains available for controlled experiments. | In the unrestricted control, first0/8 were queried;9–12 arrivals were recoverably deferred before numerical work. See [audit](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md). |
+| First jump at9/10/11 rather than0/8 | The maintained Real11 case has no whitelist; archived controls retain `[0,8]`. | Shared physical screening, hard-anchor peer deferral and strict finish bounds choose work. Explicit `initialJumpInputs` remains available for controlled experiments. | In the unrestricted control, first0/8 were queried;9–12 arrivals were recoverably deferred before numerical work. See [audit](DECISIONS_AND_PLANS.md). |
 
 Ordinary landing durations are not independent air-tick permutations. The model
 finds the descending support-height crossing, then choices compose that history.
@@ -52,17 +58,17 @@ a no-stepping/no-shortening-ceiling flight between fixed heights.
 | Boundary | Decision and evidence | Fate of the work | IPOPT worker at this boundary? |
 | --- | --- | --- | --- |
 | Domain / ownership | Enabled movement types, requested caps, initial-jump domain, required order, departed owners, learned hard structure. | Outside-domain proposals are excluded. Caps are limits, not physical-impossibility proofs. | No. |
-| Early producer prerequisite | Shared `InteractionGate` approach and common-case checks. Required conjunction absent means reject that proposal; unwanted contact absent means omit its avoidance alternatives. | Retain unknowns; budget/timeout does not become absence. | No; Java coefficient compilation and interval/optional LP work are analytical preparation. |
+| Early producer prerequisite | Shared `InteractionGate` approach and common-case checks. Required conjunction absent means reject that proposal; unwanted contact absent means omit its avoidance alternatives. Top and underside contacts are checked per rectangle, so an unreachable rectangle is never a walk decision. | Retain unknowns; budget/timeout does not become absence. | No; Java coefficient compilation and interval/optional LP work are analytical preparation. |
 | Composition / owned projection | Compose once at stable raw ordinal; identify first actual owned anchor arrival; preserve row/event ownership. | Keep owned model independently of unused-tail evidence. Persist projection flag/cursor across JSON resume. | No. |
-| Fixed-model screen | Scalar validity, initial-floor guard, required-event envelopes and optional optimistic LP exclusion for the exact effective model. | Reject only the checked proposal/model. Changed rows/projections need their own analysis. | No. The optimistic LP is not the nonlinear IPOPT solve. |
+| Fixed-model screen | Scalar validity, initial-floor guard, required-event envelopes, propagated reach/travel bounds and optional optimistic LP exclusion. Accumulated obstacle rows are screened before downstream generation and again when more rows are added. | Reject only the checked proposal/model. Changed rows/projections need their own analysis; separate passes do not establish joint feasibility. | No. The optimistic LP is not the nonlinear IPOPT solve. |
 | Global finish bound | Compare current `T + max(H,V)` with the one best validated full finish. | Exclude only if strictly greater; equality remains eligible. No queue-wide bound refresh. This overrides local count protection. | No. |
 | Local hard-arrival peer comparison | One compatible validated peer must be strictly earlier, with no more-J or lower-cost protection for the candidate. | **Recoverably defer**, retaining exact program/ownership/proof. Open prefixes and unlatched spans are not suppressed by this arrival rule. | No. |
 | Queue selection | Shared ordinary/turn priority; inspect saved lifecycle flags; lazily recheck selected work against current peers/incumbent. | Descend via DFS; unselected alternatives remain queued/preserved. Priority alone is not a deferral proof. | No. |
 | Selected meaningful internal decision | Default cadence1 since last solved completed movement decision; retain prior contacts/anchors but omit the pending end-anchor predicate. | Evaluate exact node from original state. Reuse saved exact feasible/rejected node result where applicable; unknown work remains saved. | Possibly. Eligible solve preparation can still screen/block before a wrapper call. |
-| Required anchor arrival | Query the actual achieved anchor clock, regardless of cadence. | Guided early-stop feasibility and physical validation; validated arrival can learn hard topology and become peer evidence. | Possibly. A valid seed can satisfy early-stop mode without launching a worker. |
+| Required anchor arrival | Query the actual achieved anchor clock, regardless of cadence. | Optimize the onward guide objective over the alternatives the switch-tick climb visits, keep the best and up to two close fallbacks; physical validation; validated arrival can learn hard topology and become peer evidence. | Yes for every visited alternative; screens and caps can still prevent a call. |
 | Final physical landing | Optimize configured terminal objective at fixed candidate T; outer search compares actual T first, then terminal objective. | Update the single validated incumbent. There is no fixed64 target and no maximum-Z-at64 task. | Normally for surviving terminal variants: `stopOnFeasible=False`, so a feasible seed does not replace optimization. Caps/screens may prevent a call. |
-| Rejected / suspended result | Distinguish exact operational oracle rejection, exhausted repair catalogue, unresolved/budget/error and feasible evidence. A constraint generator exhausted before emitting any numerical branch is also exhausted when no pending/in-flight/unresolved repair remains. | Only the exact solved model receives its rejection. Empty-domain exhaustion backtracks its node without inventing an IPOPT rejection. A failed child never invalidates an unqueried ancestor. | No additional ancestor-probing pass. |
-| Feasibility recovery | Definite required-continuation failure plus drained runnable first-class work in its owning context; successful finish alone does not reopen slower work. | Restore one eligible saved alternative with frame-scoped bypass. Skip globally excluded alternatives; reuse matching saved witness when available. Keep all hard/cap/order limits. | Only if restored work needs a query; not automatically on every restoration. |
+| Rejected / suspended result | Distinguish exact operational oracle rejection, exhausted repair catalogue, unresolved/budget/error and feasible evidence. A constraint generator exhausted before emitting any numerical branch is also exhausted when no pending/in-flight/unresolved repair remains. An alternative whose every attempt the pre-solve check on its compiled problem blocked keeps those certificates and is `proven`, never unresolved; with oracle rejection a node closes when each alternative is oracle-rejected or proven. | Only the exact solved model receives its rejection. Empty-domain exhaustion backtracks its node without inventing an IPOPT rejection. A failed child never invalidates an unqueried ancestor. | No additional ancestor-probing pass. |
+| Feasibility recovery | Definite required-continuation failure plus drained runnable first-class work in its owning context; successful finish alone does not reopen slower work. | First restore the next fallback of a failed record (`failedCandidates`, in failure order, transition `restore_alternative`); only when none remains restore one eligible saved slower run-tick alternative with frame-scoped bypass. Skip globally excluded alternatives; reuse matching saved witness when available. Keep all hard/cap/order limits. | Only if restored work needs a query; not automatically on every restoration. |
 
 A **candidate evaluation**, **solver wrapper invocation** and **worker launch** are
 three counts. One evaluation can enumerate several fixed variants, be screened,
@@ -157,7 +163,7 @@ keys or adding a pose constraint. No mixed or uncertainty mode exists.
 | Restore slower unprotected work only on actual feasibility fallback | Extra preparations should remain reconstructable without consuming routine improvement search after success. | Lossless saved alternatives, one-at-a-time restoration, scoped bypass and failed-edge cause. |
 | One incumbent, lazy strict bound checks | Queue-wide rescans repeated unnecessary work and equality can improve Z. | Check new/selected candidates only; strict greater-than cutoff; no incumbent-triggered queue scan. |
 | Shared prerequisite/model preparation | Independent lower/higher tests allowed jointly impossible stepping cases to fan out; identical screens/compiles were repeated. | `InteractionGate` owns preparation/coefficients/analyses; common-case check precedes fan-out; model-changing rows retain separate keys. |
-| Guided intermediate feasibility | Early stopping is fast; configured onward objective can guide the witness when a worker is needed. | `objectiveMode=configured`, `stopOnFeasible=True`; valid seed may return without improving progress. No constant-zero default or slack proxy. |
+| Feasibility never chooses | A first feasible alternative is an arbitrary choice; comparing alternatives needs their optimized objectives. | Anchor legs use `stopOnFeasible=False`, `rankEqualCost=True` with the switch-tick climb; decision checks keep `stopOnFeasible=True` and commit none of their alternative's rows. No constant-zero default or slack proxy. |
 | Normal exact-node queries at cadence1 | Reject a selected impossible action before extending it, with unambiguous ownership. | No raw-hold NLPs or separate ancestor tests. Cadence2/4 remains a future measured tradeoff. |
 | Binary spatial turnaround, observable | A single decision needs one clear priority; witness positions can change on later re-solves. | One110° edge+margin classification, frozen key, distances/query/replay-flip records. Preliminary heuristic, not a completeness theorem. |
 | No inter-block revisits yet | Cyclic histories enlarge the decision domain and need dedicated repeat-family design. | Departed-owner filter; same-owner hops remain. [Revisit plan](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md) stays deferred. |
@@ -167,10 +173,10 @@ keys or adding a pose constraint. No mixed or uncertainty mode exists.
 
 | Owner | Current responsibility |
 | --- | --- |
-| [`event_search`](../src/parkour_solver/search/events/engine.py), [`anchor_adapter`](../src/parkour_solver/search/anchors/adapter.py) | Physical automatic dispatch, required-anchor frames, immutable stage objectives, internal slices sharing owned live state. |
+| [`event_search`](../src/parkour_solver/search/events/engine.py), [`anchor_adapter`](../src/parkour_solver/search/anchors/adapter.py) | Physical automatic dispatch, required-anchor frames, immutable stage objectives, continuous anchor DFS under the session budget. |
 | [`anchor_policy`](../src/parkour_solver/search/anchors/policy.py) | Owner visits, required order/caps, source preparation versus hard transfer; hard policy3. |
 | [`search.comparison`](../src/parkour_solver/search/comparison.py) | Sole intermediate count/key, OR-protection, peer verdict and strict-incumbent predicate owner; comparison policy1. |
-| [`depth_first`](../src/parkour_solver/search/dfs.py), [`search.deferrals`](../src/parkour_solver/search/deferrals.py) | Traversal, validated peer index, single `minimumRunExclusions` compatibility table, selected-only checks and recovery. |
+| [`depth_first`](../src/parkour_solver/search/dfs.py), [`search.deferrals`](../src/parkour_solver/search/deferrals.py) | Traversal, validated peer index, single `minimumRunExclusions` compatibility table, selected-only checks and recovery. Generator contexts set `regionItems`, so a contact on a face of several rectangles keeps the rectangle open as a `regionChoices` entry; a kept leg closes the entries it solved (their rows become retained constraints), a decision check keeps them open, and a restored fallback keeps its own rectangle. The run-tick deferral (`compat/minimum_runs`, policy3) never defers across an open entry in the ground hold and keys entries after takeoff into the pattern. Every landing, step and named case onto the goal block carries the goal block's exposed top itself; there is no separate goal-region item, so decision checks apply it too. |
 | [`movement.generation`](../src/parkour_solver/movement/generation.py), [`search.frontier`](../src/parkour_solver/search/frontier.py) | Shared composition/assessment, owned endpoints, raw ordinals, projected flag, queued nodes and `nodeInFlight`. |
 | [`reachability.service`](../src/parkour_solver/reachability/service.py), [`bridge.compiler`](../src/parkour_solver/bridge/compiler.py) | Disposable bounded session cache for preparation, canonical coefficient payloads, exact envelopes/screens and common-case eligibility; proof policy2. |
 | [`reachability.intervals`](../src/parkour_solver/reachability/intervals.py), [`reachability.linear`](../src/parkour_solver/reachability/linear.py) | Conservative phase envelopes and optional optimistic LP; named internal probe uncertainty retained. |
@@ -181,19 +187,19 @@ keys or adding a pose constraint. No mixed or uncertainty mode exists.
 | [`numerics.solver`](../src/parkour_solver/numerics/solver.py), [`search.ranking`](../src/parkour_solver/search/ranking.py) | Seed check/worker lifecycle/scalar validation; terminal actualT/objective ranking stays distinct from intermediate J/R/A policy. |
 
 Physical automatic continuation is outer schema2 / DFS8 / movement context4 /
-repair assembly9. Hard3/search5/comparison1/guide2/proposal1 semantics participate
+repair assembly13. Hard3/search5/comparison1/guide2/proposal1 semantics participate
 in the relevant context fingerprints. Matching schema numbers alone do not make
 an older checkpoint compatible. Old wrong-policy exact continuations reject;
 checkpoint storage format stays version1. Never redirect work to an old checkout
 because a source-era handoff contains its absolute path.
 
-## Current Real11 domain and measured work
+## Real11 domain and work measured at `dd738c98`
 
 The [fixture](../research/anchor-feasibility/real11-anchors.json) declares
 B2/B3/B4/B5 anchors, normal+stepping generators, horizon200,
 64 total/per-jump run cap, 2,048 prefix cap, 32 contact branches, 128 passage
 candidates, cadence1, 2s candidate and8s score slices, 1,024 wrapper-call guard.
-These caps/domain choices are not proofs that excluded alternatives cannot help.
+These caps/domain choices are not proofs that excluded alternatives cannot help. The contact-branch and passage caps and the score slices no longer exist; see [avoidance passages](design/AVOIDANCE_PASSAGES.md).
 Normal momentum remains; inertia thresholds are zero. No B6 replacement bounds
 have been supplied, so validation uses the stored B6 geometry.
 
@@ -229,7 +235,7 @@ cost milliseconds in the profile. Remaining wall cost is mostly numerical
 preparation/refinement, digesting and retained-state copying. The simultaneous
 feature changes do not isolate each change's individual causal contribution.
 
-600 native-enabled tests pass without skips; all131 archived T67/T64 prefix
+At `dd738c98`, 600 native-enabled tests passed without skips; all131 archived T67/T64 prefix
 bounds and80 post-change retained-witness scene replays pass. Timings include
 instrumentation; the early combined arm overlapped a read-only audit. See the
 [evidence README](../research/hard-jump-comparisons/README.md) for

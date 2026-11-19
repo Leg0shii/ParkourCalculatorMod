@@ -1,0 +1,278 @@
+faces,switches,early_check,linear_check,full_pre_solver_check
+Z- -> X-,61,not_ruled_out,not_ruled_out,not_ruled_out
+Z- -> X-,62,not_ruled_out,not_ruled_out,not_ruled_out
+Z- -> X-,60,not_ruled_out,not_ruled_out,not_ruled_out
+Z- -> X-,63,not_ruled_out,not_ruled_out,not_ruled_out
+Z- -> X-,59,not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Z- -> X-,64,not_ruled_out,not_ruled_out,not_ruled_out
+Z- -> X-,0,not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X-,58,not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X-,65,not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Z- -> X-,"0,61",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Z- -> X-,"0,62",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Z- -> X-,"0,60",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Z- -> X-,"0,63",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Z- -> X-,"0,59",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+X- -> Z- -> X-,"0,64",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Z- -> X-,"0,0",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"0,58",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"0,65",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Z- -> X-,"59,61",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"59,62",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"59,60",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"59,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"59,59",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"59,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"59,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"60,61",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"60,62",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"60,60",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"60,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"60,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"60,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"61,61",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"61,62",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"61,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"61,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"61,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"62,62",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"62,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"62,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"62,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"63,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"63,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"63,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"64,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"64,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z- -> X-,"65,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X+ -> Z- -> X-,"59,61",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"59,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"59,60",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"59,63",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+X+ -> Z- -> X-,"59,59",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"59,64",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+X+ -> Z- -> X-,"59,65",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+X+ -> Z- -> X-,"60,61",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"60,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"60,60",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"60,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"60,64",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+X+ -> Z- -> X-,"60,65",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+X+ -> Z- -> X-,"61,61",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"61,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"61,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"61,64",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"61,65",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+X+ -> Z- -> X-,"62,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"62,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z- -> X-,"62,64",not_ruled_out,not_ruled_out,interval_reach_contradiction
+X+ -> Z- -> X-,"62,65",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X-,"0,61",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> Z- -> X-,"0,62",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> Z- -> X-,"0,60",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> Z- -> X-,"0,63",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> Z- -> X-,"0,59",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> Z- -> X-,"0,64",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> Z- -> X-,"0,0",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X-,"0,58",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X-,"0,65",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Y- -> Z- -> X-,"0,1,61",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Y- -> Z- -> X-,"0,1,62",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Y- -> Z- -> X-,"0,1,60",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Y- -> Z- -> X-,"0,1,63",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Y- -> Z- -> X-,"0,1,59",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+X- -> Y- -> Z- -> X-,"0,1,64",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Y- -> Z- -> X-,"0,1,1",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Y- -> Z- -> X-,"0,1,58",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Y- -> Z- -> X-,"0,1,65",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> X+ -> Z- -> X-,"0,0,61",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> X+ -> Z- -> X-,"0,0,62",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> X+ -> Z- -> X-,"0,0,60",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> X+ -> Z- -> X-,"0,0,63",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> X+ -> Z- -> X-,"0,0,59",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> X+ -> Z- -> X-,"0,0,64",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> X+ -> Z- -> X-,"0,0,0",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,0,58",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,0,65",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> X+ -> Z- -> X-,"0,59,61",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,59,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,59,60",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,59,63",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> X+ -> Z- -> X-,"0,59,59",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,59,64",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> X+ -> Z- -> X-,"0,59,65",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> X+ -> Z- -> X-,"0,60,61",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,60,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,60,60",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,60,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,60,64",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> X+ -> Z- -> X-,"0,60,65",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> X+ -> Z- -> X-,"0,61,61",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,61,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,61,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,61,64",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,61,65",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> X+ -> Z- -> X-,"0,62,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,62,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,62,64",not_ruled_out,not_ruled_out,interval_reach_contradiction
+Y- -> X+ -> Z- -> X-,"0,62,65",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"61,67",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Z- -> X- -> Z+,"61,66",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Z- -> X- -> Z+,"61,65",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"61,64",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"61,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"61,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"62,67",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Z- -> X- -> Z+,"62,66",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"62,65",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"62,64",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"62,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"60,67",not_ruled_out,not_ruled_out,not_ruled_out
+Z- -> X- -> Z+,"60,66",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Z- -> X- -> Z+,"60,65",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Z- -> X- -> Z+,"60,64",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"60,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"60,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"63,67",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"63,66",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"63,65",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"63,64",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"59,67",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Z- -> X- -> Z+,"59,66",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Z- -> X- -> Z+,"59,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"59,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"59,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"59,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"64,67",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"64,66",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"64,65",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"0,67",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"0,66",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"0,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"0,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"0,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"0,62",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"58,67",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"58,66",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"58,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"58,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"58,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"58,62",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z+,"65,67",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X- -> Z+,"65,66",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,61,67",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> Z- -> X- -> Z+,"0,61,66",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> Z- -> X- -> Z+,"0,61,65",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,61,64",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,61,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,61,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,62,67",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> Z- -> X- -> Z+,"0,62,66",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,62,65",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,62,64",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,62,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,60,67",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> Z- -> X- -> Z+,"0,60,66",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> Z- -> X- -> Z+,"0,60,65",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> Z- -> X- -> Z+,"0,60,64",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,60,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,60,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,63,67",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,63,66",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,63,65",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,63,64",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,59,67",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> Z- -> X- -> Z+,"0,59,66",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> Z- -> X- -> Z+,"0,59,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,59,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,59,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,59,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,64,67",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,64,66",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,64,65",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,0,67",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,0,66",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,0,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,0,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,0,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,0,62",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,58,67",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,58,66",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,58,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,58,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,58,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,58,62",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,65,67",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X- -> Z+,"0,65,66",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X-,,not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> X-,0,not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Y- -> X-,"0,1",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"66,66",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"65,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"65,66",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"64,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"64,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"64,66",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"63,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"63,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"63,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"63,66",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"62,62",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"62,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"62,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"62,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+ -> X-,"62,66",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X+ -> Z+ -> X-,"62,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z+ -> X-,"62,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z+ -> X-,"62,64",not_ruled_out,not_ruled_out,interval_reach_contradiction
+X+ -> Z+ -> X-,"62,65",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+X+ -> Z+ -> X-,"62,66",not_ruled_out,not_ruled_out,not_ruled_out
+Y- -> X+ -> Z+ -> X-,"0,62,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z+ -> X-,"0,62,63",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z+ -> X-,"0,62,64",not_ruled_out,not_ruled_out,interval_reach_contradiction
+Y- -> X+ -> Z+ -> X-,"0,62,65",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> X+ -> Z+ -> X-,"0,62,66",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Z+,67,not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+,66,not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+,65,not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+,64,not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+,63,not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X- -> Z+,62,not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> X- -> Z+,"0,67",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> X- -> Z+,"0,66",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> X- -> Z+,"0,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> X- -> Z+,"0,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> X- -> Z+,"0,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> X- -> Z+,"0,62",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X+ -> Y- -> X- -> Z+,"0,1,67",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X+ -> Y- -> X- -> Z+,"0,1,66",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X+ -> Y- -> X- -> Z+,"0,1,65",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X+ -> Y- -> X- -> Z+,"0,1,64",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X+ -> Y- -> X- -> Z+,"0,1,63",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X+ -> Y- -> X- -> Z+,"0,1,62",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z-,"61,67",not_ruled_out,not_ruled_out,not_ruled_out
+Z- -> X- -> Z-,"62,67",not_ruled_out,not_ruled_out,not_ruled_out
+Z- -> X- -> Z-,"60,67",not_ruled_out,not_ruled_out,not_ruled_out
+Z- -> X- -> Z-,"63,67",not_ruled_out,not_ruled_out,not_ruled_out
+Z- -> X- -> Z-,"59,67",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Z- -> X- -> Z-,"64,67",not_ruled_out,not_ruled_out,not_ruled_out
+Z- -> X- -> Z-,"0,67",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z-,"58,67",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X- -> Z-,"65,67",not_ruled_out,not_ruled_out,not_ruled_out
+X- -> Z-,67,not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> X- -> Z-,"0,67",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+X+ -> Y- -> X- -> Z-,"0,1,67",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Y- -> Z+ -> X- -> Z-,"0,0,67",not_ruled_out,linear_control_relaxation_infeasible,norm_reach_contradiction
+Z- -> X+ -> Z+,"61,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X+ -> Z+,"60,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X+ -> Z+,"59,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Z- -> X+ -> Z+,"0,62",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Z- -> X+ -> Z+,"58,62",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> Z- -> X+ -> Z+,"0,61,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X+ -> Z+,"0,60,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X+ -> Z+,"0,59,62",not_ruled_out,linear_control_relaxation_infeasible,interval_reach_contradiction
+Y- -> Z- -> X+ -> Z+,"0,0,62",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> Z- -> X+ -> Z+,"0,58,62",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+X+ -> Z+,62,not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+Y- -> X+ -> Z+,"0,62",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible
+X- -> Y- -> X+ -> Z+,"0,1,62",not_ruled_out,linear_control_relaxation_infeasible,linear_control_relaxation_infeasible

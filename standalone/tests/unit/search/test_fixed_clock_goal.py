@@ -23,7 +23,7 @@ class FixedClockTests(unittest.TestCase):
         policy=SupportOrder(scene,['goal'],32)
         def first(priority):
             g=iter_movement_programs(scene,checkpoint_tick=16,threshold=0.,stop_on_goal=False,
-                deadline=time.monotonic()+2,program_priority=priority)
+                deadline=time.monotonic()+2,program_priority=priority,context_adapter=lambda c:c.update(interactionGate=None))
             try:return next(g)
             finally:g.close()
         ordinary,ranked=first(None),first(policy.priority)
@@ -50,9 +50,9 @@ class FixedClockTests(unittest.TestCase):
         seed=next(p for p in programs(scene,1) if p['profile']['grounded'][-1])
         seed['terminalSupport']=scene['goalBlock']
         old=list(itertools.islice(iter_movement_programs(scene,initial_programs=[seed],threshold=0.,
-            checkpoint_tick=2,deadline=time.monotonic()+2),1))
+            checkpoint_tick=2,deadline=time.monotonic()+2,context_adapter=lambda c:c.update(interactionGate=None)),1))
         new=list(itertools.islice(iter_movement_programs(scene,initial_programs=[seed],threshold=0.,
-            checkpoint_tick=2,deadline=time.monotonic()+2,stop_on_goal=False),1))
+            checkpoint_tick=2,deadline=time.monotonic()+2,stop_on_goal=False,context_adapter=lambda c:c.update(interactionGate=None)),1))
         self.assertEqual(old[0]['profile']['airtime'],1)
         self.assertEqual(new[0]['profile']['airtime'],2)
 
@@ -94,7 +94,8 @@ class FixedClockNumericalTests(unittest.TestCase):
         from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
         from parkour_solver.validation.scoped_scene import CorridorAdapter
         from parkour_solver.search.work import SearchWork
-        from parkour_solver.search.engine import evaluate_program, _motion_bound
+        from parkour_solver.search.engine import evaluate_program
+        from parkour_solver.reachability.intervals import motion_bound
         from parkour_solver.movement.normal import event_choice
         from parkour_solver.movement.program import empty_program, append_choice
         request=flat_scene()
@@ -114,7 +115,7 @@ class FixedClockNumericalTests(unittest.TestCase):
             return original(checkpoint,candidate,gates)
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler, \
              patch.object(Checkpoint,'stage',stage):
-            result=evaluate_program(request,p,compiler,adapter,SearchWork(16),_motion_bound(request,compiler,2),
+            result=evaluate_program(request,p,compiler,adapter,SearchWork(16),motion_bound(request,compiler,2),
                 checkpoint=cp,seconds=5,candidate_seconds=.7,solver_calls=16,
                 python_executable=os.environ['PKC_IPOPT_PYTHON'])
             self.assertIsNotNone(result['best'],result['termination'])
@@ -130,7 +131,7 @@ class SupportOrderTests(unittest.TestCase):
         scene=flat_scene()
         policy=SupportOrder(scene,['goal'],8)
         goal=scene['collisionScene']['solids'][1]
-        program=dict(profile=dict(airtime=8,contactEvents=[dict(offset=4,axis='Y',direction=-1,box=goal)]))
+        program=dict(profile=dict(airtime=8,contactEvents=[dict(offset=4,axis='Y',direction=-1,boxes=[goal])]))
         self.assertTrue(policy(program))
 
         self.assertEqual(policy.audit(program)['observed'],[dict(tick=5,block='goal')])

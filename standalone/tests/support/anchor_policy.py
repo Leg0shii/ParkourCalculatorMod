@@ -17,7 +17,7 @@ def history(s,names):
     p['profile'].update(airtime=n,position=[1.]*(n+1),velocity=[0.]*(n+1),
         grounded=[True]*(n+1),jump=[True]*n,sneak=[False]*n,ladderTicks=[False]*(n+1))
     p['profile']['contactEvents']=[dict(offset=i,axis='Y',direction=-1,
-        box=s['collisionScene']['solids'][next(b['solidIndex'] for b in s['blocks'] if b['id']==name)])
+        boxes=[s['collisionScene']['solids'][next(b['solidIndex'] for b in s['blocks'] if b['id']==name)]])
         for i,name in enumerate(names)]
     p['terminalSupport']=names[-1] if names else s['startBlock']
     return p

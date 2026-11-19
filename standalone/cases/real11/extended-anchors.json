@@ -371,7 +371,6 @@
     "unknown_slots": 1,
     "score_call_limit": 6,
     "final_call_limit": 24,
-    "fair_parents": true,
     "spatial_seconds": 5,
     "spatial_calls": 6,
     "spatial_candidates": 4,

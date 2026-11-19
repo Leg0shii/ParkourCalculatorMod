@@ -68,10 +68,10 @@ class EventDomainTests(unittest.TestCase):
     def test_running_rows_are_silent_but_landings_revisits_and_named_cases_survive(self):
         scene = task_scene([[0, 0, 0, 1, 1, 1]])
         domain = build_route_domain(scene, None)
-        event = dict(axis='Y', direction=-1, box=scene['collisionScene']['solids'][0])
+        event = dict(axis='Y', direction=-1, boxes=[scene['collisionScene']['solids'][0]])
         profile = dict(airtime=4, position=[1]*5, grounded=[True, True, False, True, True],
             jump=[False, True, False, False], contactEvents=[dict(event, offset=i) for i in (0, 2, 3)],
-            caseEvents=[dict(input=3, case='blip', box=event['box'])])
+            caseEvents=[dict(input=3, case='blip', boxes=event['boxes'])])
         episodes = support_episodes(domain, profile)
         self.assertEqual([e['kind'] for e in episodes], ['support_visit', 'named_contact'])
         self.assertEqual(episodes[0]['tick'], 3)

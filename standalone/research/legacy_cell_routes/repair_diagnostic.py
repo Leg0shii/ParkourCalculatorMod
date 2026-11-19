@@ -11,7 +11,8 @@ import time
 from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
-from parkour_solver.search.engine import _motion_bound, evaluate_program
+from parkour_solver.search.engine import evaluate_program
+from parkour_solver.reachability.intervals import motion_bound
 from research.legacy_cell_routes.failure_diagnostic import ROOT, read
 from research.legacy_cell_routes.generation_diagnostic import execution_key, save
 from parkour_solver.spatial.cells import decompose
@@ -56,7 +57,7 @@ def main():
                     def candidate(self,*args,**kwargs):
                         return dict(accepted=True)
                 adapter = NoCorridor()
-            motion = _motion_bound(scene,compiler,2)
+            motion = motion_bound(scene,compiler,2)
             for cap in (4,16,32):
                 work = SearchWork(cap,deadline=time.monotonic()+8)
                 result = evaluate_program(scene,program,compiler,adapter,work,motion,

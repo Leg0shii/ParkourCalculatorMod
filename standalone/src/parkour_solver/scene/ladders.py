@@ -186,8 +186,7 @@ def schedule_constraints(schedule, column, wall, entry_face, exit_face, *, start
         if type(choice) is not int or not 0 <= choice < len(corridors):
             raise ValueError('Invalid finite wall corridor')
         lo, hi, boxes = corridors[choice]
-        scene_contacts.append(dict(contacts[-1], axis=0 if axis == 0 else 2,
-                                   **({'box': boxes[0]} if len(boxes) == 1 else {'boxes': boxes})))
+        scene_contacts.append(dict(contacts[-1], axis=0 if axis == 0 else 2, boxes=boxes))
         rows.extend([{'mode': tangent, 't1': start + stage, 'cmp': 'GE', 'rhs': lo + margin,
                       'name': 'ladder:finite_face'},
                      {'mode': tangent, 't1': start + stage, 'cmp': 'LE', 'rhs': hi - margin,

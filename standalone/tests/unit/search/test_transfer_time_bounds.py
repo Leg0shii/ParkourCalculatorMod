@@ -15,13 +15,14 @@ from parkour_solver.movement.program import append_choice, boundary_state
 from parkour_solver.movement.normal import event_choice
 from tests.support.checkpoint_guidance import flat_scene
 from tests.support.proposal_analysis import Coefficients
+from tests.support.archived_events import current_events
 
 
 class TransferTimeBoundTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         base=REGRESSION_FIXTURES
-        cls.data=json.loads(gzip.decompress((base/'anchor-contexts.json.gz').read_bytes()))
+        cls.data=current_events(json.loads(gzip.decompress((base/'anchor-contexts.json.gz').read_bytes())))
 
     def real11(self):
         from parkour_solver.scene.normalize import prepare_scene

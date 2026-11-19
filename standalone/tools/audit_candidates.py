@@ -47,7 +47,7 @@ def summary_program(program, boxes):
     p=program['profile'];n=p['airtime']
     contacts=collections.defaultdict(list)
     for event in p.get('contactEvents',[]):
-        name=boxes.get(tuple(event['box']),'unmapped')
+        name='+'.join(sorted({boxes.get(tuple(b),'unmapped') for b in (event['boxes'] if 'boxes' in event else [event['box']])}))
         contacts[(name,event['axis'],event['direction'])].append(event['offset']+1)
     return dict(id=_key(program),ticks=n,
         jumps=[t for t in range(n) if p['jump'][t] and p['grounded'][t]],
@@ -282,8 +282,8 @@ def render(audit):
                                   (' inside/support boundary' if inside else ' outside/avoid boundary'))
         return '; '.join(result) or 'explicit task/route inequality'
     def interactions(values):
-        return '; '.join(f"{audit['scene']['blocks'][p['solidIndex']]['id']}:"+
-            '>'.join(f"{f['axis']}{'+' if f['direction']>0 else '-'}" for f in p['faces'])+
+        return '; '.join(f"{p.get('blockId', 'solid:'+str(p.get('solidIndex')))}:"+
+            '>'.join(''.join(f"{b['axis']}{'+' if b['direction']>0 else '-'}" for b in f.get('bounds') or [f]) for f in p['faces'])+
             f" gates={p['gates']}" for p in values) or 'no passage metadata; see rows'
     def known_value(branch):
         captured=branch['corridorAudit']

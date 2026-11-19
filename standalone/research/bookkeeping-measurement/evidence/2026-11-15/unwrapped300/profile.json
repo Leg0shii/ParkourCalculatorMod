@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "buckets": {
+    "callback.profile_write": {
+      "calls": 27,
+      "inclusiveSeconds": 0.014256902039051056,
+      "selfSeconds": 0.014256902039051056,
+      "maxSeconds": 0.0005878321826457977
+    },
+    "callback.progress": {
+      "calls": 931,
+      "inclusiveSeconds": 0.01757512241601944,
+      "selfSeconds": 0.003318220376968384,
+      "maxSeconds": 0.0006579160690307617
+    },
+    "run.search_and_final_replay": {
+      "calls": 1,
+      "inclusiveSeconds": 302.04190837591887,
+      "selfSeconds": 302.02433325350285,
+      "maxSeconds": 302.04190837591887
+    },
+    "postrun.accepted_replays": {
+      "calls": 1,
+      "inclusiveSeconds": 0.1954740434885025,
+      "selfSeconds": 0.1954740434885025,
+      "maxSeconds": 0.1954740434885025
+    },
+    "postrun.shared_report_write": {
+      "calls": 1,
+      "inclusiveSeconds": 3.0965443328022957,
+      "selfSeconds": 3.0965443328022957,
+      "maxSeconds": 3.0965443328022957
+    },
+    "postrun.shared_report_compact": {
+      "calls": 1,
+      "inclusiveSeconds": 0.25346095860004425,
+      "selfSeconds": 0.25346095860004425,
+      "maxSeconds": 0.25346095860004425
+    }
+  },
+  "sessions": [],
+  "active": [],
+  "accounting": "Inclusive buckets overlap; selfSeconds exclude instrumented children. Unwrapped work stays in its parent.",
+  "wallSeconds": 306.0778429992497,
+  "cpuSeconds": 292.21684300000004,
+  "maxRssBytes": 408567808,
+  "error": null,
+  "gc": {
+    "calls": 38483,
+    "seconds": 14.235876183956861
+  },
+  "cancelled": false
+}

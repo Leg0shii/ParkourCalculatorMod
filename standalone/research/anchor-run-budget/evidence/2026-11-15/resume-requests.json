@@ -1,0 +1,11 @@
+[
+  {
+    "index": 1,
+    "fingerprint": "9e4dc0c7561745c3fb99a9bac92d778374392e3efa2d38f4459f1ed1c6d17d4d",
+    "ticks": 21,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": null
+  }
+]

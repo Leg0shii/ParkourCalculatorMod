@@ -1,49 +1,73 @@
 # Current standalone state
 
-2026-11-16 user deferral: **pause further longer Real11 trials until the other
-agent finishes the solver improvements**. Preserve the fixed-B5 fixture and
-latest manifest/SQLite pair; do not start another solve as background follow-up.
-The [experiment resume checklist](../research/real11-long-solve/README.md#status-and-resumption)
-records the integration review, compatibility and validation checks required
-before returning. The other agent's assignment remains active independently.
+Snapshot, 2026-11-16. This file describes what is true now; dated results live in
+the linked evidence. Standing user decisions are in [decisions](DECISIONS_AND_PLANS.md);
+everything not being worked on is in the [deferred-work register](DEFERRED_WORK.md).
 
-2026-11-15 longer Real11 trial: [new task and fixed-B5 experiment](../research/real11-long-solve/README.md)
-add required B7/B20 and terminal B22. Existing initial-program support fixes
-initial-0 decisions through B5@55 while all earlier facings remain free. The first
-300s trial reached unit B7@64, then exposed an empty-exhausted-constraint outcome
-bug; that exact node now backtracks without a numerical infeasibility claim.
-Pending/interrupted alternatives remain suspended. The611-test native gate passes
-without skips. Corrected300s+120s exact continuations backtrack eight exhausted
-nodes but have not reached B20/B22; latest work is constraint enumeration for
-an optional B11@68 candidate. Prefix audits preserve all55 decisions, while the
-B7 witness changes all55 earlier facings. Full evidence and latest saved resume
-path are in the experiment README.
+## Branches and status
 
-2026-11-15 geometry follow-up: [longer Real11 input and bounds](REAL11_EXTENDED_GEOMETRY.md)
-record B8–B22, original unit B6 (latest user correction), unit B7 and the B13 stair.
-The geometry-only input stays separate from the explicit longer task above.
-The existing extended-B7 benchmark and its measurements below retain their
-original input.
-The [implemented face-merging contract](design/FACE_MERGING_IMPLEMENTATION_PLAN.md) has exactly
-two parts: detect adjacent coplanar faces across all six orientations, and
-represent their exact unions with original block/solid membership for later
-decisions. It includes physical-boundary exposure, partial
-occlusion, component-specific contributions, stable IDs and catalog queries.
-Both parts are complete: immutable catalog queries/serialization and
-`tools.geometry_bounds --faces` are available, with54 focused/compatibility/package
-checks. Real11 has102 merged faces from144 source faces; source-specific static
-validation is in the [record](../research/real11-extension/face-catalog-validation.json).
-The catalog is available for later decision integration; current generators still
-use their existing geometry contracts.
+- Base branch: the fork's `main`. It contains the Real11 extension work: extended
+  geometry and bounds, the six-direction [face catalog](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
+  (not yet consumed by any generator) and the [longer Real11 task](../research/real11-long-solve/README.md).
+- Active: `perf/early-passage-screen`, draft PR #3 into `main`. It adds
+  [geometry-driven avoidance passages](design/AVOIDANCE_PASSAGES.md) on obstacle
+  clusters (touching blocks are one obstacle; [evidence](../research/obstacle-clusters/README.md)), screening of
+  accumulated passage prefixes before extension, anchor legs that optimize their
+  alternatives with a switch-tick climb and keep close fallbacks
+  ([evidence](../research/switch-climb/README.md)), anchor search under the global
+  run budget instead of service-turn quotas, and ceiling moves in the Real11 case.
+  The PR is a first test and is still under investigation, not ready to merge.
+- Native gate (`tools/native_gate.py`): the current result is in [testing](TESTING.md).
+- Latest cold Real11 control on the PR: T64 at 5.9 s with 18 solver requests; the
+  DFS explores every runnable alternative and ends `exhausted` at 9.7 s. See
+  [performance](PERFORMANCE.md) for the full series of controls.
+- Longer Real11 trials are paused until the PR's solver changes settle. The saved
+  fixed-B5 checkpoints predate constraint policy9/state5, so the next trial starts
+  cold from the [resume checklist](../research/real11-long-solve/README.md#status-and-resumption).
 
-Follow-up status2026-11-15: the user has **deferred interleaving/scheduler implementation**. The [preserved plan](BRANCH_SCHEDULING_INVESTIGATION.md) retains the existing tick priority, work-category/outcome clarifications, ownership/cost analysis and resumption checks; none is implemented by this documentation. Current code remains DFS. The separate [bookkeeping performance handoff](BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md) is not paused by this request. Use the [deferred-work register](DEFERRED_WORK.md) for other preserved follow-ups and their actual status.
+## Focus areas and where to read
 
-2026-11-15: package/layout refactor through `9c79e741`; solver behavior remains feature `dd738c98`. Production is installed from `src/parkour_solver`, with separate tests/tools/research/native roots. See [layout](LAYOUT.md) and the [refactor ledger](STANDALONE_REFACTOR_IMPLEMENTATION.md). Start with the [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md)
-for the combination catalogue, pruning/deferral table, IPOPT dispatch boundaries,
-settled decisions/rationale and module ownership. The [decisions index](DECISIONS_AND_PLANS.md)
-records authority; the [implementation record](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
-and [evidence](../research/hard-jump-comparisons/README.md) record how
-this version was implemented and validated. This feature is complete.
+**Improving the avoidance generator**
+1. [Avoidance passages](design/AVOIDANCE_PASSAGES.md): the contract implemented by
+   `constraints/encounters.py` and `constraints/variants.py`.
+2. [Generation relevance](design/GENERATION_RELEVANCE_PLAN.md): one shared eligibility
+   gate; required versus unwanted interactions; screen the whole proposal before truncation.
+3. [Obstacle relevance](design/OBSTACLE_RELEVANCE.md): interval and LP reachability screens.
+4. [Obstacles and blockages](design/OBSTACLES_AND_BLOCKAGES.md): Y-X-Z overlap, blockage
+   timing templates, wall-hit sprint loss, run-off sources.
+5. [Generic route discovery research](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md),
+   sections 6.2 to 6.4 (when side or corner avoidance matters), 7.2 and 7.3 (required
+   versus unwanted, exact merging) and 8.3 (generate before products).
+6. [Pruning research](research/PRUNING_RESEARCH.md): "fixed support constraints already
+   exist; avoid assembly over-enumerates B2", "systematic obstacle relevance" and the
+   "Real11 full candidate audit" (canonicalize per obstacle before products).
+7. [Spatial route research](research/SPATIAL_ROUTE_RESEARCH.md): a chosen free cuboid
+   replaces the six-way avoid disjunction with linear bounds.
+
+**Reducing DFS states**
+1. [Anchor execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md): the combination
+   catalogue and every dispatch and pruning boundary.
+2. [Anchor policy decisions](design/ANCHOR_POLICY_DECISIONS.md): hard transfer, cadence,
+   finish bound, protections.
+3. [Hard-jump comparison and reachability record](design/HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md):
+   the canonical comparison rule, `InteractionGate` semantics, duration certificate.
+4. [Branch scheduling](design/BRANCH_SCHEDULING_INVESTIGATION.md) (deferred): when work runs
+   and when it is excluded.
+5. [Automatic grouping](design/PRUNING_IMPROVEMENTS_BACKLOG.md#automatic-grouping-joint-constraint-solving):
+   every interaction type now reads one [shared scene geometry](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
+   (`spatial/surfaces.py`); grouping itself is to be re-planned on it. Commitment
+   and cadence stay deferred. Other pruning gaps stay in the backlog.
+6. [Pruning research](research/PRUNING_RESEARCH.md): "why one best arrival fails",
+   "how branch and bound could help", "candidate pruning and reuse mechanisms" and
+   "schedule-gated comparison, run/jump protection and exact processing order".
+7. [Search objective](design/SEARCH_OBJECTIVE.md) and [time-progress labels](design/TIME_PROGRESS_FRONTIER.md).
+
+**Improving performance**
+1. [Performance](PERFORMANCE.md): controls, hotspots, owners and invariants.
+2. [IPOPT constraint reduction](IPOPT_CONSTRAINT_REDUCTION.md), [feasibility mode](IPOPT_FEASIBILITY_MODE.md)
+   and [checkpoint storage](CHECKPOINT_STORAGE.md).
+3. [Stratfinder investigation](research/STRATFINDER_INVESTIGATION.md): coefficient caching
+   and early prefix rejection.
 
 ## Implemented search
 
@@ -68,64 +92,37 @@ Terminal actualT/objective ranking stays separate. Cells, portals and soft guide
 points are not discrete input clocks or fixed dynamic seams.
 
 Physical automatic continuation is outer schema2 / DFS8 / movement context4 /
-repair assembly9. Hard3/search5/comparison1/guide2/proposal1 semantic identities
+repair assembly13 / constraint policy12/state8. Hard3/search5/comparison1/guide2/proposal1 semantic identities
 also matter; schema equality does not make old policy checkpoints compatible.
-Storage remains manifest/SQLite version1. Internal slices reuse owned live state;
-external resume decodes isolated mutable values and checks the saved incumbent.
+Storage remains manifest/SQLite version1. Physical anchor DFS now uses the session's
+global deadline/call allowance continuously, without service-turn or per-program
+quotas; per-request solver timeouts remain. Non-anchor event search retains its
+internal slices. External resume decodes isolated mutable values and checks the
+saved incumbent. The [run-budget change](../research/anchor-run-budget/README.md)
+records the removed limits and continuation checks.
 
-## Current Real11 task and evidence
+## Real11 task
 
-The [maintained case](../cases/real11/physical-anchors.json) supplies
-B2/B3/B4/B5 anchors, normal+stepping, horizon200 and declared caps, with no first-jump whitelist.
-The [unrestricted control](../research/initial-domain-selection/README.md) naturally queries first jumps0/8 and recoverably defers9–12 before numerical work; it finds T64 with55/55 retained-witness replays. Archived controls below keep their original `[0,8]` domain. B7 is the
-physical extended box `[729,0,-1095,730,7,-1093]`; actual landing minimizes T then
-maximizes Z. Guide `(729.5,7,-1093)` is not a center-coordinate cap. The old
-virtual goal, extra X<729.7 row and fixed64 task are absent.
+The [maintained case](../cases/real11/physical-anchors.json) supplies B2/B3/B4/B5
+anchors, normal, stepping and ceiling movement, horizon 200 and no first-jump
+whitelist. B7 is the physical extended box `[729,0,-1095,730,7,-1093]`; the landing
+minimizes T, then maximizes Z. Guide `(729.5,7,-1093)` is not a center-coordinate
+cap. The [unrestricted control](../research/initial-domain-selection/README.md)
+queries first jumps 0 and 8 and recoverably defers 9 to 12 before numerical work.
+Timed controls do not establish global minimum T or Z, or executable replay in the
+real world. The [Real11 guide](REAL11_GUIDE.md) maps each question to its evidence.
 
-| Matched arm | Best T | Workers | Expanded prefixes | Independent retained-witness replays |
-| --- | ---: | ---: | ---: | ---: |
-| Baseline combined300s |67 |159 |1,114 |75/75 |
-| Current combined300s |64 |55 |35 |57/57 |
-| Baseline initial0-only90s |64 |56 |427 |34/34 |
-| Current initial0-only90s |64 |22 |7 |23/23 |
-
-Both current arms reach Z=−1093.2381026602416. The combined arm has61 distinct
-invocation fingerprints,22 saved finish-bound exclusions,8 recoverable deferrals,
-0 restorations and18 early common-sequence exclusions. Comparison/bound checks
-cost milliseconds; remaining measured cost is largely numerical preparation,
-digesting and retained-state copies. The [evidence README](../research/hard-jump-comparisons/README.md)
-qualifies timing overlap/instrumentation and gives exact budgets/provenance.
-
-600 native-enabled tests pass without failures/errors/skips;131 archived T67/T64
-prefix-bound controls and80 current retained-witness replays pass. Runtime hashes
-stay unchanged;54 historical event artifacts remain unchanged. The native module
-scope includes generic mixed-ladder controls/all IPOPT tests, but excludes dedicated
-src/parkour_solver ladder/climbable/vine/movement-entry modules. No mod build/game run or
-new native-helper rebuild was needed. See [testing](TESTING.md).
-
-The wall guards ended both runs; global minimum T/Z and actual-world executable
-replay are not established. The latest user correction confirms unit B6; the
-longer-course geometry above is separate from these measured controls. They do
-not cover unknown world geometry.
-
-## Deferred work
-
-The [central deferred-work register](DEFERRED_WORK.md) links the preserved scheduler plan, revisit design, intentional wall hits, water, cadence/turn tuning, inertia follow-up, proposed research and outstanding acceptance/input work. It distinguishes user deferrals from unapproved ideas and completed source-era backlog claims. Bookkeeping optimization is separately assigned, not deferred by the scheduling pause. Hard-latch/count policy remains a bounded heuristic/domain policy, not a global optimality theorem.
-
-## Source-era history
+## History
 
 These records explain earlier implementations/results; their old checkout paths,
 status paragraphs and policies do not direct current work.
 
 | Stage | Evidence / design record |
 | --- | --- |
-| Selective numerical solver integration, nested persistence, explicit recovery and lazy selected-only bounds | [Integration contract](ANCHOR_SEARCH_INTEGRATION.md), [review](SOLVER_BRANCH_INTEGRATION_REVIEW.md), [profiling](../research/anchor-runtime-profile/README.md) |
+| Selective numerical solver integration, nested persistence, explicit recovery and lazy selected-only bounds | [Architecture](ARCHITECTURE.md), [profiling](../research/anchor-runtime-profile/README.md) |
 | Anchor feasibility / finite B7, then correction preserving source hops | [Initial anchor implementation](../research/anchor-feasibility/README.md), [transfer/preparation correction](../research/anchor-transfer-preparation/README.md) |
-| Generic potential route/contact discovery and event backend | [Cited research](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md), [implemented plan](design/GENERIC_ROUTE_DISCOVERY_IMPLEMENTATION_PLAN.md), [cold evidence](../research/event-route-discovery/README.md) |
-| Typed cells/portals/corridors, guide geometry and old automatic-versus-supplied shortlists | [Spatial plan](design/SPATIAL_CORRIDOR_REFACTOR_PLAN.md), [automatic corridor evidence](../research/automatic-corridors/README.md), [handoff](CORRIDOR_AGENT_HANDOFF.md) |
+| Generic potential route/contact discovery and event backend | [Cited research](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md), [cold evidence](../research/event-route-discovery/README.md) |
+| Typed cells/portals/corridors, guide geometry and old automatic-versus-supplied shortlists | [Automatic corridor evidence](../research/automatic-corridors/README.md) |
 | Virtual B7 height crossing and latest-jump run-family comparisons | [Virtual-finish evidence](../research/virtual-finish/README.md), [local-run evidence](../research/last-jump-runs/README.md) |
 | Imported goal-aware DFS/early interactions and original fixed64 pilot | [DFS evidence](../research/dfs-interactions/README.md), [Real11 source-era ledgers](REAL11_GUIDE.md) |
 
-Use [architecture](ARCHITECTURE.md), [runbook](RUNBOOK.md), [debugging](RESULTS_AND_DEBUGGING.md)
-and [resume](ANCHOR_IMPLEMENTATION_RESUME.md) for current work. No implementation
-or numerical run from the completed feature remains pending after compaction.

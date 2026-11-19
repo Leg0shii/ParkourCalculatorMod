@@ -67,7 +67,7 @@ class SearchFixTests(unittest.TestCase):
         with patch('parkour_solver.search.repair.find_route', side_effect=find), \
              patch('parkour_solver.search.repair.validate_vertical_schedule', return_value=vertical):
             result = solve_contact_branches(route, [], [], object(), seconds=1, candidate_seconds=.1,
-                retries=0, max_branches=2, rank_equal_cost=True, optimize_goal=True, candidate_filter=filter_candidate)
+                retries=0, rank_equal_cost=True, optimize_goal=True, candidate_filter=filter_candidate)
         if valid_seed:
             self.assertEqual(result['best']['candidate']['objective'], 3 if repair else 1)
             self.assertEqual(result['status'], 'feasible')

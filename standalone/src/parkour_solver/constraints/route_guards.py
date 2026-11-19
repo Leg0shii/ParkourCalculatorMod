@@ -18,7 +18,7 @@ def physical_events(scene, profile):
         if event['axis'] != 'Y' or event.get('direction') != -1:
             continue
         owners = {b.get('sourceBlock', b['id']) for b in scene['blocks']
-                  if scene['collisionScene']['solids'][b['solidIndex']] == event['box']}
+                  if scene['collisionScene']['solids'][b['solidIndex']] in event['boxes']}
         result.setdefault(3*event['offset'], set()).update(owners)
     return result
 

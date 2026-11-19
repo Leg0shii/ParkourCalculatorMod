@@ -1,0 +1,47 @@
+{
+  "before": {
+    "ticks": 67,
+    "objective": -1093.823129063534,
+    "wrappers": 49,
+    "workers": 47,
+    "expandedPrefixes": 21,
+    "validatedWitnesses": 41,
+    "allReplaysPassed": true,
+    "searchSeconds": 303.4884398765862,
+    "totalEnumerationVisits": 3293967,
+    "b7Visits": 3282698,
+    "b7Options": 3978,
+    "requestsByTicks": {
+      "17": 1,
+      "27": 1,
+      "28": 1,
+      "40": 1,
+      "57": 1,
+      "58": 2,
+      "67": 42
+    }
+  },
+  "after": {
+    "ticks": 67,
+    "objective": -1093.823129063534,
+    "wrappers": 59,
+    "workers": 57,
+    "expandedPrefixes": 21,
+    "validatedWitnesses": 50,
+    "allReplaysPassed": true,
+    "searchSeconds": 303.234652210027,
+    "totalEnumerationVisits": 1998548,
+    "b7Visits": 1977755,
+    "b7Options": 2384,
+    "requestsByTicks": {
+      "17": 1,
+      "27": 1,
+      "28": 1,
+      "40": 1,
+      "57": 1,
+      "58": 2,
+      "67": 52
+    }
+  },
+  "resumedPriorFeasiblePairsRepeated": []
+}

@@ -1,0 +1,1 @@
+solids  1000 table True  items     10 prepared     10 phaseChecks      180 variants 1 seconds 1.393

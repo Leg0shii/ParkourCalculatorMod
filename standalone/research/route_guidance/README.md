@@ -1,8 +1,8 @@
 # Experimental route guidance
 
-Latest design decision, 2026-10-31: the user wants input-decision search to omit inertia thresholds while retaining all ordinary momentum carry. [The revised model note](../../docs/design/NO_THRESHOLD_DECISION_MODEL.md) explains this direction. The source and measurements documented below still use the earlier carry hull; removing it and rebenchmarking are the next implementation changes. Actual inertia-pattern refinement and tolerance calibration are deferred.
+Latest design decision, 2026-10-31: the user wants input-decision search to omit inertia thresholds while retaining all ordinary momentum carry. The revised model note explains this direction. The source and measurements documented below still use the earlier carry hull; removing it and rebenchmarking are the next implementation changes. Actual inertia-pattern refinement and tolerance calibration are deferred.
 
-This module implements the first restricted experiment in [CONVEX_ROUTE_GUIDANCE_PLAN.md](../../docs/design/CONVEX_ROUTE_GUIDANCE_PLAN.md). It compares a compact circle NLP, an otherwise identical compact disk NLP, and a disaggregated disk SOCP. It does not replace production route generation.
+This module implements the first restricted experiment in CONVEX_ROUTE_GUIDANCE_PLAN.md. It compares a compact circle NLP, an otherwise identical compact disk NLP, and a disaggregated disk SOCP. It does not replace production route generation.
 
 The input is a supplied support sequence, a fixed final horizon, and optional horizontal passage choices. Ordinary jump profiles come from the existing vertical model. Movement coefficients come from the existing shared Java compiler. A time-expanded phase graph represents run/departure timing without materializing complete histories. Inputs keep W/sprint or the existing Force 45 policy with freely optimized facings. Each solve retains the full original horizontal position and velocity.
 

@@ -25,7 +25,7 @@ class AnchorSearchTests(unittest.TestCase):
             continuation=continuation,threshold=0.,node_evaluator=evaluator,
             program_filter=lambda p:local_counts(p)['R']<=2 and (not latched or not latched() or
                 single_jump_structure(s,p,0,'start','goal',complete=p['terminalSupport']=='goal')),
-            policy_context=dict(version=1,span=0),deadline=time.monotonic()+3)
+            policy_context=dict(version=1,span=0),deadline=time.monotonic()+3,context_adapter=lambda c:c.update(interactionGate=None))
 
     def test_multiple_same_block_jumps_generated_and_no_solve_for_run_hold(self):
         calls=[]
@@ -130,7 +130,7 @@ class AnchorSearchTests(unittest.TestCase):
             with patch('parkour_solver.search.repair.find_route',side_effect=solve), \
                  patch('parkour_solver.search.repair.validate_vertical_schedule',return_value=VERTICAL):
                 return solve_contact_branches(route(),[],[],object(),seconds=1,candidate_seconds=.1,retries=0,
-                    max_branches=1,optimize_goal=True,rank_equal_cost=False,
+                    optimize_goal=True,rank_equal_cost=False,
                     candidate_filter=lambda *a:dict(accepted=True),**options)
         first=invoke(stop_on_feasible=True)
         second=invoke(stop_on_feasible=False,resume_state=first['repairState'])
@@ -143,7 +143,7 @@ class AnchorSearchTests(unittest.TestCase):
                 dict(status='unknown',termination='worker_finished',workerStatus=worker_status)])])
             with patch('parkour_solver.search.repair.find_route',return_value=response):
                 return solve_contact_branches(route(),[],[],object(),seconds=1,candidate_seconds=.1,retries=0,
-                    max_branches=1,oracle_rejection=True)
+                    oracle_rejection=True)
         rejected=invoke('Infeasible_Problem_Detected')['repairState']
         limited=invoke('Maximum_CpuTime_Exceeded')['repairState']
         self.assertTrue(rejected['completed'][0]['oracleRejected'])
@@ -151,15 +151,35 @@ class AnchorSearchTests(unittest.TestCase):
         self.assertFalse(limited['completed'][0]['oracleRejected'])
         self.assertEqual(len(limited['unresolved']),1)
 
+    def test_pre_solve_proofs_complete_an_alternative_without_ipopt(self):
+        from parkour_solver.search.feasibility import outcome, policy_spec
+        certificate=dict(reason='linear_control_relaxation_infeasible')
+        def invoke(termination):
+            response=dict(status='unknown',best=None,termination=termination,
+                          attempts=[dict(status='blocked',certificate=certificate)])
+            with patch('parkour_solver.search.repair.find_route',return_value=response):
+                return solve_contact_branches(route(),[],[],object(),seconds=1,candidate_seconds=.1,retries=0,
+                    oracle_rejection=True)
+        proven=invoke('search_exhausted')
+        completed,=proven['repairState']['completed']
+        self.assertEqual((completed['proven'],completed['oracleRejected'],completed['certificates']),(True,False,[certificate]))
+        self.assertEqual(proven['repairState']['unresolved'],[])
+        policy=policy_spec(dict(purpose='node',oracleRejection=True),first_witness=True)
+        self.assertEqual(outcome(proven,'model',policy)['status'],'oracle_rejected')
+        interrupted=invoke('deadline')['repairState']
+        self.assertFalse(interrupted['completed'][0]['proven'])
+        self.assertEqual(len(interrupted['unresolved']),1)
+
     def test_actual_landing_clock_binds_before_unused_suffix_and_drops_owned_future_rows(self):
         from parkour_solver.movement.normal import event_choice
         from parkour_solver.movement.program import boundary_state
+        from parkour_solver.movement.contact_combinations import expanded_face
         s=flat_scene();root=empty_program(s['initial'],threshold=0.);root['terminalSupport']='start'
         goal=next(b for b in s['blocks'] if b['id']=='goal')
         box=s['collisionScene']['solids'][goal['solidIndex']]
         choice=event_choice(dict(threshold=0.),'normal',boundary_state(root),13,jumping=True,
             vertical=[dict(state=12,plane=1.,direction=-1)],
-            finite=[dict(offset=11,axis='Y',direction=-1,box=box)],
+            finite=[dict(offset=11,axis='Y',direction=-1,boxes=[box],surface=None,regions=[expanded_face(box,1,1,1e-6)])],
             constraints=[dict(mode='X',t1=13,cmp='GE',rhs=100.,name='future-owned')])
         # The future row belongs to a later event, not the achieved landing.
         choice['profile']['constraintOwners']=[13]

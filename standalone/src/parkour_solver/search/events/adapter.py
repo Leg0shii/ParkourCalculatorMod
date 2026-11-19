@@ -10,6 +10,7 @@ from parkour_solver.spatial.event_routes import initial_cursor, next_goals, adva
 from parkour_solver.spatial.guides import guide_for, outgoing_objective, task_reference
 from parkour_solver.spatial.regions import geometry_key
 from parkour_solver.spatial.cells import contains
+from parkour_solver.reachability.intervals import travel_radii
 
 
 @dataclass(frozen=True)
@@ -79,10 +80,8 @@ class EventGuideAdapter:
                                     flight=self.compiler.compile(dict(self.scene,sharedMovement=True),
                                         dict(grounded=[ctx['state']['onGround']]+[False]*(n-1),jump=[jumping]+[False]*(n-1)),
                                         self.candidate_seconds)
-                                    speed=self.motion['storedSpeedNorm']; total=0.
-                                    for magnitude,friction in zip(flight['magnitude'],flight['friction']):
-                                        move=speed+magnitude;total+=move;speed=move*friction
-                                    self.flight_cache[key]=total
+                                    self.flight_cache[key]=travel_radii(self.motion['storedSpeedNorm'],
+                                        flight['magnitude'],flight['friction'])[-1]
                                 except TimeoutError:
                                     pass
                             radius=self.flight_cache.get(key,radius)
@@ -143,28 +142,6 @@ class EventGuideAdapter:
 
     def eligible(self, envelopes, through):
         return self
-
-    def contact_regions(self, program, through):
-        """Finite required-contact OR, independent of the chosen air witness.
-
-        Normal landing footprints apply at the Y phase's pre-X/Z position.
-        Named terminal support regions use their existing post-input convention.
-        No new probe-height model or waypoint clock is introduced.
-        """
-        goal=self.request['goal']
-        if through<program['profile']['airtime'] or goal['kind']!='landing' or 'surface' not in goal:
-            return None
-        surface=next(s for s in self.data['surfaces'] if s['id']==goal['surface'])
-        solids={b['solidIndex'] for b in self.scene['blocks'] if b['id'] in goal.get('blocks',[goal['block']])}
-        boxes={tuple(self.scene['collisionScene']['solids'][i]) for i in solids}
-        profile=program['profile']
-        states={e['offset'] for e in profile.get('contactEvents',[]) if e['axis']=='Y' and
-                e.get('direction')==-1 and tuple(e['box']) in boxes and self.request['afterTick']<=e['offset']<through}
-        states.update(e['input']+1 for e in profile.get('caseEvents',[]) if tuple(e.get('box',())) in boxes and
-                      self.request['afterTick']<=e['input']<through)
-        return [[dict(leg=0,offset=t,mode=axis,cmp=cmp,rhs=value,name='event:required_contact_region')
-                 for axis,a in (('X',0),('Z',2)) for cmp,value in (('GE',box[a]),('LE',box[a+3]))]
-                for t in sorted(states) for box in surface['cover']]
 
     def candidate(self, plan, candidate, vertical, *, partial=False):
         if self.program is None or self.request is None:

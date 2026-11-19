@@ -5,20 +5,20 @@ from pathlib import Path
 import time
 import unittest
 
-from parkour_solver.spatial.checkpoints import checkpoint
-from parkour_solver.search.engine import _motion_bound, evaluate_program
-from parkour_solver.search.goals import goal_spec, probe_spatial
+from parkour_solver.search.engine import evaluate_program
+from parkour_solver.reachability.intervals import motion_bound
+from parkour_solver.search.goals import goal_spec
 from parkour_solver.spatial.cells import decompose
 from parkour_solver.validation.scoped_scene import CorridorAdapter
 from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
-from parkour_solver.search.compat.time_progress import clock_result, retain_two_goals
+from parkour_solver.search.compat.time_progress import clock_result
 from research.legacy_cell_routes.window_diagnostic import controls
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
 from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.bridge.compiler import JavaCompiler
-from parkour_solver.movement.program import truncate_program
-from tests.support.checkpoint_guidance import flat_scene, programs
+from tests.support.checkpoint_guidance import flat_scene
+from tests.support.archived_events import current_events
 
 
 class ComparisonGoalTests(unittest.TestCase):
@@ -62,51 +62,15 @@ class ComparisonGoalNumericalTests(unittest.TestCase):
         self.compiler=JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
         self.addCleanup(self.compiler.close)
 
-    def test_landing_time_and_same_clock_progress_are_distinct(self):
-        rows=[]
-        root=RESEARCH_ROOT
-        for name,_,label,fixture,known in controls(root):
-            if name!='ceiling':continue
-            scene=prepare_scene(fixture['request'])
-            d,gates=decompose(scene),landmarks(scene)
-            route=corridor_for_points(d,fixture['spatialPoints'],gates)
-            adapter=CorridorAdapter(scene,route,gates,decomposition=d)
-            full=known['movementProgram'].copy()
-            full['guideSeedYaw']=known['candidate']['yaw'][:]
-            program=truncate_program(full,11)
-            cp=checkpoint(route,gates,dict(tick=11))
-            work=SearchWork(24,deadline=time.monotonic()+8)
-            motion=_motion_bound(scene,self.compiler,2)
-            clock=evaluate_program(scene,program,self.compiler,adapter,work,motion,checkpoint=cp,
-                seconds=3,candidate_seconds=.7,solver_calls=8,python_executable=os.environ['PKC_IPOPT_PYTHON'])
-            spatial=probe_spatial(scene,program,self.compiler,adapter,work,motion,seconds=3,
-                candidate_seconds=.7,solver_calls=8,python_executable=os.environ['PKC_IPOPT_PYTHON'])
-            self.assertIsNotNone(clock['best'])
-            self.assertIsNotNone(spatial['best'])
-            self.assertEqual(spatial['measurement']['ticks'],known['plan']['ticks'])
-            key,measurement=clock_result(cp,clock)
-            rows.append((dict(id=label,clock_results={key:measurement},
-                spatial_results={spatial['key']:spatial['measurement']}),program))
-            self.assertTrue(replay_witness(scene,spatial['best'],self.compiler)['passed'])
-            self.assertEqual(clock['best']['candidate']['positions'][0],scene['initial']['position'][::2])
-            self.assertEqual(spatial['best']['candidate']['velocity'][0],scene['initial']['velocity'][::2])
-        early,late=[r for r,_ in rows]
-        clock=next(iter(early['clock_results']))
-        goal=next(iter(early['spatial_results']))
-        self.assertLess(early['spatial_results'][goal]['ticks'],late['spatial_results'][goal]['ticks'])
-        self.assertLess(early['clock_results'][clock]['objective'],late['clock_results'][clock]['objective'])
-        kept,_=retain_two_goals(rows,cap=8)
-        self.assertEqual(len(kept),2)
-
     def test_full_regression_continues_a_discarded_actual_faster_route(self):
         from research.legacy_cell_routes.comparison_audit import audit_pool
-        records=[r for r in controls(RESEARCH_ROOT) if r[0]=='ceiling']
+        records=[current_events(list(r)) for r in controls(RESEARCH_ROOT) if r[0]=='ceiling']
         fixture=records[0][3]
         scene=prepare_scene(fixture['request'])
         d,gates=decompose(scene),landmarks(scene)
         route=corridor_for_points(d,fixture['spatialPoints'],gates)
         adapter=CorridorAdapter(scene,route,gates,decomposition=d)
-        motion=_motion_bound(scene,self.compiler,2)
+        motion=motion_bound(scene,self.compiler,2)
         entries=[]
         for _,_,label,_,known in records:
             program=known['movementProgram'].copy()
@@ -124,22 +88,6 @@ class ComparisonGoalNumericalTests(unittest.TestCase):
         self.assertTrue(result['heuristicQualityLoss'])
         self.assertIn('early_jump',result['discardedBeatsHeuristic'])
         self.assertEqual(result['best']['plan']['ticks'],12)
-
-    def test_region_time_is_an_evaluator_on_existing_candidate_not_generation_target(self):
-        scene=flat_scene()
-        d,gates=decompose(scene),landmarks(scene)
-        route=corridor_for_points(d,[[.5,1,.5],[5.5,1,.5]],gates)
-        adapter=CorridorAdapter(scene,route,gates,decomposition=d)
-        program=next(p for p in programs(scene,4) if p['profile']['jump'][0])
-        original=program['profile']['jump'][:]
-        result=probe_spatial(scene,program,self.compiler,adapter,SearchWork(8,deadline=time.monotonic()+5),
-            _motion_bound(scene,self.compiler,2),spec=dict(kind='region',region=[.7,2.,-1.,2.],segment=0),
-            seconds=4,solver_calls=8,python_executable=os.environ['PKC_IPOPT_PYTHON'])
-        self.assertEqual(result['measurement']['status'],'feasible')
-        self.assertEqual(result['measurement']['ticks'],1)
-        self.assertEqual(program['profile']['jump'],original)
-        self.assertFalse(result['finalGoal'])
-        self.assertTrue(replay_witness(scene,result['best'],self.compiler)['passed'])
 
 
 if __name__=='__main__':unittest.main()

@@ -68,7 +68,7 @@ def source_entries(result):
 
 def run_full_audit(request,result,compiler,*,seconds_per_candidate=4,candidate_seconds=.7,solver_calls=48,
                    program_limit=None,python_executable=None,cancel_event=None,on_candidate=None,candidate_entries=None):
-    from parkour_solver.search.engine import _motion_bound, evaluate_program
+    from parkour_solver.search.engine import evaluate_program, motion_bound
     for name,value in [('seconds_per_candidate',seconds_per_candidate),('candidate_seconds',candidate_seconds)]:
         if number(value,name)<=0:raise ValueError('Reference budgets must be positive')
     integer(solver_calls,'reference solver calls',1,200000)
@@ -79,7 +79,7 @@ def run_full_audit(request,result,compiler,*,seconds_per_candidate=4,candidate_s
     d,gates=decompose(scene),landmarks(scene)
     corridor=corridor_for_points(d,result['corridor']['points'],gates)
     adapter=CorridorAdapter(scene,corridor,gates,decomposition=d)
-    motion=_motion_bound(scene,counted,2)
+    motion=motion_bound(scene,counted,2)
     cfg=movement_settings(scene)
     policy=None
     if result.get('decisionPlan') is not None:

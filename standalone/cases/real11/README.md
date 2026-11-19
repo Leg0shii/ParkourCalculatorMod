@@ -24,6 +24,27 @@ and budgets. The maintained case omits `initialJumpInputs`: the orchestrator
 selects initial preparation through existing reachability, hard-anchor tick
 comparison and finish bounds. Archived `[0,8]` fixtures are unchanged.
 
+As of 2026-11-16, the maintained movement domain enables `ceiling` alongside
+`normal` and `stepping`, with `ceilingHits: true`. Ceiling choices use the same
+movement proposal/composition, decision validation and constraint/solver path;
+they do not require a declared anchor. The existing type order is preserved,
+with ceiling choices appended. All seven supplied boxes start at Y=0, so their
+undersides do not provide head-hit opportunities on the above-ground transfers.
+Enabling the family does not create new geometry. This domain change requires
+a fresh run; older checkpoints must use their original input to resume exactly.
+
+Validation for the enablement: 27 tests passed with native compiler/worker and
+zero skips across ceiling contacts, generic composition, ceiling-aware transfer
+bounds and package layout. Direct ceiling-generation checks at the original
+state and captured History B states17/28/40/58/67 returned zero choices. These
+are configuration/generation checks, not a new cold Real11 performance run.
+
+The geometry-driven avoidance replacement removes local repair/passage caps;
+the maintained case omits their obsolete fields. Source-era inputs remain readable,
+but normalization removes those values. Global time/call budgets and per-request
+numerical timeouts apply. See the [implementation and measurements](../../research/geometry-passages/README.md).
+Old face-generator continuations require their original source checkout.
+
 The [unrestricted initial-delay control](../../research/initial-domain-selection/README.md)
 found T64 with only0/8 receiving first-anchor feasibility work;9–12 were saved
 as recoverable alternatives without numerical calls. This is observed behavior

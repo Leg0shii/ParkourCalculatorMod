@@ -97,7 +97,7 @@ objective_E = maximize(d.x * X[T_E] + d.z * Z[T_E])
 
 Reuse [`Checkpoint.objective`](../../src/parkour_solver/spatial/checkpoints.py) and existing POSITION/customYaw. Physical landing constraints remain independent. No waypoint equality, progress-based pruning, slack work or constant FEASIBILITY objective is introduced.
 
-**Settled design evidence:** the user reports another agent measured approximately equal speed for this objective with early stop. Adopt that as the design input; this session did not reproduce or inspect the other agent's measurement. No further approval or constant-objective comparison is required to proceed with this direction. Implementation/regression/cold acceptance is recorded in the current evidence linked above.
+**Settled design evidence:** the user reports a measurement of approximately equal speed for this objective with early stop. Adopt that as the design input; this session did not reproduce or inspect the other agent's measurement. No further approval or constant-objective comparison is required to proceed with this direction. Implementation/regression/cold acceptance is recorded in the current evidence linked above.
 
 Use stop-on-feasible and no intermediate polishing/equal-cost variant drain. Keep native scene/anchor acceptance, repair, feasible-yaw seeds and original-state re-solves. A warm seed may already be feasible and return without improvement; it remains a valid early-stop result. Final actual landing uses real MAXZ optimization.
 
@@ -125,7 +125,7 @@ A decision level here means a completed jump/landing or selected physical contac
 
 For example, run3→jump→land on the same block is one completed movement decision including its run preparation. A second setup jump is another level. Required anchor arrival is always solved even if it occurs before the next scheduled level. Existing [`append_choice`](../../src/parkour_solver/movement/program.py), [`normal_choices`](../../src/parkour_solver/movement/normal.py) and named-choice boundaries provide the underlying actual choices; distinguish raw construction steps from this solve cadence explicitly.
 
-Each feasible node contributes a yaw seed only; no fixed X/Z/velocity seam is created. Later node/anchor solves still optimize all earlier facings jointly from the original state. This does not introduce optional-support **comparison goals**: actual time comparisons/promotion remain at required anchors/final task. An internal feasible node is not a new required anchor.
+Each feasible node retains its selected physical/avoidance inequalities and a yaw seed; no fixed X/Z/velocity seam is created. `evaluate_node` calls `commit_arrival`, whose `retain_prefix` preserves those selected rows before the next movement extension. Later node/anchor solves still optimize all earlier facings jointly from the original state, within the retained constraints. This does not introduce optional-support **comparison goals**: actual time comparisons/promotion remain at required anchors/final task. An internal feasible node is not a new required anchor. The [avoidance follow-up plan](AVOIDANCE_PASSAGES.md) separately records the need to specify recoverable passage-alternative retention; continuous reoptimization alone does not reopen a selected discrete side.
 
 ### Alternative: every 2 or 4 decision levels
 
@@ -234,7 +234,7 @@ A → B → C → B      not generated now: inter-block return
 
 Use stable physical support-owner provenance. Ignore transient air; compress consecutive same-owner occurrences only for eligibility. Keep every jump event, input count, physical patch/case and actual program in the solver model. Moving among decomposed patches belonging to the same block is not automatically a different block visit.
 
-Track departed owners: the current owner remains eligible for repeated local jumps; after another owner is visited, the departed owner is ineligible. Apply this before expensive contact generation and audit emitted programs as well. Initialize from the original support and reconstruct the same state on resume; supplied roots violating this selected domain must be identified explicitly. Do not use a visited set that rejects the second landing on the **current** owner.
+Track departed owners: the current owner remains eligible for repeated local jumps; after another owner is visited, the departed owner is ineligible for every interaction at the feet (landings, lower landings and the blocks a stepping case steps onto, over or around), while ceiling hits, grinds and wall contacts with it stay allowed. Apply this before expensive contact generation (the `feetAllowed` context predicate) and audit emitted programs as well. Initialize from the original support and reconstruct the same state on resume; supplied roots violating this selected domain must be identified explicitly. Do not use a visited set that rejects the second landing on the **current** owner.
 
 A required-anchor cursor advances only on its next actual required contact, never from a same-block setup hop. Optional supports are not globally disabled. Required order remains enforced; do not enter a later required anchor prematurely if that would require a currently unsupported return to fulfill the required sequence.
 

@@ -10,7 +10,7 @@ The task minimizes achieved finish T, then maximizes Z at equal T.
 **2026-11-16: user deferred further trials until the other agent finishes the
 solver improvements.** No further solve is running. The fixture, saved work and
 historical evidence below remain intact; the separate agent's assignment stays
-active. The known [bookkeeping handoff](../../docs/BOOKKEEPING_PERFORMANCE_AGENT_HANDOFF.md)
+active. The known [bookkeeping handoff](../../docs/PERFORMANCE.md)
 owns hashing, preparation and snapshot costs while preserving policy and exact
 resume/ownership. Do not infer that its current implementation progress is known.
 

@@ -6,15 +6,15 @@ import os
 from pathlib import Path
 import time
 import unittest
-from unittest.mock import patch
 
 from parkour_solver.scene.normalize import prepare_scene
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
 from parkour_solver.search.engine import find_checkpoint_route
-from parkour_solver.search.compat.decision_windows import DecisionPolicy, fair_programs, plan_windows, retain_candidates
+from parkour_solver.search.compat.decision_windows import DecisionPolicy, plan_windows, retain_candidates
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.search.movement import iter_movement_programs
 from tests.support.checkpoint_guidance import flat_scene
+from tests.support.archived_events import current_events
 
 
 def decision(name, lo, hi, **kwargs):
@@ -29,7 +29,7 @@ class DecisionWindowTests(unittest.TestCase):
             scene = prepare_scene(fixture['request'])
             plan = plan_windows(fixture['opportunities'],gap=fixture['settings']['cluster_gap'],
                                 max_inputs=scene['movementSearch']['maxInputs'])
-            audit = DecisionPolicy(plan,scene).audit(best['movementProgram'])
+            audit = DecisionPolicy(plan,scene).audit(current_events(best['movementProgram']))
             self.assertTrue(audit['accepted'],(name,label,audit['unmatched']))
             if name=='grind-or-run':
                 self.assertEqual(len(plan['clusters']),1)
@@ -95,27 +95,12 @@ class DecisionWindowTests(unittest.TestCase):
         policy = DecisionPolicy(plan_windows([decision('launch',0,0,kinds=['jump']),
                                               decision('next',10,15,kinds=['landing'])]),scene)
         programs = list(itertools.islice(iter_movement_programs(scene,checkpoint_tick=4,threshold=0.,
-                            deadline=time.monotonic()+2),32))
+                            deadline=time.monotonic()+2,context_adapter=lambda c:c.update(interactionGate=None)),32))
         initial = next(p for p in programs if p['profile']['jump'][0])
         delayed = next(p for p in programs if not p['profile']['jump'][0] and any(p['profile']['jump']))
         self.assertTrue(policy(initial))
         self.assertFalse(policy(delayed))
         self.assertTrue(any(e['kind']=='jump' for e in policy.audit(delayed)['unmatched']))
-
-    def test_fair_generation_gives_each_parent_a_turn_and_bounded_quota(self):
-        def generate(scene,settings,initial_programs,report,**kwargs):
-            for i in range(settings['maxPrefixes']):
-                report['expandedPrefixes'] = i+1
-                yield dict(seed=initial_programs[0]['tag'],index=i)
-        report = {}
-        with patch('parkour_solver.search.movement.iter_movement_programs',generate), \
-                patch('parkour_solver.search.engine._key',lambda p:p['tag']):
-            g = fair_programs({},[dict(tag='a'),dict(tag='b')],cfg=dict(maxPrefixes=6),fair=True,report=report)
-            values = [next(g) for _ in range(4)]
-            g.close()
-        self.assertEqual([v['seed'] for v in values],['a','b','a','b'])
-        self.assertEqual([r['prefixQuota'] for r in report['parents']],[3,3])
-        self.assertEqual(report['expandedPrefixes'],4)
 
 
 @unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
@@ -125,7 +110,7 @@ class DecisionWindowNumericalTests(unittest.TestCase):
         scene = flat_scene()
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             result = find_checkpoint_route(scene,compiler,opportunities=[decision('launch',0,2,kinds=['jump']),
-                decision('finish',6,20,kinds=['landing'])],cluster_gap=1,objective_gap=.25,fair_parents=True,
+                decision('finish',6,20,kinds=['landing'])],cluster_gap=1,objective_gap=.25,
                 spatial_points=[[.5,1,.5],[5.5,1,.5]],seconds=12,max_candidates=12,beam_width=6,
                 max_solver_calls=48,score_call_limit=4,score_seconds=2,candidate_seconds=.7,
                 python_executable=os.environ['PKC_IPOPT_PYTHON'])

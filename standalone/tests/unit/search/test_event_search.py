@@ -44,17 +44,17 @@ class EventSearchTests(unittest.TestCase):
         request=next(r for r in requests if r['goal'].get('surface')==right['id'])
         p=program(scene,2,2);p['terminalSupport']='floor'
         p['profile']['grounded']=[True,False,True]
-        p['profile']['contactEvents']=[dict(offset=1,axis='Y',direction=-1,box=scene['collisionScene']['solids'][0])]
+        p['profile']['contactEvents']=[dict(offset=1,axis='Y',direction=-1,boxes=[scene['collisionScene']['solids'][0]])]
         view=adapter.for_goal(request,cursor).bind_program(p)
         candidate=dict(positions=[[.5,.5],[.5,.5],[.5,.5]])
         self.assertFalse(view.candidate({},candidate,{})['accepted'])
-        rows=view.contact_regions(p,2)
-        self.assertTrue(rows)
-        self.assertTrue(all(r['offset']==1 for option in rows for r in option))
+        from parkour_solver.movement.contact_combinations import scene_contact_options
+        pieces=scene_contact_options(scene,1,1,members=[0])
+        self.assertEqual(len(pieces),2)
+        right_piece,=[r for option in pieces for r in option.regions if r[0]>3]
         candidate['positions'][1]=[4.,.5]
         self.assertTrue(view.candidate({},candidate,{})['accepted'])
-        self.assertTrue(any(all((candidate['positions'][1][0 if r['mode']=='X' else 1]-r['rhs'])*
-            (1 if r['cmp']=='GE' else -1)>=0 for r in option) for option in rows))
+        self.assertTrue(right_piece[0]<4<right_piece[2] and right_piece[1]<.5<right_piece[3])
     def test_same_support_setup_is_local_without_removing_its_physical_choices(self):
         scene=flat_scene();data=build_route_domain(scene,dict(kind='landing',block='goal')).to_dict()
         adapter=EventGuideAdapter(data,build_event_graph(data))
@@ -63,7 +63,7 @@ class EventSearchTests(unittest.TestCase):
         requests,_,_=adapter.next_goals(cursor,[root])
         self.assertTrue(any(r['localSetupAlias'] for r in requests))
         view=adapter.for_goal(next(r for r in requests if r['terminal']),cursor)
-        ctx=dict(mode='open',scene=scene,program=root,state=boundary_state(root),maxInputs=20,threshold=0.)
+        ctx=dict(mode='open',scene=scene,program=root,state=boundary_state(root),maxInputs=20,threshold=0.,interactionGate=None)
         view.context(ctx)
         choices=list(generate_choices('normal',ctx))
         self.assertIn('start',[c['terminalSupport'] for c in choices])
@@ -95,7 +95,7 @@ class EventSearchTests(unittest.TestCase):
             p=program(s,n,n);p['terminalSupport']=s['goalBlock']
             target=next(b for b in s['blocks'] if b['id']==s['goalBlock'])
             p['profile']['position'][-1]=target['top']
-            p['profile']['contactEvents']=[dict(offset=n-1,axis='Y',direction=-1,box=s['collisionScene']['solids'][target['solidIndex']])]
+            p['profile']['contactEvents']=[dict(offset=n-1,axis='Y',direction=-1,boxes=[s['collisionScene']['solids'][target['solidIndex']]])]
             yield p
         def evaluate(s,p,compiler,adapter,work,motion,**kwargs):
             work.before_solve({});dispatched.append((p['terminalSupport'],p['profile']['airtime']))
@@ -109,7 +109,7 @@ class EventSearchTests(unittest.TestCase):
             if chosen:
                 owner=next(d for d in dfs['discovery'].values() if d['parent'] and d['parent']['candidate']==chosen[-1]['candidate'])
                 published.append(owner['owner'])
-        with patch('parkour_solver.search.engine._motion_bound',return_value=dict(movementAfterSupportCheck=.5)), \
+        with patch('parkour_solver.search.engine.motion_bound',return_value=dict(movementAfterSupportCheck=.5)), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate):
             result=find_checkpoint_route(scene,object(),anchor_search=dict(anchors=['mid']),seconds=2,score_seconds=1,max_solver_calls=1,

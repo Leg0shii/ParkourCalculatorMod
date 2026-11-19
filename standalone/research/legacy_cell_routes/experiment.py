@@ -162,8 +162,12 @@ def run_arm(request, arm, *, mode='generation', seconds=10, route_cap=10, max_ex
         counted = CountingCompiler(compiler) if compiler is not None else None
         if mode == 'generation':
             report = {}
+            def configure(context):
+                if adapter:
+                    adapter.context(context)
+                context['interactionGate'] = None
             for program in iter_movement_programs(scene, settings=movement_settings(scene), deadline=route_started+allocation,
-                    report=report, context_adapter=adapter.context if adapter else None, cancel_event=cancel_event, work=work):
+                    report=report, context_adapter=configure, cancel_event=cancel_event, work=work):
                 work.program(program)
             result = dict(status='generated', best=None, movementGeneration=report, termination=report.get('termination'))
         else:

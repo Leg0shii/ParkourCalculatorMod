@@ -4,8 +4,8 @@
 
 ## Inspected sources and scope
 
-- Baritone default checkout `1.21.4`, commit `c55a9c5d9a333c9f0336179a96c13a178fcbc2d4`, freshly shallow-cloned into `/tmp/pkc-pruning-baritone`. Reviewed ordinary walking/parkour search, not its separate elytra pathfinder.
-- Curryocity/Stratfinder `main`, commit `988695b9b23245ded9f8ffb07c7ffd984091225d`, freshly shallow-cloned into `/tmp/pkc-pruning-stratfinder`. Same revision as the earlier local investigation. Reviewed Input Cracker, segment transforms, zSolver and settings.
+- Baritone default checkout `1.21.4`, commit `c55a9c5d9a333c9f0336179a96c13a178fcbc2d4`. Reviewed ordinary walking/parkour search, not its separate elytra pathfinder.
+- Curryocity/Stratfinder `main`, commit `988695b9b23245ded9f8ffb07c7ffd984091225d`. Reviewed Input Cracker, segment transforms, zSolver and settings.
 - This mod's native Stratfinder at local `dc10e68`, `/Users/arvindmurty/CS/ParkourCalculatorMod`, as a supplementary comparison: `StructurePoolDriver`, `UnitScreen`, `PoolCertifier`, `NoTurnFinder`. This native code is not a claim about the consolidated standalone search's behavior. Existing unrelated working changes were left untouched.
 - Read [STRATFINDER_INVESTIGATION.md](STRATFINDER_INVESTIGATION.md) for earlier provenance and measurements. No runtime benchmarks or new numerical witnesses were generated here. The source repositories were read, not built or executed.
 
@@ -115,19 +115,3 @@ Measure route proposal quality at K=10, 50, 100 and 200 expensive attempts. Use 
 Ablate separately: geometry/time only; add momentum lookahead; add diversity; add strategy-family generation and timing grouping; add warm local changes. Test whether the shortlist contains useful routes before adding a more complicated search algorithm. Include routes needing backward setup, self jumps, unusual entry faces and repeated ceiling/stepping/ladder effects. A heuristic that only succeeds on ordinary forward jumps has not met our movement scope.
 
 Decision checkpoint: the user has prioritized heuristic route selection to tens/hundreds. Current recommendation is a diverse bounded candidate search on the sparse event graph with template generation, estimated completion time, momentum compatibility and constraint-deficit screening. Particular weights, caps and graph-search backend are still open. No speedup, recall or solution-quality claim has yet been measured.
-
-## Terminology follow-up, 2026-10-31
-
-[The living research record](PRUNING_RESEARCH.md#search-terminology-clarification-bounded-best-first-and-beam-search) now defines the proposed globally capped best-first frontier versus classical layer-based beam retention. Live width, total expansions and complete numerical attempts are separate budgets. No width, layering or policy has been selected.
-
-## Spatial-route formalization follow-up, 2026-10-31
-
-The user clarified why Baritone was requested: derive a broad spatial path representation separately from local interaction/timing optimization. [The living research record](PRUNING_RESEARCH.md#hierarchical-encoding-spatial-route-families-and-local-realizations) now proposes shared region/passage nodes, untimed spatial route signatures and a local timed event graph. Baritone's location-plus-movement-action graph informs this abstraction, but the two-level route-family/local-realization design is our adaptation. Local alternatives include changes in event structure, such as overflight versus landing/run-off, rather than only tick shifts. The original-state continuous solve and momentum continuity couple the levels.
-
-## Geometry extraction research follow-up, 2026-10-31
-
-[SPATIAL_ROUTE_RESEARCH.md](SPATIAL_ROUTE_RESEARCH.md) now supplies a concrete proposal for deriving spatial regions/passages from AABB geometry, comparing cell decomposition, navmesh links, hierarchical entrances, topo-geometric path classes and diverse top-K route selection. This extends the Baritone-inspired abstraction beyond a list of heuristic scores. No source/runtime implementation or measurements were added.
-
-## General cell-decomposition foundation follow-up, 2026-10-31
-
-The user requested the general context before adapting the method. SPATIAL_ROUTE_RESEARCH.md now separates standard exact/approximate/coverage decomposition and graph guarantees from our AABB-specific proposal. It also records alternative cuboid constructions and the local solver benefit of replacing obstacle-side disjunctions by corridor membership bounds. These are research conclusions and design candidates; no code or benchmark changed.

@@ -1,0 +1,95 @@
+{
+  "suspendedFrames": [
+    {
+      "frame": 4,
+      "goal": "b7",
+      "records": 18,
+      "unresolvedBranches": 1,
+      "pendingBranches": 0,
+      "deferredNodes": 0
+    }
+  ],
+  "oracleRejectedRoutes": [
+    {
+      "frame": 3,
+      "goal": "b5",
+      "record": "7f935a774f6eb9d8c59a8e438af2308e129039683c8cf73e0d9e5f82954b1f35",
+      "recordStatus": "unknown",
+      "node": "oracle_rejected"
+    },
+    {
+      "frame": 1,
+      "goal": "b3",
+      "record": "c0f42dd935a3bc7d8b4606fbb517d786b338bfe4eff7038e2e0c9564bff119e4",
+      "recordStatus": "unknown",
+      "node": "oracle_rejected"
+    }
+  ],
+  "unknownRequests": [
+    {
+      "index": 2,
+      "workerStatus": "Infeasible_Problem_Detected",
+      "owners": [
+        {
+          "frame": 1,
+          "goal": "b3",
+          "record": "c0f42dd935a3bc7d8b4606fbb517d786b338bfe4eff7038e2e0c9564bff119e4",
+          "recordStatus": "unknown",
+          "node": "oracle_rejected"
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "workerStatus": "Infeasible_Problem_Detected",
+      "owners": [
+        {
+          "frame": 3,
+          "goal": "b5",
+          "record": "7f935a774f6eb9d8c59a8e438af2308e129039683c8cf73e0d9e5f82954b1f35",
+          "recordStatus": "unknown",
+          "node": "oracle_rejected"
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "workerStatus": "Infeasible_Problem_Detected",
+      "owners": [
+        {
+          "frame": 4,
+          "goal": "b7",
+          "record": "7ff90b6147dbe92f6a4cecf37507890849a8ece4ecf4e2971508b1406683bd24",
+          "recordStatus": "feasible",
+          "node": "feasible"
+        }
+      ]
+    },
+    {
+      "index": 23,
+      "workerStatus": "Infeasible_Problem_Detected",
+      "owners": [
+        {
+          "frame": 4,
+          "goal": "b7",
+          "record": "7ff90b6147dbe92f6a4cecf37507890849a8ece4ecf4e2971508b1406683bd24",
+          "recordStatus": "feasible",
+          "node": "feasible"
+        }
+      ]
+    },
+    {
+      "index": 53,
+      "workerStatus": "Infeasible_Problem_Detected",
+      "owners": [
+        {
+          "frame": 7,
+          "goal": "b5",
+          "record": "9ec51a85099ba5be0367341a390beb0ab084784393e21dd15b38105e0bbea56c",
+          "recordStatus": "feasible",
+          "node": "feasible"
+        }
+      ]
+    }
+  ]
+}

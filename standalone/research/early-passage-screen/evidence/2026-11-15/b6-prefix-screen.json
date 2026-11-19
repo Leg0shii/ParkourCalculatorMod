@@ -1,0 +1,14 @@
+{
+  "baseRevision": "641c68b51ffd6621717bc86c3f08ddecf30faf9d",
+  "captureResultSHA256": "46725eff2384436e250f7409ef01dd2dceb084f4b994850fd249ea66dd731b04",
+  "descriptions": 277,
+  "uniqueRowSets": 137,
+  "results": {
+    "not_ruled_out": 40,
+    "linear_control_relaxation_infeasible": 39,
+    "norm_reach_contradiction": 108,
+    "interval_reach_contradiction": 90
+  },
+  "productionReplayMatched": true,
+  "scope": "First run-8 history, fixed67-tick model; no B7 alternatives or angle-solver workers."
+}

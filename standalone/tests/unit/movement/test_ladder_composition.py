@@ -20,6 +20,7 @@ from parkour_solver.search.repair import solve_contact_branches; from parkour_so
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.scene.route import prepare_route, schedule
 from parkour_solver.physics.vertical import REST_CARRY, CLIMB_CARRY, f32
+from parkour_solver.movement.ceiling_profiles import ceiling_options
 
 
 ROOT = AUTONOMY_DATA
@@ -85,7 +86,7 @@ class LadderRegionTests(unittest.TestCase):
         col = {'id': 'a', 'x': 0, 'z': 0, 'minY': 0, 'maxY': 5}
         wall = climb_walls(col, [[1,0,-2,2,6,2]])[0]
         ceiling = [-2, 4., -2, 3, 5, 3]
-        contacts = ceiling_sequence(s, ceiling)
+        contacts = ceiling_sequence(s, ceiling_options([ceiling])[0])
         self.assertGreater(len(contacts), 1)
         changed = with_contacts(s, contacts, col, wall, 0, max_inputs=40)
         self.assertIsNotNone(changed)
@@ -116,7 +117,7 @@ class LadderCompositionIntegrationTests(unittest.TestCase):
         compiled = compile_block_path(scene, ['start','b'], [edge])
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             result = solve_contact_branches(compiled['route'], compiled['profiles'], floor_checks(scene, ['start','b'], compiled['profiles']),
-                compiler, seconds=18, candidate_seconds=3, retries=1, max_branches=8, geometry=scene['collisionScene'],
+                compiler, seconds=18, candidate_seconds=3, retries=1, geometry=scene['collisionScene'],
                 motion_bound={'storedSpeedNorm':2,'movementAfterSupportCheck':2}, python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'], 'feasible', result)
         b = result['best']

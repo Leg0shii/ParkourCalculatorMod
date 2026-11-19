@@ -10,7 +10,7 @@ For our block solver, the promising design is a pool of route/profile prefixes, 
 
 ## Sources and what was verified
 
-- Our worktree at `54c0374`, native code unchanged from its baseline. Read the actual controller, pool driver, screens, certifier and fallback, not only the early spike document.
+- Native mod code at `54c0374`. Read the actual controller, pool driver, screens, certifier and fallback, not only the early spike document.
 - `git blame` attributes the current pad-prefix prune and best-first cross-level queue to `3085f011`, [PR #558](https://github.com/Leg0shii/ParkourCalculatorMod/pull/558), merged 2026-10-18. Read that description, [issue #554](https://github.com/Leg0shii/ParkourCalculatorMod/issues/554), and [the original issue #424](https://github.com/Leg0shii/ParkourCalculatorMod/issues/424) with `gh`.
 - The consolidated [native design record](../../../docs/noturn-global-solver-design.md) contains later changes that supersede parts of [the early spike](../../../docs/noturn-stratfinder-spike.md). In particular, the pool driver is implemented and is the controller's first path; Benders/homotopy research code is not the default window search.
 - Curryocity source cloned into ignored `build/stratfinder-source`, pinned at `988695b9b23245ded9f8ffb07c7ffd984091225d`. Its repository returned no issues or pull requests in the API queries. Read `inputCracker`, `segLerp`, `zSolver`, movement code and settings.

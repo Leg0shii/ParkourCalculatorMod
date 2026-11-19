@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import unittest
 
-from parkour_solver.movement.contact_combinations import contact_combinations, merge_contacts
+from parkour_solver.movement.contact_combinations import contact_combinations, expanded_face, merge_contacts
 from parkour_solver.movement.contact_profiles import contact_profile, generate_contact_profiles
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.movement.ladder.schedules import trace_ladder_schedule
@@ -23,7 +23,8 @@ def event(axis, tick=0, direction=1, box=None, role='contact'):
     a = 'XYZ'.index(axis)
     width = BODY_HEIGHT if axis == 'Y' else HALF_WIDTH
     plane = box[a] - width if direction > 0 else box[a + 3] + (0 if axis == 'Y' else width)
-    return dict(leg=0, offset=tick, axis=axis, direction=direction, plane=plane, box=box, role=role)
+    return dict(leg=0, offset=tick, axis=axis, direction=direction, plane=plane, boxes=[box], surface=None,
+                regions=[expanded_face(box, a, -direction, 1e-6)], role=role)
 
 
 class CombinationTests(unittest.TestCase):
@@ -68,6 +69,21 @@ class CombinationTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 merge_contacts([c, changed])
         self.assertEqual(len(list(contact_combinations([event('X'), event('X', direction=-1)], limit=100))), 2)
+
+    def test_touching_coplanar_ceilings_are_one_contact_with_both_members(self):
+        from parkour_solver.movement.ceiling_profiles import ceiling_opportunities
+        boxes = [[0, 3, 0, 1, 4, 1], [1, 3, 0, 2, 4, 1]]
+        opportunities = list(ceiling_opportunities(boxes, 12))
+        self.assertEqual(len(list(contact_combinations(opportunities, max_events=1))), 12)
+        profile, = generate_contact_profiles(0., 0., opportunities, max_events=1)['profiles']
+        event, = profile['contactEvents']
+        self.assertEqual((event['offset'], event['boxes']), (4, boxes))
+        self.assertEqual(event['regions'], [expanded_face(boxes[0], 1, -1, 1e-6)[:2] + expanded_face(boxes[1], 1, -1, 1e-6)[2:]])
+
+    def test_same_tick_alternatives_are_never_combined(self):
+        pool = [event('Y', 4, box=[0, 3, 0, 1, 4, 1]), event('Y', 4, box=[1, 3, 3, 2, 4, 4])]
+        self.assertEqual(len(list(contact_combinations(pool, max_events=1))), 2)
+        self.assertEqual(len(list(contact_combinations(pool, max_events=2))), 2)
 
     def test_events_and_before_after_avoidance_follow_run_insertion(self):
         contacts = [event('X'), event('Z', 1), event('Y', 1)]
@@ -159,6 +175,20 @@ class CombinationSceneTests(unittest.TestCase):
         contacts[0]['boxes'] = boxes[:1]
         self.assertFalse(self.compiler.check_scene(scene, positions, [[.15,0,0]], [False,False], 5, contacts=contacts)['feasible'])
 
+    def test_coplanar_ceiling_replays_under_each_member(self):
+        boxes = [[-2, 2.05 + BODY_HEIGHT, -2, 0, 6, 2], [0, 2.05 + BODY_HEIGHT, -2, 2, 6, 2]]
+        scene = {'version': 1, 'profile': 'minecraft-1.8.9', 'bounds': [-8, -5, -8, 8, 12, 8], 'solids': boxes, 'stepHeight': 0}
+        plane = event('Y', box=boxes[0])['plane']
+        for x, member in ((-1, 0), (1, 1)):
+            with self.subTest(member=member):
+                positions = [[x, 2., 0], [x, plane, 0]]
+                merged = [{'state': 1, 'axis': 1, 'direction': 1, 'plane': plane, 'boxes': boxes}]
+                checked = self.compiler.check_scene(scene, positions, [[0, .12, 0]], [False, False], 5, contacts=merged)
+                self.assertTrue(checked['feasible'], checked)
+                other = [dict(merged[0], boxes=[boxes[1 - member]])]
+                self.assertFalse(self.compiler.check_scene(scene, positions, [[0, .12, 0]], [False, False], 5,
+                                                           contacts=other)['feasible'])
+
     def test_all_same_tick_axis_combinations_and_signs_against_shared_scene(self):
         for vertical, xhit, zhit, xs, zs in itertools.product(('none', 'ceiling', 'floor'), (False, True),
                                                            (False, True), (-1, 1), (-1, 1)):
@@ -176,13 +206,13 @@ class CombinationSceneTests(unittest.TestCase):
                         e = event(axis, direction=sign, box=box)
                         next_p[a] = e['plane']
                         solids.append(box)
-                        contacts.append({'state': 1, 'axis': a, 'direction': sign, 'plane': e['plane'], 'box': box})
+                        contacts.append({'state': 1, 'axis': a, 'direction': sign, 'plane': e['plane'], 'boxes': [box]})
                 if vertical != 'none':
                     box = [-3, 2.05 + BODY_HEIGHT, -3, 3, 6, 3] if vertical == 'ceiling' else [-3, 0, -3, 3, 1.95, 3]
                     e = event('Y', direction=1 if vertical == 'ceiling' else -1, box=box)
                     next_p[1] = e['plane']
                     solids.append(box)
-                    contacts.append({'state': 1, 'axis': 1, 'direction': e['direction'], 'plane': e['plane'], 'box': box})
+                    contacts.append({'state': 1, 'axis': 1, 'direction': e['direction'], 'plane': e['plane'], 'boxes': [box]})
                 scene = {'version': 1, 'profile': 'minecraft-1.8.9', 'bounds': [-8, -5, -8, 8, 12, 8], 'solids': solids, 'stepHeight': 0}
                 checked = self.compiler.check_scene(scene, [p, next_p], [displacement], [False, vertical == 'floor'], 5, contacts=contacts)
                 self.assertTrue(checked['feasible'], checked)
@@ -195,7 +225,7 @@ class CombinationSceneTests(unittest.TestCase):
     def test_selected_step_is_checked_as_step_not_a_fictitious_downward_clip(self):
         floor, stair = [-2, 0, -2, 1, 1, 2], [1, 0, -2, 3, 1.5, 2]
         scene = {'version': 1, 'profile': 'minecraft-1.8.9', 'bounds': [-8, -5, -8, 8, 12, 8], 'solids': [floor, stair]}
-        selected = {'state': 1, 'axis': 1, 'direction': -1, 'plane': 1.5, 'box': stair, 'step': True}
+        selected = {'state': 1, 'axis': 1, 'direction': -1, 'plane': 1.5, 'boxes': [stair], 'step': True}
         checked = self.compiler.check_scene(scene, [[.5, 1, 0], [1., 1.5, 0]], [[.5, REST_CARRY, 0]], [True, True], 5, contacts=[selected])
         self.assertTrue(checked['feasible'], checked)
         selected['plane'] = 1.4
@@ -208,9 +238,9 @@ class CombinationSceneTests(unittest.TestCase):
         xwall, zwall = [1.5, 0, -3, 2, 6, 3], [-3, 0, 1.5, 3, 6, 2]
         scene = {'version': 1, 'profile': 'minecraft-1.8.9', 'bounds': [-8, -5, -8, 8, 12, 8],
                  'solids': [floor, stair, xwall, zwall]}
-        selected = [{'state': 1, 'axis': 1, 'direction': -1, 'plane': 1.5, 'box': stair, 'step': True},
-                    {'state': 1, 'axis': 0, 'direction': 1, 'plane': 1.5 - HALF_WIDTH, 'box': xwall},
-                    {'state': 1, 'axis': 2, 'direction': 1, 'plane': 1.5 - HALF_WIDTH, 'box': zwall}]
+        selected = [{'state': 1, 'axis': 1, 'direction': -1, 'plane': 1.5, 'boxes': [stair], 'step': True},
+                    {'state': 1, 'axis': 0, 'direction': 1, 'plane': 1.5 - HALF_WIDTH, 'boxes': [xwall]},
+                    {'state': 1, 'axis': 2, 'direction': 1, 'plane': 1.5 - HALF_WIDTH, 'boxes': [zwall]}]
         checked = self.compiler.check_scene(scene, [[.5, 1, .5], [1.5 - HALF_WIDTH, 1.5, 1.5 - HALF_WIDTH]],
                                            [[.8, REST_CARRY, .8]], [True, True], 5, contacts=selected)
         self.assertTrue(checked['feasible'], checked)
@@ -243,7 +273,7 @@ class StepCombinationIntegrationTests(unittest.TestCase):
             'profileKind':'step','profile':p,'entryFace':None,'exitFace':None}])
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             result = solve_contact_branches(compiled['route'],compiled['profiles'],floor_checks(scene,['floor','stair'],compiled['profiles']),
-                compiler,seconds=10,candidate_seconds=2,retries=0,max_branches=2,geometry=scene['collisionScene'],
+                compiler,seconds=10,candidate_seconds=2,retries=0,geometry=scene['collisionScene'],
                 motion_bound={'storedSpeedNorm':2,'movementAfterSupportCheck':2},python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'],'feasible',result)
         self.assertEqual(result['best']['plan']['ticks'],1)
@@ -270,7 +300,7 @@ class StepCombinationIntegrationTests(unittest.TestCase):
             'profile':profile,'entryFace':None,'exitFace':None}])
         with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
             result = solve_contact_branches(compiled['route'],compiled['profiles'],floor_checks(scene,['floor','goal'],compiled['profiles']),
-                compiler,seconds=12,candidate_seconds=2,retries=1,max_branches=8,geometry=scene['collisionScene'],
+                compiler,seconds=12,candidate_seconds=2,retries=1,geometry=scene['collisionScene'],
                 motion_bound={'storedSpeedNorm':2,'movementAfterSupportCheck':2},python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'],'feasible',result)
         b = result['best']

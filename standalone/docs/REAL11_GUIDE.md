@@ -1,44 +1,21 @@
 # Linkcraft Real11 opening: agent guide
 
-2026-11-15 longer-course trial: [extended anchor task](../cases/real11/extended-anchors.json)
-uses B7/B20 as additional intermediate anchors and B22 as the finish. The
-[fixed initial-0 prefix experiment](../research/real11-long-solve/README.md)
-starts generation at B5@55 while keeping all earlier facings free. The first
-300s run validated unit B7@64, then exposed an empty constraint-domain retry
-loop. The exact-node correction passes611 native tests; corrected300s+120s
-continuations backtrack the empty nodes and leave an optional B11@68 candidate's
-constraint work pending. No B20/B22 arrival was found. The saved state and prefix/
-replay audits are linked from the experiment. Old extended-B7 results below remain
-separate.
+Maps Real11 questions to their evidence. The current task, status and decisions
+are in [current state](CURRENT_STATE.md) and [decisions](DECISIONS_AND_PLANS.md);
+start below at "Which evidence answers which question?". Every section records its
+own source revision, task and policy.
 
-2026-11-15 continuation geometry: [new bounds report](REAL11_EXTENDED_GEOMETRY.md)
-and [input](../cases/real11/extended-geometry.json) add B8–B22, restore unit B7
-and keep B6 unit-sized as finally corrected by the user. That file is geometry-only;
-the later task above supplies its explicit goal. The extended-B7 benchmark
-and older wider/missing-B6 caveats below describe their recorded source era.
+| Date | Change | Evidence |
+| --- | --- | --- |
+| 2026-11-16 | Geometry-driven avoidance passages: T64 at 14.1 s | [geometry passages](../research/geometry-passages/README.md) |
+| 2026-11-15 | Longer course: anchors B7/B20, finish B22, fixed initial-0 prefix through B5@55; no B20/B22 arrival yet | [long solve](../research/real11-long-solve/README.md), [task](../cases/real11/extended-anchors.json) |
+| 2026-11-15 | Extended geometry B8 to B22, unit B6 and B7 | [geometry report](REAL11_EXTENDED_GEOMETRY.md), [input](../cases/real11/extended-geometry.json) |
+| 2026-11-15 | `[0,8]` first-jump filter removed from the maintained case | [unrestricted control](../research/initial-domain-selection/README.md) |
+| 2026-11-11 | Shared comparisons and reachability; ceiling-aware flight minima 9/9/10/15/9 for B1 to B7; combined cold search reaches T64 | [hard-jump comparisons](../research/hard-jump-comparisons/README.md) |
+| 2026-11-10 | Inventory of all 1,158 admitted programs; B3 to B4 is the main generator and solver hotspot | [candidate audit](../research/anchor-candidate-audit/README.md) |
 
-2026-11-15 initial-domain follow-up: the [maintained case](../cases/real11/physical-anchors.json) now omits the old `[0,8]` filter. The [unrestricted control](../research/initial-domain-selection/README.md) naturally queried0/8 and deferred9–12 before numerical work, reaching T64 with55/55 independent replays. [Configuration audit](INITIAL_DOMAIN_AND_CONFIG_AUDIT.md) distinguishes task inputs, inferred choices and policy constants; older results below retain their recorded domains.
-
-Current combination/pruning/IPOPT tables and decisions: [execution reference](ANCHOR_SEARCH_EXECUTION_REFERENCE.md). Source-era sections below preserve their own task/policy/results.
-
-2026-11-11: [implemented shared comparisons/reachability](HARD_JUMP_TICK_PRUNING_AND_REACHABILITY_PLAN.md)
-protect more J OR fewer R ordinarily / fewer A in turnaround, defer slower
-unprotected hard arrivals for explicit recovery, and prune against a strict
-optimistic finish bound without queue scans. Hard transfers assume no stepping;
-source setup hops remain allowed. Ceiling-aware scalar minima derive9/9/10/15/9
-for B1→B2→B3→B4→B5→B7. Early joint stepping checks avoid the former12-variant
-B3@28 fan-out; owned-arrival counting excludes unused tails. The600-test native
-gate and131-prefix known-witness bound controls pass. New combined cold search
-reaches T64; [evidence](../research/hard-jump-comparisons/README.md)
-records final counts/settings/replays and source-specific limitations.
-
-2026-11-10: [candidate inventory and generation audit](../research/anchor-candidate-audit/README.md)
-reconstructs all 1,158 admitted programs from the last integrated 300s run. It
-identifies B3→B4 as the main generator/solver hotspot, with late rejection of
-jointly impossible stepping cases and extensive source-hop preparation work.
-This is source-era investigation evidence motivating the implemented follow-up above.
-
-**Current hard-jump correction:** source-local setup hops remain legal even after a global one-transfer latch. Initial-0 jump0→B1@12 then jump12→B2@21 is one setup plus one hard transfer. The old implementation incorrectly excluded it. [Corrected policy/validation](../research/anchor-transfer-preparation/README.md).
+Setup hops at the source anchor stay legal after the one-transfer latch: initial-0
+jump0 to B1@12, then jump12 to B2@21, is one setup plus one hard transfer.
 
 ## Physical B7 and anchor implementation (2026-11-04)
 
@@ -46,7 +23,7 @@ The [fresh fixture](../research/anchor-feasibility/real11-anchors.json) extends 
 
 The new default physical-task engine uses caller-declared anchors B2/B3/B4/B5, backward/onward guides, intermediate early stopping, global hard-jump latches and protected/recoverable hard-span tick alternatives. Internal queries check selected completed decisions without future anchor rows or fixed intermediate poses. The preliminary binary110° turn heuristic records its edge/margin/distances/keys and replay drift. Multiple jumps on the current block remain available; inter-block returns are [deferred](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md).
 
-[New-task implementation and evidence](../research/anchor-feasibility/README.md), [plan](design/ANCHOR_FEASIBILITY_IMPLEMENTATION_PLAN.md), and [resume](ANCHOR_IMPLEMENTATION_RESUME.md) describe current source/verification. The2026-11-03 results below remain historical controls with original geometry/virtual semantics. B6's reported extension still needs actual bounds.
+[New-task implementation and evidence](../research/anchor-feasibility/README.md), [plan](design/ANCHOR_POLICY_DECISIONS.md), and [resume](design/ANCHOR_POLICY_DECISIONS.md) describe current source/verification. The2026-11-03 results below remain historical controls with original geometry/virtual semantics. B6's reported extension still needs actual bounds.
 
 ## Automatic corridor implementation (2026-11-03)
 
@@ -62,13 +39,13 @@ This goal does not authorize adding artificial side walls or treating an enlarge
 
 The generic `search.virtual_goals` adapter and the [new fixture](../research/virtual-finish/fixture.json) now implement this objective. It discovers the downward height-crossing tick from the existing scalar movement model, adds only endpoint horizontal rows and preserves actual collisions with the supplied scene. An overshooting trajectory can end below height7 and airborne: this is a nominal landing-height clock, not an artificial collision floor. Actual Y and ground state are reported separately. Ordinary finite-support landing choices remain available. The 200-input horizon is a search guard, not a fixed finish. [New cold evidence](../research/virtual-finish/README.md): combined0/8 DFS finds67 (Z≈−1093.82313); a separate initial0-only cold diagnostic finds64 (Z≈−1093.26755), with no reference seeds. All34 replay checks pass. The combined run still spends its budget in the initial8 subtree, so do not present the diagnostic as default traversal success. Neither run proves the earliest possible tick. All372 selected regression tests pass. The archived91.22s MAXZ-at64 result remains historical.
 
-This guide first describes the archived pre-DFS audit. [Current DFS cold/resume results](../research/dfs-interactions/README.md) and evidence are a separate, newer corpus. Generic code must not depend on these labels/coordinates/ticks. [Current state](CURRENT_STATE.md) and [current DFS/interaction plan](design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md) supersede old pilot policies. Read the archived ledgers to answer existing questions before rerunning jobs.
+This guide first describes the archived pre-DFS audit. [Current DFS cold/resume results](../research/dfs-interactions/README.md) and evidence are a separate, newer corpus. Generic code must not depend on these labels/coordinates/ticks. [Current state](CURRENT_STATE.md) and current DFS/interaction plan supersede old pilot policies. Read the archived ledgers to answer existing questions before rerunning jobs.
 
 ## Historical virtual baseline and fixed-clock benchmark
 
-For this historical corpus, the accepted finish was the **virtual height7 crossing described above**. Current physical B7/minT→MAXZ semantics are specified at the top of this guide. The [corridor handoff](CORRIDOR_AGENT_HANDOFF.md) through `61355976` is imported at merge `984b701b`; [spatial-plan section0](design/SPATIAL_CORRIDOR_REFACTOR_PLAN.md#0-imported-baseline-and-integration-requirements) lists compatibility requirements. The automatic spatial path must discover intermediate supports rather than require a supplied B2/B3/B4/B5 list; the canonical virtual fixture still supplies that route as a control. Intentional wall hits remain future work. B6's reported rightward extension lacks exact revised bounds. Historical capability audits describe their inspected `93652150` code, not the new implementation status.
+For this historical corpus, the accepted finish was the **virtual height7 crossing described above**. Current physical B7/minT→MAXZ semantics are specified at the top of this guide. The corridor handoff through `61355976` is imported at merge `984b701b`; spatial-plan section0 lists compatibility requirements. The automatic spatial path must discover intermediate supports rather than require a supplied B2/B3/B4/B5 list; the canonical virtual fixture still supplies that route as a control. Intentional wall hits remain future work. B6's reported rightward extension lacks exact revised bounds. Historical capability audits describe their inspected `93652150` code, not the new implementation status.
 
-Spatial contract clarified subsequently: different supports and 3D passages distinguish routes; overflight and landing/run-off are different even with identical horizontal projections. Support itineraries are discovered automatically by the spatial layer, then realized by local timing/method search. See the [concrete refactor proposal](design/SPATIAL_CORRIDOR_REFACTOR_PLAN.md). Earlier diagnostic grouping and supplied support lists are historical, not the desired route contract.
+Spatial contract clarified subsequently: different supports and 3D passages distinguish routes; overflight and landing/run-off are different even with identical horizontal projections. Support itineraries are discovered automatically by the spatial layer, then realized by local timing/method search. See the concrete refactor proposal. Earlier diagnostic grouping and supplied support lists are historical, not the desired route contract.
 
 The [recorded cold fixture](../research/linkcraft11-opening/fixtures/clock64-orchestrator.json) still defines the **older benchmark**: original start `(746.5,5,-1104.5)`, stored velocity `(0,-0.0784000015258789,0)`, seven stored boxes inside declared geometry coverage, prescribed support order B2→B3→B4→B5, and **maximize Z at absolute state64 with B7 landing optional**. No external world context is inferred. Normal momentum is retained with zero inertia thresholds. Initial jump domain `[0,8]` is explicitly selected, not proof that eight is the minimum useful delay. Later run bounds in this fixture are broader than the user's original simple no-run/B6-only intent. Preserve its source-era results; they do not answer the corrected landing-time objective.
 
@@ -82,7 +59,7 @@ The [recorded cold fixture](../research/linkcraft11-opening/fixtures/clock64-orc
 | B6 | `[730,0,-1095,731,20,-1094]` |
 | B7 | `[729,0,-1095,730,7,-1094]` |
 
-[Player bounds](../research/linkcraft11-opening/PLAYER_BOUNDS.md) and [constraint runbook](design/CONSTRAINT_GENERATION_RUNBOOK.md) explain float player expansion and B1's corner union. These are raw world boxes, not landing-center bounds. The old 200/400-tick IPOPT capture fixtures include other movements/ladders and are a different benchmark.
+[Player bounds](../research/linkcraft11-opening/PLAYER_BOUNDS.md) and [constraint runbook](MOD_REFERENCES.md) explain float player expansion and B1's corner union. These are raw world boxes, not landing-center bounds. The old 200/400-tick IPOPT capture fixtures include other movements/ladders and are a different benchmark.
 
 ## Which evidence answers which question?
 
@@ -90,15 +67,15 @@ The [recorded cold fixture](../research/linkcraft11-opening/fixtures/clock64-orc
 | --- | --- |
 | Every cell, spatial route, guide direction, decision/commit/prune in original pilot | [EXECUTION_AUDIT.md](../research/linkcraft11-opening/EXECUTION_AUDIT.md) |
 | Why the original four trials returned unknown | [OTHER_FAILURES.md](../research/linkcraft11-opening/OTHER_FAILURES.md) |
-| Corridor bounds, 728.9 versus expanded obstacle edge, missing future constraints/checks | [CORRIDOR_FAILURES.md](../research/linkcraft11-opening/audit/CORRIDOR_FAILURES.md), [corridor fix plan](design/CORRIDOR_CONSTRAINT_FIX_PLAN.md) |
+| Corridor bounds, 728.9 versus expanded obstacle edge, missing future constraints/checks | [CORRIDOR_FAILURES.md](../research/linkcraft11-opening/audit/CORRIDOR_FAILURES.md), corridor fix plan |
 | Exact seven programs, 227 handled fixed branches, probes, pending frontier, exclusions | [CANDIDATE_AUDIT.md](../research/orchestrator-fixes/audit/CANDIDATE_AUDIT.md) |
 | Every numerical request/result, including probe logging gaps | [WORKER_CALLS.md](../research/orchestrator-fixes/audit/WORKER_CALLS.md), [CSV](../research/orchestrator-fixes/audit/worker-calls.csv) |
 | P01/P02 ancestry/order, P06/P07 introduction, jump16/17 versus run counts | [CANDIDATE_QUESTIONS.md](../research/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md) |
 | Why initial runs0/8 only; older successful9; coverage needed for10/11 | [Initial-delay follow-up](../research/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#7-why-only-initial-runs08-rather-than91011) |
 | Why state10; supplied timings/routes/settings versus generated choices | [Experiment configuration audit](../research/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#8-why-compare-first-at-state10-and-what-was-supplied-rather-than-discovered) |
 | Existing automatic components, remaining integration and corrected landing objective | [Capability follow-up](../research/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#9-which-requested-automatic-behaviors-already-exist) |
-| Automatic versus supplied corridor, reference coverage and helper integration plan | [Corridor comparison](../research/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#10-how-does-the-automatic-corridor-compare-with-the-supplied-one), [support/goal/direction plan](design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md#21-integration-plan-infer-support-order-from-generated-decisions) |
-| How cells are built, support-top patches, portal midpoint bias and local refinement | [Decomposition investigation](../research/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#11-are-large-air-cells-and-negative-z-block-cells-built-into-decomposition), [improvement proposal](design/DFS_INTERACTION_IMPLEMENTATION_PLAN.md#25-cell-decomposition-and-anchor-investigation-focused-improvement-proposal) |
+| Automatic versus supplied corridor, reference coverage and helper integration plan | [Corridor comparison](../research/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#10-how-does-the-automatic-corridor-compare-with-the-supplied-one), support/goal/direction plan |
+| How cells are built, support-top patches, portal midpoint bias and local refinement | [Decomposition investigation](../research/orchestrator-fixes/audit/CANDIDATE_QUESTIONS.md#11-are-large-air-cells-and-negative-z-block-cells-built-into-decomposition), improvement proposal |
 | Duplicate descriptions, what can actually be pruned, P04/P05 provenance | [PRUNING_FOLLOWUP.md](../research/orchestrator-fixes/audit/PRUNING_FOLLOWUP.md), [generation detail](../research/orchestrator-fixes/audit/generation-detail.json) |
 | Machine-readable exact plans/coefficients/call data | [candidate-ledger.json.gz](../research/orchestrator-fixes/audit/candidate-ledger.json.gz), [counts](../research/orchestrator-fixes/audit/counts.json), [manifest](../research/orchestrator-fixes/audit/manifest.json) |
 | Current runtime fix scope and checks already run | [Orchestrator results](../research/orchestrator-fixes/README.md) |

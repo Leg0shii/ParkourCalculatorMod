@@ -56,6 +56,7 @@ bash.exe.stackdump
 __pycache__/
 .venv-ipopt
 .venv-guidance/
+.venv-bookkeeping/
 
 # COPT research scratch (struct/probe dumps, regenerated locally)
 research/copt/data/

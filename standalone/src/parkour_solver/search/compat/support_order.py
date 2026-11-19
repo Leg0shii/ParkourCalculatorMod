@@ -28,11 +28,13 @@ class SupportOrder:
                 return dict(accepted=False, progress=0, observed=[], reason='initial_jump_domain')
         events=[]
         for e in p.get('contactEvents',[]):
-            if e.get('axis')=='Y' and e.get('direction')==-1 and tuple(e['box']) in self.boxes:
-                events.append((e['offset']+1,self.boxes[tuple(e['box'])]))
+            member=next((tuple(b) for b in e['boxes'] if tuple(b) in self.boxes),None)
+            if e.get('axis')=='Y' and e.get('direction')==-1 and member is not None:
+                events.append((e['offset']+1,self.boxes[member]))
         for e in p.get('caseEvents',[]):
-            if e.get('type')=='stepping' and 'box' in e and tuple(e['box']) in self.boxes:
-                events.append((e['input']+1,self.boxes[tuple(e['box'])]))
+            member=next((tuple(b) for b in e.get('boxes',()) if tuple(b) in self.boxes),None)
+            if e.get('type')=='stepping' and member is not None:
+                events.append((e['input']+1,self.boxes[member]))
         index,current=0,self.start
         observed=[]
         ranks={name:i for i,name in enumerate(self.supports)}

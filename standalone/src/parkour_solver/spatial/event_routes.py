@@ -152,7 +152,7 @@ def support_episodes(domain, profile, *, required_owners=()):
               if e['axis'] == 'Y' and e.get('direction') == -1]
     events += [(e['input'], 1, e) for e in profile.get('caseEvents', [])]
     for tick, named, event in sorted(events, key=lambda x: (x[0], x[1], _json(x[2]))):
-        blocks = by_box.get(tuple(event.get('box', ())), [])
+        blocks = [block for box in event.get('boxes', ()) for block in by_box.get(tuple(box), [])]
         owners = sorted({b.get('sourceBlock', b['id']) for b in blocks})
         solids = sorted({b['solidIndex'] for b in blocks})
         surfaces = sorted(s['id'] for s in groups if any(b['solidIndex'] in s['solids'] for b in blocks)
@@ -318,9 +318,9 @@ def observed_route(data, profile, witness, *, after=0):
         for passage in bundle:
             features=[]
             for face in passage['faces']:
-                matches=[f['id'] for f in data['features'] if f['solidIndex']==passage['solidIndex'] and
-                    f['axis']=='XYZ'.index(face['axis']) and f['side']==face['direction'] and
-                    f['bounds'][f['axis']]==face['plane']]
+                matches=[f['id'] for bound in face.get('bounds') or [face] for f in data['features']
+                    if f['solidIndex'] in passage.get('members', [passage.get('solidIndex')]) and f['axis']=='XYZ'.index(bound['axis']) and
+                    f['side']==bound['direction'] and f['bounds'][f['axis']]==bound['plane']]
                 features.append(matches)
             variant.append(dict(kind='passage',features=features,gates=passage['gates'],
                 resources=passage['blockageCounts'],classification='selected_model',

@@ -63,13 +63,13 @@ def visits(scene, program):
         # A cancel/grind touches geometry without landing on its owner. Keep
         # its requested impulse and physical case, but do not invent a visit.
         if e.get('lowerBox') is not None:
-            events.append((e['input'],1,dict(box=e['lowerBox'])))
-        box=e.get('box')
-        if box and profile['grounded'][t] and abs(profile['position'][t]-box[4])<=1e-7:
+            events.append((e['input'],1,dict(boxes=[e['lowerBox']])))
+        boxes=e.get('boxes')
+        if boxes and profile['grounded'][t] and abs(profile['position'][t]-max(b[4] for b in boxes))<=1e-7:
             events.append((e['input'],2,e))
     result = [(0, owner(scene,scene['startBlock']))]
     for tick, _, e in sorted(events, key=lambda x:(x[0],x[1],digest(x[2]))):
-        name = by_box.get(tuple(e.get('box', ())))
+        name = next((by_box[tuple(b)] for b in e.get('boxes', ()) if tuple(b) in by_box), None)
         if name is not None:
             result.append((tick+1, name))
     # Some named profiles report only terminalSupport. Include its physical
@@ -79,11 +79,39 @@ def visits(scene, program):
     return result
 
 
+def launch(scene, program, begin=None, end=None):
+    tick, name = [v for v in visits(scene, program) if begin is None or v[0] <= begin][-1]
+    ladder = program['profile']['ladderTicks'][tick:None if end is None else end+1]
+    return None if any(ladder) else (tick, name)
+
+
+FEET_CASES = frozenset(('normal_step', 'slab_boost', 'blip', 'blip_up', 'corner_jump_cancel', 'corner_blip_up'))
+
+
+def feet_touches(scene, program):
+    by_box = {tuple(scene['collisionScene']['solids'][b['solidIndex']]): owner(scene,b['id'])
+              for b in scene['blocks']}
+    result = []
+    for e in program['profile'].get('caseEvents', []):
+        if e.get('case') not in FEET_CASES:
+            continue
+        boxes = list(e.get('boxes') or ()) + ([e['lowerBox']] if e.get('lowerBox') is not None else [])
+        result.extend((e['input']+1, by_box[tuple(b)]) for b in boxes if tuple(b) in by_box)
+    return sorted(result)
+
+
 def visit_state(scene, program):
     current = None
     departed = set()
     valid = True
-    for _, name in visits(scene,program):
+    touches = feet_touches(scene,program)
+    def touch_until(tick):
+        nonlocal valid
+        while touches and (tick is None or touches[0][0] < tick):
+            if touches.pop(0)[1] in departed:
+                valid = False
+    for tick, name in visits(scene,program):
+        touch_until(tick)
         if name == current:
             continue
         if name in departed:
@@ -91,6 +119,7 @@ def visit_state(scene, program):
         if current is not None:
             departed.add(current)
         current = name
+    touch_until(None)
     return dict(version=1, current=current, departed=sorted(departed), valid=valid)
 
 

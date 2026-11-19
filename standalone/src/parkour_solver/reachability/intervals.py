@@ -3,6 +3,23 @@ import math
 from parkour_solver.physics.vertical import clamp
 
 
+def travel_radii(speed, magnitudes, frictions, margin=0.):
+    radii = [0.]
+    for magnitude, friction in zip(magnitudes, frictions):
+        move = speed+magnitude+margin
+        radii.append(radii[-1]+move)
+        speed = friction*move
+    return radii
+
+
+def motion_bound(scene, compiler, seconds):
+    sample = compiler.compile(dict(scene, sharedMovement=True), dict(grounded=[True, True, False], jump=[False, True, False]), seconds)
+    speed = max(math.hypot(scene['initial']['velocity'][0], scene['initial']['velocity'][2]),
+                max(f*m/(1-f) for m, f in zip(sample['magnitude'], sample['friction'])))
+    return dict(storedSpeedNorm=speed+1e-8, movementAfterSupportCheck=speed+max(sample['magnitude'])+1e-8,
+                groundMagnitude=sample['magnitude'][0])
+
+
 def reachable_envelopes(problem, y=None):
     bounds = {}
     for row in problem.get('walls', []):
@@ -96,13 +113,10 @@ def reachable_envelopes(problem, y=None):
     speed = math.hypot(*problem['velocity'])
     if 'initialIntervals' in problem:
         speed = math.hypot(*(max(abs(a), abs(b)) for a,b in zip(problem['initialIntervals'][2],problem['initialIntervals'][3])))
-    radii = [0.]
-    for magnitude, friction in zip(problem['magnitude'], problem['friction']):
-        move = speed+magnitude+1e-8
-        radii.append(radii[-1]+move)
-        speed = friction*move
+    radii = travel_radii(speed, problem['magnitude'], problem['friction'], margin=1e-8)
+    constrained = max([t for t, _ in bounds]+[c['state'] for c in problem.get('contacts', [])], default=0)
     if contradiction is None:
-        for j in range(1,len(states)):
+        for j in range(1,min(constrained,len(states)-1)+1):
             for i in range(j):
                 gap = math.hypot(*(max(0.,states[j][axis][0]-states[i][axis][1],states[i][axis][0]-states[j][axis][1])
                                    for axis in ('X','Z')))
@@ -167,7 +181,9 @@ def interaction_reachability(envelopes, interaction, *, refine=False):
                             axis=axis, reachable=[lo, hi], required=[box[i], box[i+3]])
     if refine and envelopes.get('model') is not None:
         from parkour_solver.reachability.linear import linear_exclusion
-        excluded=linear_exclusion(envelopes['model'],interaction.get('rows',[]))
-        if excluded is not None:
-            return dict(ruledOut=True,**excluded)
+        checked=linear_exclusion(envelopes['model'],interaction.get('rows',[]))
+        if checked is not None and checked['outcome']=='infeasible':
+            return dict(ruledOut=True,**checked['proof'])
+        if checked is not None and checked['outcome']=='undecided':
+            return dict(ruledOut=False,reason='linear_undecided',status=checked['status'],message=checked['message'])
     return dict(ruledOut=False, reason='not_ruled_out')

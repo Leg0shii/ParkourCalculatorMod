@@ -9,7 +9,7 @@ import unittest
 
 from parkour_solver.scene.geometry import normalize_geometry
 from parkour_solver.spatial.cells import contains
-from parkour_solver.spatial.faces import FaceCatalog, merge_faces
+from parkour_solver.spatial.surfaces import FaceCatalog, merge_faces
 from tests.support.paths import STANDALONE_ROOT
 from tools.geometry_bounds import markdown_report, player_bounds_report
 

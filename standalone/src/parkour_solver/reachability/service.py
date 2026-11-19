@@ -1,3 +1,5 @@
+import collections
+
 from parkour_solver.scene.geometry import expanded_box
 from parkour_solver.reachability.intervals import interaction_reachability, reachable_envelopes
 
@@ -84,9 +86,33 @@ def block_interaction(envelopes, box, tick, phases=('Y', 'X', 'Z'), *, interior=
         dict(tick=tick, phase=phase, bounds=expanded_box(box), interior=interior)]) for phase in phases]))
 
 
-def interaction_allowed(context, box, tick, *, jumping=False, phases=('Y', 'X', 'Z')):
-    gate = context.get('interactionGate')
-    return gate is None or not gate.query(context, box, tick, jumping=jumping, phases=phases)['ruledOut']
+def interaction_allowed(context, box, tick, *, label, jumping=False, phases=('Y', 'X', 'Z')):
+    return bounds_allowed(context, expanded_box(box), tick, label=label, jumping=jumping, phases=phases)
+
+
+def bounds_allowed(context, bounds, tick, *, label, jumping=False, phases=('Y', 'X', 'Z')):
+    """`label` (owner, role) names the generator choice in the exclusion log."""
+    if 'interactionGate' not in context:
+        raise ValueError('Generation needs an interactionGate; set it to None to run without reachability')
+    gate = context['interactionGate']
+    return gate is None or not gate.query(context, bounds, tick, label=label, jumping=jumping, phases=phases)['ruledOut']
+
+
+def candidate_blocks(context):
+    blocks = context['scene']['blocks']
+    owner = context.get('launchOwner')
+    if owner is None or context['interactionGate'] is None:
+        return blocks
+    kept = context['interactionGate'].reachable_blocks(owner)['blocks']
+    return [b for b in blocks if b['id'] in kept]
+
+
+def candidate_option(context, option):
+    owner = context.get('launchOwner')
+    if owner is None or context['interactionGate'] is None:
+        return True
+    solids = context['interactionGate'].reachable_blocks(owner)['solids']
+    return any(i in solids for i in option.members)
 
 
 class InteractionGate:
@@ -97,6 +123,56 @@ class InteractionGate:
         self.metrics = {}
         self.checked = 0
         self.exclusions = []
+        from parkour_solver.reachability.linear import STATS
+        self.linear_start = {kind: collections.Counter(counts) for kind, counts in STATS.items()}
+        self.block_table, self.jump_traces = {}, {}
+        self.approaches = {}
+
+    def reachable_blocks(self, owner):
+        if owner in self.block_table:
+            return self.block_table[owner]
+        import math
+        import time
+        from parkour_solver.movement.normal import first_descent, replay
+        from parkour_solver.physics.vertical import REST_CARRY
+        from parkour_solver.scene.geometry import BODY_HEIGHT
+        from parkour_solver.spatial.surfaces import scene_geometry
+        started = time.process_time()
+        blocks = self.scene['blocks']
+        geometry = scene_geometry(self.scene['collisionScene'])
+        lowest = min(b['top'] for b in blocks)
+        by_solid = {}
+        for b in blocks:
+            by_solid.setdefault(b['solidIndex'], []).append(b['id'])
+        kept, ticks = set(), None
+        for block in blocks:
+            if block.get('sourceBlock', block['id']) != owner:
+                continue
+            kept.add(block['id'])
+            if block['top'] not in self.jump_traces:
+                state = dict(position=block['top'], velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
+                self.jump_traces[block['top']] = replay(state, 200, jumping=True, threshold=0.)
+            trace = self.jump_traces[block['top']]
+            descent = first_descent(trace, lowest)
+            flight = 200 if descent is None else descent+1
+            ticks = flight if ticks is None else min(ticks, flight)
+            radius = .4+.7+.4*(flight-1)
+            ceiling = max(trace['position'])+.6+BODY_HEIGHT
+            own = geometry.boxes[block['solidIndex']]
+            foot = [own[0], own[2], own[3], own[5]]
+            for i in geometry.near([foot[0]-radius, foot[1]-radius, foot[2]+radius, foot[3]+radius]):
+                box = geometry.boxes[i]
+                if box[1] > ceiling:
+                    continue
+                dx = max(0., box[0]-foot[2], foot[0]-box[3])
+                dz = max(0., box[2]-foot[3], foot[1]-box[5])
+                if math.hypot(dx, dz) <= radius:
+                    kept.update(by_solid.get(i, ()))
+        solids = frozenset(b['solidIndex'] for b in blocks if b['id'] in kept)
+        self.block_table[owner] = dict(blocks=frozenset(kept), solids=solids, ticks=ticks)
+        self.metrics['blockTableBuilds'] = self.metrics.get('blockTableBuilds', 0)+1
+        self.metrics['blockTableSeconds'] = self.metrics.get('blockTableSeconds', 0.)+time.process_time()-started
+        return self.block_table[owner]
 
     def _cached(self, key, build, kind):
         hit = key in self.cache
@@ -156,8 +232,9 @@ class InteractionGate:
         """Add X/Z prerequisites and repropagate, retaining the compiled physics."""
         model=dict(analysis['model'],walls=list(analysis['model']['walls'])+list(rows))
         key=interaction_context_key(dict(model=model,y=analysis['y']))
+        from parkour_solver.reachability.screen import condition_envelopes
         return self._cached(('conditioned',key),lambda:dict(analysis,key=key,model=model,
-            envelopes=reachable_envelopes(model,analysis['y'])),'conditioned')
+            **condition_envelopes(analysis['envelopes'],rows,refine=False)),'conditioned')
 
     def envelopes(self, program):
         analysis=self.analyze(program)
@@ -172,7 +249,7 @@ class InteractionGate:
         proof=dict(reason='composition_rejected') if program is None else self.required(program)
         if proof:
             self.metrics['sequenceExclusions']=self.metrics.get('sequenceExclusions',0)+1
-            self.exclusions.append(dict(reason='joint_prerequisites_unreachable',proof=proof,
+            self.exclusions.append(dict(reason='joint_prerequisites_unreachable',proof=proof,frame=context.get('frameId'),
                 input=context['program']['profile']['airtime'],cases=choice['profile'].get('caseEvents',[])))
         return proof
 
@@ -186,40 +263,66 @@ class InteractionGate:
                 return dict(reason='unselected_initial_floor')
         analysis=self.analyze(program)
         if analysis is None:return dict(reason='vertical_schedule')
+        undecided=False
         def build():
+            nonlocal undecided
             proof=self.required(program)
             if proof:return proof
             if self.scene.get('maxWallHits',0):return None
             self.metrics['linearChecks']=self.metrics.get('linearChecks',0)+1
             checked=interaction_reachability(analysis['envelopes'],{},refine=True)
+            undecided=checked['reason']=='linear_undecided'
             return {k:v for k,v in checked.items() if k!='ruledOut'} if checked['ruledOut'] else None
-        return self._cached(('screen',analysis['key']),build,'screen')
+        result=self._cached(('screen',analysis['key']),build,'screen')
+        if undecided:
+            self.cache.pop(('screen',analysis['key']))
+        return result
 
-    def query(self, context, box, tick, *, jumping=False, phases=('Y', 'X', 'Z')):
+    def query(self, context, bounds, tick, *, label, jumping=False, phases=('Y', 'X', 'Z')):
         from parkour_solver.movement.program import append_choice, program_physics_key
-        from parkour_solver.movement.normal import event_choice
+        from parkour_solver.movement.normal import approaches, event_choice, first_descent
         from parkour_solver.search.identity import digest
         # Prefix inputs and free approach inputs are known; the proposed interaction
         # has not changed the post-movement height/ground state yet. Use its horizontal
         # envelope, keeping Y unconstrained for stepping and ceiling outcomes.
         prefix = context['program']
-        key = (digest(program_physics_key(prefix)), jumping, tick)
-        cache = context.setdefault('_interactionApproaches', {})
-        if key not in cache:
-            choice = event_choice(context, 'normal', context['state'], tick+1, jumping=jumping)
-            p = append_choice(prefix, choice) if choice is not None else None
-            cache[key] = self.envelopes(p) if p is not None else None
-        envelope = cache[key]
+        if '_prefixKey' not in context:
+            context['_prefixKey'] = (digest(program_physics_key(prefix)), context.get('threshold', .005))
+        prefix_key = context['_prefixKey']
+        def remember(key, build):
+            if key not in self.approaches:
+                self.approaches[key] = build()
+                while len(self.approaches) > 512:
+                    self.approaches.pop(next(iter(self.approaches)))
+            return self.approaches[key]
+        def approach(inputs):
+            def build():
+                self.metrics['approachBuilds'] = self.metrics.get('approachBuilds', 0)+1
+                choice = event_choice(context, 'normal', context['state'], inputs, jumping=jumping)
+                p = append_choice(prefix, choice) if choice is not None else None
+                return self.envelopes(p) if p is not None else None
+            return remember((prefix_key, jumping, inputs), build)
+        def horizon():
+            lowest = min(b['top'] for b in context['scene']['blocks'])
+            trace = next((t for _, j, t in approaches(context) if j == jumping), None)
+            landing = first_descent(trace, lowest) if trace is not None else None
+            return context.get('maxInputs', 0) if landing is None else min(landing+2, context.get('maxInputs', 0))
+        horizon = remember((prefix_key, jumping, 'horizon', context.get('maxInputs', 0)), horizon)
+        envelope = approach(horizon) if tick < horizon else None
+        if envelope is None:
+            self.metrics['approachFallbacks'] = self.metrics.get('approachFallbacks', 0)+1
+            envelope = approach(tick+1)
         if envelope is None:
             return dict(ruledOut=False, reason='unknown_approach')
         at = prefix['profile']['airtime']+tick
-        bounds = expanded_box(box)
+        bounds = list(bounds)
         bounds[1], bounds[4] = -float('inf'), float('inf')
         proof = interaction_reachability(envelope, dict(alternatives=[dict(regions=[
             dict(tick=at, phase=phase, bounds=bounds)]) for phase in phases]))
         self.checked += 1
         if proof['ruledOut']:
-            self.exclusions.append(dict(box=list(box), input=at, proof=proof))
+            self.exclusions.append(dict(label, frame=context.get('frameId'), horizontal=[bounds[0], bounds[2], bounds[3], bounds[5]],
+                                        input=at, proof=proof))
         return proof
 
     def required(self, program):
@@ -233,18 +336,20 @@ class InteractionGate:
         context = dict(envelopes=envelope)
         context_key = interaction_context_key(context)
         for event in profile.get('contactEvents', [])+profile.get('caseEvents', []):
-            if 'box' not in event:
+            if 'boxes' not in event:
                 continue
             tick = event.get('offset', event.get('input'))
-            proof = query_interaction(dict(box=event['box'], role='required_contact',
+            proofs = [query_interaction(dict(box=box, role='required_contact',
                 windows=[dict(tick=tick, phase=p) for p in ('Y', 'X', 'Z')], interior=False),
-                context, context_key=context_key)
-            if proof['status'] == 'absent':
-                return dict(reason='required_interaction_unreachable', input=tick, box=event['box'], proof=proof)
+                context, context_key=context_key) for box in event['boxes']]
+            if all(proof['status'] == 'absent' for proof in proofs):
+                return dict(reason='required_interaction_unreachable', input=tick, boxes=event['boxes'], proof=proofs[0])
         return None
 
     def context(self, context):
         context['interactionGate'] = self
 
     def summary(self):
-        return dict(checked=self.checked,excluded=len(self.exclusions),exclusions=self.exclusions,metrics=dict(self.metrics))
+        from parkour_solver.reachability.linear import STATS
+        return dict(checked=self.checked,excluded=len(self.exclusions),exclusions=self.exclusions,metrics=dict(self.metrics),
+                    linear={kind: dict(counts-self.linear_start[kind]) for kind, counts in STATS.items()})

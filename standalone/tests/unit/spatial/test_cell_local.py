@@ -21,7 +21,8 @@ class CellLocalTests(unittest.TestCase):
         corridor = Corridor(0, [], [], [], (), [(-1, 0, -1, 6, 0, 2)], 0)
         adapter = CorridorAdapter(scene, corridor, [])
         program = empty_program(scene['initial'])
-        original = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=15)
+        original = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=15,
+                        interactionGate=None)
         before = list(generate_choices('normal', original))
         conditioned = dict(original)
         adapter.context(conditioned)
@@ -46,8 +47,7 @@ class CellLocalTests(unittest.TestCase):
         self.assertTrue(result['variants'])
         for variant in result['variants']:
             for event in variant:
-                self.assertEqual(event['box'], solids[1])
-                self.assertEqual(event['solidIndex'], 1)
+                self.assertEqual(event['boxes'], [solids[1]])
 
     def test_wrong_side_gets_a_timed_constraint_without_changing_initial_state(self):
         scene = side_scene()

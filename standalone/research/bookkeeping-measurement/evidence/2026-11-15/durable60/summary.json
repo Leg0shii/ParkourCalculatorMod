@@ -1,0 +1,45 @@
+{
+  "ticks": 67,
+  "objective": -1093.823129063534,
+  "firstFullSolutionSeconds": 19.283206958323717,
+  "searchSeconds": 61.348439667373896,
+  "work": {
+    "solverCalls": 12,
+    "workerLaunches": 9,
+    "feasibleSeedReturns": 3,
+    "maxSolverCalls": 1024
+  },
+  "expandedPrefixes": 33,
+  "termination": "deadline",
+  "runDeferrals": 11,
+  "runRestorations": 0,
+  "deferredNodes": 0,
+  "comparisonWork": {
+    "assessments": 28,
+    "cacheHits": 8,
+    "peerChecks": 27
+  },
+  "interactionMetrics": {
+    "preparationMisses": 191,
+    "coefficientMisses": 179,
+    "analysisMisses": 191,
+    "screenMisses": 61,
+    "preparationHits": 164,
+    "coefficientHits": 176,
+    "analysisHits": 164,
+    "linearChecks": 61,
+    "sequenceChecks": 12,
+    "sequenceExclusions": 12
+  },
+  "wrappers": 12,
+  "workers": 9,
+  "validatedWitnesses": 10,
+  "allReplaysPassed": true,
+  "sourceUnchanged": true,
+  "resume": {
+    "exact": false,
+    "session": 1
+  },
+  "profileMode": "bookkeeping",
+  "durable": true
+}

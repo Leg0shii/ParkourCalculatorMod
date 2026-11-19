@@ -1,15 +1,9 @@
 import copy
 import json
-import math
-import time
 
-from parkour_solver.movement.program import program_search_key, truncate_program
-from parkour_solver.search.movement import iter_movement_programs, screen_program
-from parkour_solver.movement.settings import movement_settings
-from parkour_solver.search.ranking import candidate_rank
+from parkour_solver.movement.program import truncate_program
 from parkour_solver.schema import integer, number
 from parkour_solver.spatial.checkpoints import checkpoint
-from parkour_solver.search.completion import generation_exhausted
 
 
 def goal_spec(scene, spec=None):
@@ -70,7 +64,7 @@ def _landing_prefixes(scene,program,block_id, *, reuse_full=False):
     box=scene['collisionScene']['solids'][block['solidIndex']]
     p=program['profile']
     events=p.get('contactEvents',[])+p.get('caseEvents',[])
-    times={e.get('offset',e.get('input',-1))+1 for e in events if e.get('box')==box
+    times={e.get('offset',e.get('input',-1))+1 for e in events if box in e.get('boxes',())
            and (e.get('axis')=='Y' and e.get('direction')==-1 or e.get('case') in ('normal_step','blip'))}
     if program['terminalSupport']==block_id:times.add(p['airtime'])
     for tick in sorted(times):
@@ -78,101 +72,9 @@ def _landing_prefixes(scene,program,block_id, *, reuse_full=False):
             continue
         candidate=program if reuse_full and tick==p['airtime'] and program['terminalSupport']==block_id else truncate_program(program,tick)
         candidate['terminalSupport']=block_id
-        at=[e for e in events if e.get('box')==box and e.get('offset',e.get('input',-1))==tick-1]
+        at=[e for e in events if box in e.get('boxes',()) and e.get('offset',e.get('input',-1))==tick-1]
         if any(e.get('case') in ('normal_step','blip') for e in at):
             candidate['profile']['landingPhase']='post'
         elif any(e.get('axis')=='Y' and e.get('direction')==-1 for e in at):
             candidate['profile']['landingPhase']='pre'
         yield candidate
-
-
-def probe_spatial(scene,program,compiler,adapter,work,motion,*,spec=None,seconds=2,candidate_seconds=.7,
-                  solver_calls=4,max_candidates=4,max_prefixes=64,python_executable=None,cancel_event=None,program_filter=None):
-    from parkour_solver.search.engine import ScopedWork, evaluate_program
-    if number(seconds,'spatial comparison seconds')<=0 or number(candidate_seconds,'candidate seconds')<=0:
-        raise ValueError('Comparison budgets must be positive')
-    for name,value in [('solver_calls',solver_calls),('max_candidates',max_candidates),('max_prefixes',max_prefixes)]:
-        integer(value,name,1,200000)
-    spec=goal_spec(scene,spec)
-    if spec['kind']=='region' and not hasattr(adapter,'corridor'):
-        raise ValueError('Region comparisons require a spatial corridor')
-    key=goal_key(scene,spec,getattr(adapter,'corridor',None))
-    deadline=min(work.deadline or math.inf,time.monotonic()+seconds)
-    scoped=ScopedWork(work,solver_calls,deadline)
-    report,attempts,best,best_program={},[],None,None
-    proposed=[]
-    incomplete=False
-    if spec['kind']=='landing':
-        target_scene=copy.deepcopy(scene)
-        target_scene['goalBlock']=spec['block']
-        proposed.extend(_landing_prefixes(scene,program,spec['block']))
-        cfg=dict(movement_settings(scene),maxPrefixes=max_prefixes)
-        def screen(p):
-            return screen_program(target_scene,p,compiler,max(.001,min(candidate_seconds,deadline-time.monotonic())))
-        generator=None
-        if not proposed:
-            generator=iter_movement_programs(target_scene,settings=cfg,initial_programs=[program],threshold=0.,
-                deadline=deadline,cancel_event=cancel_event,report=report,work=scoped,screen=screen,
-                context_adapter=adapter.context if hasattr(adapter,'context') else None,program_filter=program_filter)
-            try:
-                for p in generator:
-                    proposed.append(p)
-                    if len(proposed)>=max_candidates:
-                        incomplete=True
-                        break
-            finally:generator.close()
-        proposed.sort(key=lambda p:p['profile']['airtime'])
-        complete=spec['block']==scene['goalBlock']
-        def evaluate(p):
-            return evaluate_program(target_scene,p,compiler,adapter,scoped,motion,seconds=max(.001,deadline-time.monotonic()),
-                candidate_seconds=candidate_seconds,solver_calls=max(1,solver_calls-scoped.local.counts['solverCalls']),
-                python_executable=python_executable,cancel_event=cancel_event,partial_corridor=not complete,
-                required_landing=spec['block'])
-    else:
-        target_scene=scene
-        for tick in range(spec['first_tick'],program['profile']['airtime']+1):
-            if 'y' in spec and not spec['y'][0]-1e-7<=program['profile']['position'][tick]<=spec['y'][1]+1e-7:
-                continue
-            proposed.append(truncate_program(program,tick))
-        def evaluate(p):
-            kwargs=dict(tick=p['profile']['airtime'],region=spec['region'])
-            if 'segment' in spec:kwargs['segment']=spec['segment']
-            cp=checkpoint(adapter.corridor,adapter.gates,kwargs)
-            return evaluate_program(scene,p,compiler,adapter,scoped,motion,checkpoint=cp,
-                seconds=max(.001,deadline-time.monotonic()),candidate_seconds=candidate_seconds,
-                solver_calls=max(1,solver_calls-scoped.local.counts['solverCalls']),
-                python_executable=python_executable,cancel_event=cancel_event)
-    seen=set()
-    for p in proposed:
-        identity=program_search_key(p)
-        if identity in seen:continue
-        seen.add(identity)
-        try:scoped.check()
-        except TimeoutError:
-            incomplete=True
-            break
-        if cancel_event is not None and cancel_event.is_set():
-            incomplete=True
-            break
-        result=evaluate(p)
-        attempts.append(dict(ticks=p['profile']['airtime'],status=result['status'],termination=result['termination'],
-                             work=result['work']))
-        if result['best'] is not None:
-            candidate=result['best']
-            if best is None or candidate_rank(candidate,scene['objective'])<candidate_rank(best,scene['objective']):
-                best,best_program=candidate,p
-            if spec['kind']=='region':break
-        if result['status'] in ('error','cancelled'):
-            incomplete=True
-            break
-    if best is not None and spec['kind']=='region':
-        arrival=region_arrival(best['candidate'],spec,adapter)
-        if arrival is None:raise RuntimeError('Validated region witness has no matching spatial achievement')
-    else:arrival=best['plan']['ticks'] if best is not None else None
-    generation_complete=not incomplete and (not report or generation_exhausted(report))
-    measurement=dict(goal=spec,status='feasible' if best is not None else 'unknown',ticks=arrival,
-        interpretation='elapsed_time_to_shared_spatial_goal_not_clock_objective',minimumProven=False,
-        generationComplete=generation_complete,unresolvedAttempts=sum(a['status']=='unknown' for a in attempts),
-        attempts=attempts,generation=report,work=scoped.local.summary())
-    return dict(key=key,measurement=measurement,best=best,program=best_program,
-                finalGoal=spec['kind']=='landing' and spec['block']==scene['goalBlock'])

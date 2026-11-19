@@ -171,6 +171,10 @@ def center_bounds(block, kind='landing'):
     return [a - HALF_WIDTH, b + HALF_WIDTH, c - HALF_WIDTH, d + HALF_WIDTH]
 
 
+def row_tick(event, row):
+    return event['landed'] + row['offset'] if row.get('phase', 'departure') == 'run' else event['jump'] + row['offset']
+
+
 def schedule(route, allocation, stage='jump'):
     if stage not in ('jump', 'run') or not allocation or len(allocation) > len(route['airtimes']):
         raise ValueError('Invalid allocation or stage')
@@ -261,13 +265,11 @@ def schedule(route, allocation, stage='jump'):
         if row.get('phase', 'departure') == 'run':
             if row['offset'] >= event['runTicks']:
                 continue
-            tick = event['landed'] + row['offset']
-        else:
-            if event['landing'] is None:
-                continue
-            tick = event['jump'] + row['offset']
-            if tick > event['landing']:
-                raise ValueError('Constraint lies beyond its transition')
+        elif event['landing'] is None:
+            continue
+        tick = row_tick(event, row)
+        if row.get('phase', 'departure') != 'run' and tick > event['landing']:
+            raise ValueError('Constraint lies beyond its transition')
         walls.append({'mode': row['mode'], 't1': tick, 'cmp': row['cmp'], 'rhs': row['rhs'],
                       'name': row.get('name', 'route:' + str(row['leg']))})
     from parkour_solver.constraints.avoidance import compile_passages
@@ -292,10 +294,11 @@ def schedule(route, allocation, stage='jump'):
         for case in profile.get('caseEvents', []):
             if case['case'] in ('normal_step', 'slab_boost') and any(
                     c['leg'] == event['leg'] and c.get('role') == 'step' and c['offset'] == case['input']
-                    and c['plane'] == case['plane'] and c['box'] == case['box'] for c in route.get('contactEvents', [])):
+                    and c['plane'] == case['plane'] and any(b in c['boxes'] for b in case['boxes'])
+                    for c in route.get('contactEvents', [])):
                 continue
             scene_contacts.append(dict(state=offset + case['input'] + 1, axis=1, direction=-1,
-                                       plane=case['plane'], box=case['box'], movementCase=case['case']))
+                                       plane=case['plane'], boxes=case['boxes'], movementCase=case['case']))
         occupied = profile.get('ladderTicks', [False] * (duration + 1))
         selected_sneak = profile.get('sneak', [False] * duration)
         if len(occupied) != duration + 1 or len(selected_sneak) != duration:

@@ -79,9 +79,10 @@ at that height. The existing [decompose](../src/parkour_solver/spatial/cells.py)
 and [support_components](../src/parkour_solver/spatial/regions.py) retain the
 result as a union rather than selecting one arbitrary rectangle. The report
 uses the existing [supports](../src/parkour_solver/scene/route.py) predicate to
-omit strata where the body merely touches its own support edge with zero area
-of overlap. Other boundary strata remain available in the underlying routing
-geometry; reporting does not change that algorithm.
+omit regions where the body merely touches its own support edge with zero area
+of overlap. The routing geometry itself keeps no free line, point or sliver
+narrower than the 0.012 minimum free width (see [decisions](DECISIONS_AND_PLANS.md));
+zero-thickness faces such as an exact 1.8 vertical slot remain.
 
 The table gives closures/limiting edges, rounded for readability. Actual support
 requires positive horizontal overlap, and solver constraint builders apply their
@@ -188,7 +189,7 @@ fixture with a `request` object. From `standalone/`, with the package installed:
 Add `--faces` to the command to include the physical-face catalog and statistics
 in JSON, plus an all-orientation face/member table in Markdown. The default
 bounds-only report is unchanged. Face coordinates are physical surfaces; they
-do not include player expansion. The [face API](../src/parkour_solver/spatial/faces.py)
+do not include player expansion. The [face API](../src/parkour_solver/spatial/surfaces.py)
 also supports exact source contribution queries and validated catalog loading.
 
 [Exact report](../research/real11-extension/player-bounds.json) retains all

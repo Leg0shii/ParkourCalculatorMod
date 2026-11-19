@@ -37,15 +37,21 @@ class RouteRegionTests(unittest.TestCase):
         self.assertFalse(any(contains(b, [1.5, 1, 1.5]) for b in canonical_cover(ring)))
         self.assertEqual(cover, canonical_cover(reversed(lshape)))
 
-    def test_boundary_lines_points_and_exact_doubles_are_retained(self):
-        boxes = [(0, 1, 0, 1, 1, 1), (1, 1, 0, 2, 1, 0), (3, 1, 0, 3, 1, 0)]
+    def test_lines_points_and_slivers_are_dropped_but_exact_doubles_kept(self):
+        boxes = [(0, 1, 0, 1, 1, 1), (1, 1, 0, 2, 1, 0), (3, 1, 0, 3, 1, 0), (5, 1, 0, 5+1e-15, 1, 1)]
         cover = canonical_cover(boxes)
-        self.assertTrue(any(contains(b, [1.5, 1, 0]) for b in cover))
-        self.assertTrue(any(contains(b, [3, 1, 0]) for b in cover))
-        self.assertFalse(any(contains(b, [1.5, 1, .1]) for b in cover))
+        self.assertEqual(cover, ((0, 1, 0, 1, 1, 1),))
         self.assertEqual(cover, canonical_cover(cover))
         self.assertNotEqual(canonical_cover([(0, 1, 0, 1, 1, 1)]),
                             canonical_cover([(0, 1, 0, 1.000000000000001, 1, 1)]))
+
+    def test_support_beside_a_flush_wall_is_one_rectangle(self):
+        # Real11's B5 under B6: the zero-width line where the player's box meets
+        # B5's top beside B6's east face is not a second landing rectangle.
+        scene = task_scene([[730, 0, -1096, 731, 6, -1095], [730, 0, -1095, 731, 20, -1094]],
+                           bounds=(720, -5, -1105, 740, 30, -1085))
+        low, = [s for s in support_components(decompose(scene)) if s.height == 6]
+        self.assertEqual(len(low.cover), 1)
 
     def test_local_refinement_preserves_free_volume_boundaries_and_residual_air(self):
         scene = task_scene([[0, 0, 0, 1, 1, 1], [2, 0, 1, 3, 2, 2]])

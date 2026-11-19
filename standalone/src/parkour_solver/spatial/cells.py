@@ -2,7 +2,7 @@ import itertools
 import time
 from dataclasses import asdict, dataclass, field
 
-from parkour_solver.scene.geometry import BODY_HEIGHT, box_bounds, expanded_box
+from parkour_solver.scene.geometry import BODY_HEIGHT, box_bounds, expanded_box, thin
 from parkour_solver.scene.route import HALF_WIDTH
 
 
@@ -151,7 +151,7 @@ def contact_patches(cells, solids, owners):
                 face = list(solid)
                 face[axis] = face[axis + 3] = solid[axis if side < 0 else axis + 3]
                 overlap = intersection(cell.bounds, face)
-                if overlap is not None:
+                if overlap is not None and not any(thin(overlap[a+3]-overlap[a]) for a in range(3) if a != axis):
                     kind = 'support' if axis == 1 and side == 1 else 'ceiling' if axis == 1 else 'wall'
                     contacts.append(ContactPatch(cell.id, i, owners[i], axis, side, kind, overlap))
     return contacts
@@ -216,7 +216,10 @@ def decompose(scene, *, max_cells=20000, deadline=None, refine_support=True):
                 faces.append(clipped)
     strata = union_subtract(faces, solids, max_cells, boundaries=True, deadline=deadline)
     strata = merge_boxes(strata)
-    strata = [b for b in strata if not any(intersection(b, v) == b for v in volumes)]
+    # Free pieces thinner than the minimum width are artifacts; zero-thickness
+    # faces (an exact 1.8 vertical slot) are real.
+    strata = [b for b in strata if not any(intersection(b, v) == b for v in volumes)
+              and not any(thin(e) for e in sorted(b[a+3]-b[a] for a in range(3))[1:])]
     boxes = sorted(set(volumes + strata))
     if len(boxes) > max_cells:
         raise ValueError('Cell decomposition exceeded max_cells')

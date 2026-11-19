@@ -1,0 +1,1359 @@
+{
+  "examplesHash": "c838b2ec8358761182e2072fe70f1ba41c8358c42fd9878f67d38877745b5fce",
+  "rows": [
+    {
+      "site": "parkour_solver.search.events.engine:search_event_routes:55",
+      "canonicalBytes": 2555,
+      "digest": "bec9744e4bd04b145133c5e1496616dc90e4d77dd2a9308ed6174f8a5c6b6a95",
+      "iterations": 1681,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.0415695458650589,
+          0.03977837786078453,
+          0.03948350250720978,
+          0.03959274664521217,
+          0.039490628987550735
+        ],
+        "sampled": [
+          0.04104512929916382,
+          0.04098837450146675,
+          0.04115712270140648,
+          0.04004557803273201,
+          0.04081720858812332
+        ],
+        "legacy": [
+          0.04287887364625931,
+          0.04333928972482681,
+          0.042910125106573105,
+          0.04232841730117798,
+          0.0425211638212204
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 2.3553091401078034e-05,
+        "sampled": 2.4383328079397234e-05,
+        "legacy": 2.5507955768149498e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 8.302366783191997e-07,
+        "legacy": 1.954864367071464e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 5184
+    },
+    {
+      "site": "parkour_solver.spatial.anchor_guides:build_guides:75",
+      "canonicalBytes": 1611,
+      "digest": "474d5f71c2f2d3fca54f01e527997794bcc896f8dabcdd8d669683f6b42359c7",
+      "iterations": 1383,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.03976883366703987,
+          0.03993483632802963,
+          0.039137206971645355,
+          0.039173707365989685,
+          0.03904920816421509
+        ],
+        "sampled": [
+          0.04003220796585083,
+          0.0412626639008522,
+          0.04002287611365318,
+          0.04076483100652695,
+          0.041111622005701065
+        ],
+        "legacy": [
+          0.04155958443880081,
+          0.04198620840907097,
+          0.04139671102166176,
+          0.04245391860604286,
+          0.04153575375676155
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 2.8325168015899988e-05,
+        "sampled": 2.9475655102333296e-05,
+        "legacy": 3.005031412783862e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 1.1504870864333084e-06,
+        "legacy": 1.7251461119386335e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 3296
+    },
+    {
+      "site": "parkour_solver.search.identity:motion_record:19",
+      "canonicalBytes": 106,
+      "digest": "c7dd9573db59b464c0ed81aa427656a1c3a03d4c50499306ee5b574118cc605d",
+      "iterations": 16128,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.043602414429187775,
+          0.04344820976257324,
+          0.0434168316423893,
+          0.04365437477827072,
+          0.04339003935456276
+        ],
+        "sampled": [
+          0.05124616622924805,
+          0.05089003965258598,
+          0.05121708661317825,
+          0.050030335783958435,
+          0.05005129054188728
+        ],
+        "legacy": [
+          0.06913379207253456,
+          0.06927875056862831,
+          0.06911816820502281,
+          0.06897704675793648,
+          0.06902429088950157
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 2.693961418810345e-06,
+        "sampled": 3.155384403062127e-06,
+        "legacy": 4.2856007071566725e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.614229842517821e-07,
+        "legacy": 1.5916392883463276e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 935
+    },
+    {
+      "site": "parkour_solver.search.dfs:search_goals:89",
+      "canonicalBytes": 3488,
+      "digest": "ee5581d878785c0cca177f2a5effce3f45263bce09dbb33ef9c21b0526993e08",
+      "iterations": 1572,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.0448094978928566,
+          0.04466841369867325,
+          0.04503374919295311,
+          0.04495283216238022,
+          0.0453464575111866
+        ],
+        "sampled": [
+          0.04606650024652481,
+          0.0461462065577507,
+          0.045736584812402725,
+          0.045655831694602966,
+          0.09892108663916588
+        ],
+        "legacy": [
+          0.047715503722429276,
+          0.04750904068350792,
+          0.047419290989637375,
+          0.04774320870637894,
+          0.04833617061376572
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 2.8595949212710064e-05,
+        "sampled": 2.93043894697995e-05,
+        "legacy": 3.0353373869229818e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 7.084402570894353e-07,
+        "legacy": 1.7574246565197538e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 7050
+    },
+    {
+      "site": "parkour_solver.search.dfs:candidate_key:21",
+      "canonicalBytes": 351,
+      "digest": "a31493438ab8de08829532861566beb3d9f76cbf55e0becaf999a5b6eaf1ba67",
+      "iterations": 20000,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.03398866578936577,
+          0.03367133066058159,
+          0.03329033777117729,
+          0.03349658474326134,
+          0.03318645805120468
+        ],
+        "sampled": [
+          0.041712746024131775,
+          0.042012959718704224,
+          0.04112866520881653,
+          0.04144616797566414,
+          0.04138645902276039
+        ],
+        "legacy": [
+          0.06627674773335457,
+          0.06568153947591782,
+          0.06461024656891823,
+          0.06476383283734322,
+          0.0642138347029686
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 1.6748292371630669e-06,
+        "sampled": 2.072308398783207e-06,
+        "legacy": 3.238191641867161e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 3.9747916162014025e-07,
+        "legacy": 1.563362404704094e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 776
+    },
+    {
+      "site": "parkour_solver.search.dfs:frame:160",
+      "canonicalBytes": 597,
+      "digest": "4b250ab10ffd875cb888ba6a44bb836263e8fe0861591e1163b5d5c983779578",
+      "iterations": 6960,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.038035836070775986,
+          0.03793979436159134,
+          0.03773153945803642,
+          0.03779749944806099,
+          0.038365207612514496
+        ],
+        "sampled": [
+          0.04115808382630348,
+          0.041548628360033035,
+          0.04124846309423447,
+          0.04088512435555458,
+          0.04092162102460861
+        ],
+        "legacy": [
+          0.04920012503862381,
+          0.04927096143364906,
+          0.04932158440351486,
+          0.049106497317552567,
+          0.04922575131058693
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 5.451119879538986e-06,
+        "sampled": 5.9135177911355575e-06,
+        "legacy": 7.072665418187777e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.623979115965718e-07,
+        "legacy": 1.621545538648791e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 1563
+    },
+    {
+      "site": "parkour_solver.search.anchors.adapter:next_goals:42",
+      "canonicalBytes": 375,
+      "digest": "979c0a53e958937c9e65c96c7357aa96323c36ce13156be51df4ec8d9c449515",
+      "iterations": 13824,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.04632774740457535,
+          0.0457775853574276,
+          0.0453881211578846,
+          0.04515858367085457,
+          0.045631539076566696
+        ],
+        "sampled": [
+          0.051456041634082794,
+          0.051294829696416855,
+          0.05071887746453285,
+          0.05078450217843056,
+          0.05050058290362358
+        ],
+        "legacy": [
+          0.06789179146289825,
+          0.06740337610244751,
+          0.06679074838757515,
+          0.06747225299477577,
+          0.06696679443120956
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 3.300892583663679e-06,
+        "sampled": 3.6736474376758216e-06,
+        "legacy": 4.875822924077511e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 3.727548540121426e-07,
+        "legacy": 1.5749303404138318e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 1254
+    },
+    {
+      "site": "parkour_solver.search.anchors.adapter:for_goal:59",
+      "canonicalBytes": 1216,
+      "digest": "b562d8005e54b84c6b38d5ce38d2286f91373f9c893a50703f90dd818ccfbd93",
+      "iterations": 4189,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.043282583355903625,
+          0.04324612393975258,
+          0.04327712580561638,
+          0.043019168078899384,
+          0.042986124753952026
+        ],
+        "sampled": [
+          0.04738275334239006,
+          0.04501545801758766,
+          0.045101750642061234,
+          0.04518124833703041,
+          0.04535691812634468
+        ],
+        "legacy": [
+          0.050407253205776215,
+          0.050035372376441956,
+          0.04995912313461304,
+          0.05000012740492821,
+          0.04993966594338417
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 1.032373452846803e-05,
+        "sampled": 1.0785688311537457e-05,
+        "legacy": 1.1936053331326858e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.619537830694268e-07,
+        "legacy": 1.612318802858828e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 2506
+    },
+    {
+      "site": "parkour_solver.search.frontier:persistent_programs:30",
+      "canonicalBytes": 3047,
+      "digest": "4a32e6b85de33fcf0f375242cd93a45265267131309d46ae8f4820935c6c7a75",
+      "iterations": 1822,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.04521949961781502,
+          0.0447537936270237,
+          0.08932333812117577,
+          0.045550331473350525,
+          0.045567747205495834
+        ],
+        "sampled": [
+          0.04614445939660072,
+          0.046730127185583115,
+          0.04919237643480301,
+          0.04701841622591019,
+          0.04648241773247719
+        ],
+        "legacy": [
+          0.04914499819278717,
+          0.04837712273001671,
+          0.04803541675209999,
+          0.048965584486722946,
+          0.04848621040582657
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 2.500018192829337e-05,
+        "sampled": 2.5647709761571412e-05,
+        "legacy": 2.661153150703983e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 6.475278332780409e-07,
+        "legacy": 1.611349578746459e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 6168
+    },
+    {
+      "site": "parkour_solver.search.frontier:persistent_programs:144",
+      "canonicalBytes": 327,
+      "digest": "51dc0ae715576c2045f0c71c977f0ac2a3fbacb4fe8fee2f40a7770845d28bfc",
+      "iterations": 20000,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.03226650506258011,
+          0.03283966705203056,
+          0.03231904283165932,
+          0.03262946009635925,
+          0.03237779065966606
+        ],
+        "sampled": [
+          0.04061645269393921,
+          0.0405460000038147,
+          0.04007657989859581,
+          0.0399930439889431,
+          0.04014303907752037
+        ],
+        "legacy": [
+          0.06275933608412743,
+          0.06356104090809822,
+          0.0635850839316845,
+          0.06279962509870529,
+          0.0627530887722969
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 1.618889532983303e-06,
+        "sampled": 2.0071519538760185e-06,
+        "legacy": 3.1399812549352645e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 3.8826242089271555e-07,
+        "legacy": 1.5210917219519616e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 728
+    },
+    {
+      "site": "parkour_solver.reachability.service:query:206",
+      "canonicalBytes": 327,
+      "digest": "51dc0ae715576c2045f0c71c977f0ac2a3fbacb4fe8fee2f40a7770845d28bfc",
+      "iterations": 20000,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.032038960605859756,
+          0.03272920846939087,
+          0.03268725425004959,
+          0.032188791781663895,
+          0.033115457743406296
+        ],
+        "sampled": [
+          0.04154587537050247,
+          0.04040833190083504,
+          0.04001458361744881,
+          0.04059487581253052,
+          0.04087795689702034
+        ],
+        "legacy": [
+          0.06345746293663979,
+          0.06280804052948952,
+          0.06315933912992477,
+          0.06402808427810669,
+          0.06388341635465622
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 1.6343627125024794e-06,
+        "sampled": 2.0297437906265258e-06,
+        "legacy": 3.172873146831989e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 3.953810781240463e-07,
+        "legacy": 1.5385104343295097e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 728
+    },
+    {
+      "site": "parkour_solver.reachability.service:prepare:120",
+      "canonicalBytes": 3166,
+      "digest": "3ce75bf500d7f53d44db6633e884c71ae2df6967856618698b4fd604961a7a98",
+      "iterations": 2001,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.04379158094525337,
+          0.04372404143214226,
+          0.04340604320168495,
+          0.04308762401342392,
+          0.04328475147485733
+        ],
+        "sampled": [
+          0.04430378973484039,
+          0.044301122426986694,
+          0.0441904179751873,
+          0.04406796023249626,
+          0.04457636922597885
+        ],
+        "legacy": [
+          0.04714483395218849,
+          0.04688199982047081,
+          0.04671812802553177,
+          0.04707671329379082,
+          0.046801500022411346
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 2.1692175513085932e-05,
+        "sampled": 2.2139491467759467e-05,
+        "legacy": 2.3429285267601603e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.4731595467353434e-07,
+        "legacy": 1.7371097545156706e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 6406
+    },
+    {
+      "site": "parkour_solver.reachability.service:analyze_model:135",
+      "canonicalBytes": 1284,
+      "digest": "845e8a79f4ff725c51f9dad878f83ea83065760303fa7c3426efae5400eb8f83",
+      "iterations": 2464,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.03992249816656113,
+          0.0398014560341835,
+          0.03935191407799721,
+          0.03955316171050072,
+          0.0394938699901104
+        ],
+        "sampled": [
+          0.040850210934877396,
+          0.040570419281721115,
+          0.040831539779901505,
+          0.04079883545637131,
+          0.04084895923733711
+        ],
+        "legacy": [
+          0.043839044868946075,
+          0.043754540383815765,
+          0.04338792338967323,
+          0.04345616698265076,
+          0.04352233186364174
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 1.605241952536555e-05,
+        "sampled": 1.6571241793791194e-05,
+        "legacy": 1.766328403556889e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 5.18822268425645e-07,
+        "legacy": 1.61086451020334e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 2642
+    },
+    {
+      "site": "parkour_solver.reachability.service:interaction_context_key:20",
+      "canonicalBytes": 2722,
+      "digest": "577c07a70c4fd5f14d54033d1b2061e048c1347edd1ec233c8eca66385dacdd2",
+      "iterations": 1386,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.04739820584654808,
+          0.0480634979903698,
+          0.09854674711823463,
+          0.048103831708431244,
+          0.04790179431438446
+        ],
+        "sampled": [
+          0.04962720721960068,
+          0.04994454234838486,
+          0.050069499760866165,
+          0.049794793128967285,
+          0.04882979020476341
+        ],
+        "legacy": [
+          0.05091862380504608,
+          0.05101974681019783,
+          0.05137375369668007,
+          0.05091874673962593,
+          0.050180915743112564
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 3.4677848477900285e-05,
+        "sampled": 3.592697916952906e-05,
+        "legacy": 3.673791251055262e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 1.249130691628778e-06,
+        "legacy": 2.060064032652333e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 5518
+    },
+    {
+      "site": "parkour_solver.reachability.service:build:145",
+      "canonicalBytes": 2412,
+      "digest": "793b26aacfa6b51e37d521056c81a4ab68bb2cb829216003a9326f6a783f1fec",
+      "iterations": 1462,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.04905778914690018,
+          0.0492745004594326,
+          0.04966900125145912,
+          0.049411460757255554,
+          0.049205582588911057
+        ],
+        "sampled": [
+          0.05014096200466156,
+          0.05008549988269806,
+          0.05021204426884651,
+          0.05018920823931694,
+          0.05037220939993858
+        ],
+        "legacy": [
+          0.05159008502960205,
+          0.052410878241062164,
+          0.05181913077831268,
+          0.05232333391904831,
+          0.05201524868607521
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 3.370348868634241e-05,
+        "sampled": 3.4329143802542366e-05,
+        "legacy": 3.5578145476111637e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 6.256551161999574e-07,
+        "legacy": 1.8746567897692278e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 4898
+    },
+    {
+      "site": "parkour_solver.reachability.service:query_interaction:38",
+      "canonicalBytes": 288,
+      "digest": "2b0f04dae48fa1332e756ac06fb08e038e9892bb6149d62c4bb9880e1366e2e3",
+      "iterations": 10363,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.03988320752978325,
+          0.039818331599235535,
+          0.0407707504928112,
+          0.03993508219718933,
+          0.0400528758764267
+        ],
+        "sampled": [
+          0.04404083266854286,
+          0.043787747621536255,
+          0.04489816725254059,
+          0.04388796165585518,
+          0.04360632970929146
+        ],
+        "legacy": [
+          0.056943830102682114,
+          0.05650262534618378,
+          0.05665341392159462,
+          0.05671658366918564,
+          0.05628487095236778
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 3.85362175018714e-06,
+        "sampled": 4.2350633654207444e-06,
+        "legacy": 5.466893170085364e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 3.814416152336042e-07,
+        "legacy": 1.6132714198982234e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 1365
+    },
+    {
+      "site": "parkour_solver.search.anchors.policy:<lambda>:71",
+      "canonicalBytes": 124,
+      "digest": "982905cc95f94f2d0e0bc8e38902cfe0dba1e5bf029d6c3559368b0ccfbc7406",
+      "iterations": 15957,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.04408770799636841,
+          0.043992046266794205,
+          0.04487329348921776,
+          0.04369845613837242,
+          0.043812837451696396
+        ],
+        "sampled": [
+          0.05183079093694687,
+          0.0508432500064373,
+          0.050103623420000076,
+          0.050349876284599304,
+          0.05064266547560692
+        ],
+        "legacy": [
+          0.07049933448433876,
+          0.0693245381116867,
+          0.06934550032019615,
+          0.06985683366656303,
+          0.07039792090654373
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 2.756912092924372e-06,
+        "sampled": 3.1736958999565656e-06,
+        "legacy": 4.377817488660966e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.167838070321934e-07,
+        "legacy": 1.6209053957365936e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 919
+    },
+    {
+      "site": "parkour_solver.search.feasibility:node_identity:30",
+      "canonicalBytes": 2162,
+      "digest": "983f6447da3447945e4694a6fa320af04191f9cc8582d011665aab01a58a3673",
+      "iterations": 4866,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.041552793234586716,
+          0.04253058508038521,
+          0.041546452790498734,
+          0.04226991534233093,
+          0.12488095834851265
+        ],
+        "sampled": [
+          0.04383041709661484,
+          0.04416987672448158,
+          0.0441153310239315,
+          0.04539666697382927,
+          0.04479712247848511
+        ],
+        "legacy": [
+          0.05022170767188072,
+          0.05034112557768822,
+          0.04946095868945122,
+          0.05063404142856598,
+          0.05788479372859001
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 8.686789014042527e-06,
+        "sampled": 9.07724552496539e-06,
+        "legacy": 1.0345484089126227e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 3.9045651092286263e-07,
+        "legacy": 1.6586950750837003e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 5102
+    },
+    {
+      "site": "parkour_solver.search.dfs:<lambda>:578",
+      "canonicalBytes": 5814,
+      "digest": "607d5318140787c7cfe663196b4fcf87d7c1b6d153f6d5036399cd8137a9a562",
+      "iterations": 3440,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.0550498366355896,
+          0.04781787097454071,
+          0.04748208448290825,
+          0.049386460334062576,
+          0.046416498720645905
+        ],
+        "sampled": [
+          0.0895955003798008,
+          0.049218129366636276,
+          0.049273498356342316,
+          0.04997391626238823,
+          0.04893720895051956
+        ],
+        "legacy": [
+          0.05353033170104027,
+          0.0525541678071022,
+          0.0532703697681427,
+          0.053284045308828354,
+          0.05189445614814758
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 1.390054388794788e-05,
+        "sampled": 1.4323691382657649e-05,
+        "legacy": 1.5485572607018226e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.2314749470976865e-07,
+        "legacy": 1.5850287190703458e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 11702
+    },
+    {
+      "site": "parkour_solver.search.dfs:decision_family:36",
+      "canonicalBytes": 57,
+      "digest": "cb1c4f549d8373f9d8d0db416496a669c9c5aba4a99de7c1d3b58493f12795b2",
+      "iterations": 14778,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.03261808305978775,
+          0.0329442098736763,
+          0.03281012549996376,
+          0.03270363062620163,
+          0.03221803903579712
+        ],
+        "sampled": [
+          0.038803666830062866,
+          0.03941696137189865,
+          0.03886124864220619,
+          0.03948070853948593,
+          0.03857770934700966
+        ],
+        "legacy": [
+          0.05712750181555748,
+          0.055946167558431625,
+          0.05664850398898125,
+          0.055889248847961426,
+          0.05587621033191681
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 2.2129943582488586e-06,
+        "sampled": 2.6296690108408577e-06,
+        "legacy": 3.7857739584809597e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.166746525919991e-07,
+        "legacy": 1.5727796002321011e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 876
+    },
+    {
+      "site": "parkour_solver.search.dfs:score_key:255",
+      "canonicalBytes": 136,
+      "digest": "e64ce8074540031447aa4ec3be92447d0b4e119da2aacf7bbbf59e2328bf96d6",
+      "iterations": 20000,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.038093000650405884,
+          0.03856103867292404,
+          0.039262671023607254,
+          0.03897158056497574,
+          0.03893749788403511
+        ],
+        "sampled": [
+          0.04674899950623512,
+          0.04673933610320091,
+          0.047717414796352386,
+          0.047228794544935226,
+          0.046842459589242935
+        ],
+        "legacy": [
+          0.06853524968028069,
+          0.06887000054121017,
+          0.06951720640063286,
+          0.06886279210448265,
+          0.0696311667561531
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 1.9468748942017553e-06,
+        "sampled": 2.3421229794621467e-06,
+        "legacy": 3.4435000270605086e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 3.9524808526039136e-07,
+        "legacy": 1.4966251328587532e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 948
+    },
+    {
+      "site": "parkour_solver.search.identity:solve_identity:55",
+      "canonicalBytes": 10571,
+      "digest": "152cc0fae942c4ddff2443d6ee775c27460bc3d3b5c71afb1eea910fb8afc861",
+      "iterations": 687,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.048715125769376755,
+          0.04867558553814888,
+          0.049873750656843185,
+          0.052892498672008514,
+          0.04870232939720154
+        ],
+        "sampled": [
+          0.049267545342445374,
+          0.049934789538383484,
+          0.05090833455324173,
+          0.05007270723581314,
+          0.049132876098155975
+        ],
+        "legacy": [
+          0.04948712885379791,
+          0.05042416974902153,
+          0.05049891769886017,
+          0.049840036779642105,
+          0.04888446256518364
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 7.090993561772454e-05,
+        "sampled": 7.268528317086387e-05,
+        "legacy": 7.254736066905693e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 1.7753475531393333e-06,
+        "legacy": 1.637425051332386e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 21216
+    },
+    {
+      "site": "parkour_solver.constraints.variants:__init__:17",
+      "canonicalBytes": 18747,
+      "digest": "54efef71578c9c47f227e4657a6d71086fa50b76b9b5dc6de45b85947959c040",
+      "iterations": 249,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.046295247972011566,
+          0.04623829200863838,
+          0.045558828860521317,
+          0.04616366699337959,
+          0.046358875930309296
+        ],
+        "sampled": [
+          0.047189123928546906,
+          0.04726462438702583,
+          0.047095417976379395,
+          0.04809674993157387,
+          0.048081252723932266
+        ],
+        "legacy": [
+          0.0463128387928009,
+          0.04696091637015343,
+          0.046280331909656525,
+          0.04724825173616409,
+          0.04725770652294159
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 0.00018569595184192122,
+        "sampled": 0.00018981776862259372,
+        "legacy": 0.00018859805771145955
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.121816780672499e-06,
+        "legacy": 2.9021058695383357e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 37568
+    },
+    {
+      "site": "parkour_solver.constraints.variants:effective_key:226",
+      "canonicalBytes": 2,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "iterations": 20000,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.029469456523656845,
+          0.029422245919704437,
+          0.029375165700912476,
+          0.0293874554336071,
+          0.029344167560338974
+        ],
+        "sampled": [
+          0.03721600025892258,
+          0.037446245551109314,
+          0.037182170897722244,
+          0.0372375026345253,
+          0.037230297923088074
+        ],
+        "legacy": [
+          0.059951167553663254,
+          0.06048358231782913,
+          0.05994695797562599,
+          0.059979621320962906,
+          0.06001503765583038
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 1.4693727716803552e-06,
+        "sampled": 1.8615148961544036e-06,
+        "legacy": 2.9989810660481455e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 3.921421244740485e-07,
+        "legacy": 1.5296082943677903e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 488
+    },
+    {
+      "site": "parkour_solver.constraints.variants:_next_variant:347",
+      "canonicalBytes": 72,
+      "digest": "95cf5de3e57e57df514d8c33c119ce3a50347210e5d1c0ab25aaf28a52801554",
+      "iterations": 20000,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.03471904620528221,
+          0.035421084612607956,
+          0.03521329164505005,
+          0.03563237190246582,
+          0.035173624753952026
+        ],
+        "sampled": [
+          0.043630000203847885,
+          0.04335054010152817,
+          0.0444081611931324,
+          0.04365445673465729,
+          0.0433015376329422
+        ],
+        "legacy": [
+          0.06706220656633377,
+          0.06664737686514854,
+          0.06541508063673973,
+          0.06669262424111366,
+          0.06574729084968567
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 1.7606645822525024e-06,
+        "sampled": 2.1815000101923942e-06,
+        "legacy": 3.332368843257427e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.2083542793989183e-07,
+        "legacy": 1.5717042610049247e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 863
+    },
+    {
+      "site": "parkour_solver.search.dfs:tick_label:285",
+      "canonicalBytes": 328,
+      "digest": "157ed516fffda871ffe68bf28cbf7274a390641722d55aaf0fafb7dfdb1ba552",
+      "iterations": 12537,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.04104771092534065,
+          0.04184591397643089,
+          0.0411473773419857,
+          0.04093029350042343,
+          0.0408502072095871
+        ],
+        "sampled": [
+          0.04649095982313156,
+          0.04701158404350281,
+          0.046254124492406845,
+          0.046167246997356415,
+          0.04664300009608269
+        ],
+        "legacy": [
+          0.06696312874555588,
+          0.06097858399152756,
+          0.06313541531562805,
+          0.06066499650478363,
+          0.060439832508563995
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 3.274125462657785e-06,
+        "sampled": 3.7083002172075904e-06,
+        "legacy": 4.863889606088184e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.341747545498054e-07,
+        "legacy": 1.5897641434303987e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 1200
+    },
+    {
+      "site": "parkour_solver.search.frontier:persistent_programs:193",
+      "canonicalBytes": 17632,
+      "digest": "df723c85be82b8234cb51058037062a9582f9077a20ec30a797af859045dac1d",
+      "iterations": 1290,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.04913000017404556,
+          0.04910895600914955,
+          0.04935254156589508,
+          0.04989716410636902,
+          0.04963516443967819
+        ],
+        "sampled": [
+          0.050217583775520325,
+          0.05059546232223511,
+          0.05126528814435005,
+          0.05063195526599884,
+          0.050815749913454056
+        ],
+        "legacy": [
+          0.05119729042053223,
+          0.05129629373550415,
+          0.051501207053661346,
+          0.05727337300777435,
+          0.05164821073412895
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 3.825778415960859e-05,
+        "sampled": 3.92495777255805e-05,
+        "legacy": 3.992341632066771e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 9.917935659719117e-07,
+        "legacy": 1.665632161059121e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 35338
+    },
+    {
+      "site": "parkour_solver.constraints.variants:_next_variant:382",
+      "canonicalBytes": 75,
+      "digest": "7715545ab80e50063e8cd4dff69a64f919fd28682cde34de61cdee3cd1070be3",
+      "iterations": 18719,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.03362800180912018,
+          0.03413841873407364,
+          0.039666999131441116,
+          0.040135711431503296,
+          0.045215122401714325
+        ],
+        "sampled": [
+          0.041263751685619354,
+          0.04208904504776001,
+          0.04892762750387192,
+          0.04405708983540535,
+          0.043069422245025635
+        ],
+        "legacy": [
+          0.06236029043793678,
+          0.06422829255461693,
+          0.2272375375032425,
+          0.06956691667437553,
+          0.06608391925692558
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 2.1190768273647693e-06,
+        "sampled": 2.3008399083832273e-06,
+        "legacy": 3.530312476998001e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 1.8176308101845803e-07,
+        "legacy": 1.4112356496332318e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 867
+    },
+    {
+      "site": "parkour_solver.constraints.variants:option:265",
+      "canonicalBytes": 77,
+      "digest": "2e3046a544ba8066dd06290bc8f56a695dce3cdc3a62400f5189e60066d82b66",
+      "iterations": 20000,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.0403914600610733,
+          0.039144955575466156,
+          0.038290999829769135,
+          0.03746616095304489,
+          0.03776232898235321
+        ],
+        "sampled": [
+          0.049112338572740555,
+          0.046852875500917435,
+          0.046241335570812225,
+          0.046771954745054245,
+          0.04612529277801514
+        ],
+        "legacy": [
+          0.07283371314406395,
+          0.07037162408232689,
+          0.0698048360645771,
+          0.06942545622587204,
+          0.06865183264017105
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 1.9145499914884566e-06,
+        "sampled": 2.3385977372527124e-06,
+        "legacy": 3.490241803228855e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.2404774576425577e-07,
+        "legacy": 1.5756918117403983e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 875
+    },
+    {
+      "site": "parkour_solver.constraints.variants:option:293",
+      "canonicalBytes": 114,
+      "digest": "42e8df78e452d0480b4ed9fc382e6a3a121109a8b4e7d20829fd72ccfcc4916d",
+      "iterations": 19542,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.042643122375011444,
+          0.04228024557232857,
+          0.042805206030607224,
+          0.04327995702624321,
+          0.04321487620472908
+        ],
+        "sampled": [
+          0.05083500221371651,
+          0.05120137706398964,
+          0.05082400143146515,
+          0.05177532881498337,
+          0.05101308226585388
+        ],
+        "legacy": [
+          0.0725962482392788,
+          0.07294083759188652,
+          0.0727199986577034,
+          0.07617804035544395,
+          0.07311033830046654
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 2.190420941081119e-06,
+        "sampled": 2.610433029672187e-06,
+        "legacy": 3.7325165076187966e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.200120885910681e-07,
+        "legacy": 1.5420955665376777e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 935
+    },
+    {
+      "site": "parkour_solver.constraints.variants:excluded:205",
+      "canonicalBytes": 739,
+      "digest": "ff06f42746e0674870d1e8595ccf15325ddb6894f1fdea65bc8cad27de63074a",
+      "iterations": 4882,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.04367971047759056,
+          0.043673623353242874,
+          0.04373571276664734,
+          0.04366583004593849,
+          0.04361583665013313
+        ],
+        "sampled": [
+          0.04746583104133606,
+          0.04631099849939346,
+          0.04572279378771782,
+          0.0459352508187294,
+          0.04551062360405922
+        ],
+        "legacy": [
+          0.05233112350106239,
+          0.05165528878569603,
+          0.05128500238060951,
+          0.051953043788671494,
+          0.05241971090435982
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 8.945846651626972e-06,
+        "sampled": 9.409105042754896e-06,
+        "legacy": 1.064175415581145e-05
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.632583911279238e-07,
+        "legacy": 1.6959075041844773e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 1791
+    },
+    {
+      "site": "parkour_solver.search.dfs:score:709",
+      "canonicalBytes": 136,
+      "digest": "818bfe8045e8a3899390b293df0d0ece759ef61126ec88a6b1178f46d702f29a",
+      "iterations": 20000,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.03922362998127937,
+          0.0386170856654644,
+          0.03896549716591835,
+          0.03839212656021118,
+          0.03929804638028145
+        ],
+        "sampled": [
+          0.047048792243003845,
+          0.0475337915122509,
+          0.04661387577652931,
+          0.046236708760261536,
+          0.04688458517193794
+        ],
+        "legacy": [
+          0.06962141394615173,
+          0.06941403821110725,
+          0.06938758119940758,
+          0.06893304362893105,
+          0.06872829422354698
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 1.9482748582959174e-06,
+        "sampled": 2.3442292585968973e-06,
+        "legacy": 3.469379059970379e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 3.959544003009799e-07,
+        "legacy": 1.5211042016744614e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 948
+    },
+    {
+      "site": "parkour_solver.search.bounds.flight:transfer_bounds:95",
+      "canonicalBytes": 336,
+      "digest": "e0429bc9f638d4aebcfd6839da120c7077ab6febf8fe62fdb3741a6ec9150d06",
+      "iterations": 10998,
+      "repeats": 5,
+      "rawSeconds": {
+        "unwrapped": [
+          0.04080553725361824,
+          0.04086541384458542,
+          0.04086412489414215,
+          0.04083745554089546,
+          0.04391145706176758
+        ],
+        "sampled": [
+          0.045147791504859924,
+          0.04553912580013275,
+          0.04546187445521355,
+          0.04505687579512596,
+          0.04556404426693916
+        ],
+        "legacy": [
+          0.05856892094016075,
+          0.058580294251441956,
+          0.057494793087244034,
+          0.058769162744283676,
+          0.05847850441932678
+        ]
+      },
+      "medianSecondsPerCall": {
+        "unwrapped": 3.715596007832529e-06,
+        "sampled": 4.133649250337656e-06,
+        "legacy": 5.325415615581083e-06
+      },
+      "overheadSecondsPerCall": {
+        "sampled": 4.1805324250512754e-07,
+        "legacy": 1.6098196077485538e-06
+      },
+      "tracedDigestCurrentBytes": 105,
+      "tracedDigestPeakBytes": 1215
+    }
+  ],
+  "accounting": "Same payload/iteration count in all modes. New hook state per repetition. Medians include hook overhead; no search speedup claim. One representative payload per caller, not its whole distribution."
+}

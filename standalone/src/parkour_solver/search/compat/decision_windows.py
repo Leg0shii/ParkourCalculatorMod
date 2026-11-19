@@ -83,7 +83,7 @@ def decision_events(program, goal_box=None):
             continue
         if event['direction'] > 0:
             result.append(dict(input=t,kind='ceiling'))
-        elif event.get('box') != goal_box and not (p['grounded'][t] and not p['jump'][t]
+        elif goal_box not in event['boxes'] and not (p['grounded'][t] and not p['jump'][t]
                 and abs(p['position'][t+1]-p['position'][t]) < 1e-7):
             result.append(dict(input=t,kind='landing'))
     return sorted(result,key=lambda event:(event['input'],event['kind']))
@@ -138,49 +138,3 @@ def score_features(best, cp, *, goal_box=None, samples=4):
                       forwardVelocity=dx*candidate['velocity'][t][0]+dz*candidate['velocity'][t][1],
                       lateralVelocity=-dz*candidate['velocity'][t][0]+dx*candidate['velocity'][t][1],
                       y=candidate['y'][t],vy=candidate['vy'][t],onGround=candidate['onGround'][t]) for t in states])
-
-
-def fair_programs(scene, seeds, *, cfg, fair, report, **kwargs):
-    from parkour_solver.search.movement import iter_movement_programs
-    from parkour_solver.search.engine import _key
-    if not fair or kwargs.get('persistent'):
-        yield from iter_movement_programs(scene,settings=cfg,initial_programs=seeds,report=report,**kwargs)
-        return
-    count = len(seeds)
-    reports, active = [], []
-    for i, seed in enumerate(seeds):
-        quota = cfg['maxPrefixes']//count+int(i < cfg['maxPrefixes']%count)
-        local = dict(parent=_key(seed),prefixQuota=quota)
-        reports.append(local)
-        if quota:
-            generator = iter_movement_programs(scene,settings=dict(cfg,maxPrefixes=quota),initial_programs=[seed],
-                                               report=local,**kwargs)
-            active.append((local,generator))
-        else:
-            local.update(termination='parent_prefix_quota',expandedPrefixes=0)
-    def summarize():
-        for key in ('expandedPrefixes','generated','screenedPrefixes','queueDrops','policyRejections'):
-            report[key] = sum(r.get(key,0) for r in reports)
-        report['parents'] = reports
-        reasons = [r.get('termination') for r in reports]
-        report['termination'] = next((r for r in ('cancelled','numerical_call_limit','deadline') if r in reasons),
-            'prefix_limit' if any(r in ('prefix_limit','parent_prefix_quota') for r in reasons) else 'exhausted')
-    try:
-        while active:
-            remaining = []
-            for local,generator in active:
-                if 'maxAcceptedTicks' in report:
-                    local['maxAcceptedTicks'] = report['maxAcceptedTicks']
-                try:
-                    program = next(generator)
-                except StopIteration:
-                    continue
-                remaining.append((local,generator))
-                summarize()
-                program['searchParent'] = local['parent']
-                yield program
-            active = remaining
-    finally:
-        for _,generator in active:
-            generator.close()
-        summarize()

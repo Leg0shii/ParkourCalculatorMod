@@ -54,7 +54,7 @@ class LongLadderChainTests(unittest.TestCase):
                     path=['start',scene['goalBlock']]
                     compiled=compile_block_path(scene,path,[edge])
                     r=solve_contact_branches(compiled['route'],compiled['profiles'],floor_checks(scene,path,compiled['profiles']),
-                        compiler,seconds=45,candidate_seconds=10,retries=1,max_branches=8,geometry=scene['collisionScene'],
+                        compiler,seconds=45,candidate_seconds=10,retries=1,geometry=scene['collisionScene'],
                         motion_bound={'storedSpeedNorm':2,'movementAfterSupportCheck':2},
                         python_executable=os.environ['PKC_IPOPT_PYTHON'])
                     self.assertEqual(r['status'],'feasible',r)

@@ -6,7 +6,7 @@ from pathlib import Path
 import unittest
 
 from parkour_solver.scene.normalize import prepare_scene
-from parkour_solver.movement.ceiling_profiles import ceiling_contact, ceiling_opportunities
+from parkour_solver.movement.ceiling_profiles import ceiling_contact, ceiling_opportunities, ceiling_options
 from parkour_solver.movement.contact_profiles import contact_opportunities
 from parkour_solver.movement.ladder.ceiling import own_ceiling_contacts, own_schedule_ceilings, predict_ceiling_sequences
 from parkour_solver.scene.ladders import ladder_regions, climb_walls, entry_channels, exit_faces
@@ -18,6 +18,8 @@ from parkour_solver.movement.ladder.generation import ladder_event_choice
 from parkour_solver.movement.normal import event_choice, replay
 from parkour_solver.movement.vertical_profiles import trace_ladder_schedule
 from parkour_solver.physics.vertical import CLIMB_CARRY, REST_CARRY, f32
+from parkour_solver.movement.contact_combinations import expanded_face
+from tests.support.archived_events import current_events
 
 
 ROOT = AUTONOMY_DATA
@@ -30,7 +32,7 @@ def climbing_case(beginning=False, ending=False):
     wall = next(w for w in climb_walls(column, scene['collisionScene']['solids'])
                 if w['axis'] == 'X' and w['direction'] == 1)
     hits = [not beginning, True, not ending, False]
-    finite = [ceiling_contact(scene['collisionScene']['solids'][2], t) for t in ([0] if beginning else [0, 1])]
+    finite = [ceiling_contact(ceiling_options(scene['collisionScene']['solids'], [2])[0], t) for t in ([0] if beginning else [0, 1])]
     trace = trace_ladder_schedule(dict(position=2, velocity=REST_CARRY, onGround=True),
         [True] * 4 + [False], [False] * 4, hits, jump=[f32(.42), None, None, None],
         contacts=[dict(state=e['offset'] + 1, plane=e['plane'], direction=1) for e in finite], stop_on_landing=False)
@@ -73,7 +75,7 @@ class LadderCeilingTests(unittest.TestCase):
                 self.assertTrue(all(u['type'] == 'ladder_climb' for u in units))
 
     def test_only_climbing_successors_are_accepted_and_stops_stay_inside_climbing(self):
-        contact = ceiling_contact([-1, 4, -1, 1, 5, 1], 0)
+        contact = ceiling_contact(ceiling_options([[-1, 4, -1, 1, 5, 1]])[0], 0)
         first = dict(type='ladder_climb', start=0, end=1, hitInputs=[], stopInputs=[0])
         for kind in ('normal', 'stepping', 'ceiling', 'ladder_fall', None):
             units = [first] + ([dict(type=kind, start=1, end=2)] if kind else [])
@@ -111,9 +113,9 @@ class LadderCeilingTests(unittest.TestCase):
         _, event, _ = climbing_case()
         schedule = copy.deepcopy(event['schedule'])
         box = [-1, 4, -1, 1, 5, 1]
-        sequences = predict_ceiling_sequences(schedule, box)
+        sequences = predict_ceiling_sequences(schedule, ceiling_options([box])[0])
         self.assertEqual([[c['offset'] for c in sequence] for sequence in sequences], [[0, 1, 2], [0], [0, 1]])
-        self.assertEqual([[c['offset'] for c in s] for s in predict_ceiling_sequences(schedule, box, start=1, end=3)],
+        self.assertEqual([[c['offset'] for c in s] for s in predict_ceiling_sequences(schedule, ceiling_options([box])[0], start=1, end=3)],
                          [[1, 2], [1]])
         self.assertTrue(all(c['offset'] != 3 for s in sequences for c in s))
         generated = contact_variants([box], 4, schedules=[schedule, schedule], max_events=1, max_variants=32)
@@ -126,7 +128,7 @@ class LadderCeilingTests(unittest.TestCase):
         shared = list(ceiling_opportunities([box], 2))
         old = list(contact_opportunities([box], 2, horizontal=False))
         self.assertEqual(shared, old)
-        shared[0]['box'][0] = -2
+        shared[0]['boxes'][0][0] = -2
         self.assertEqual(box[0], -1)
         plain = old[0]
         self.assertEqual(own_ceiling_contacts([plain], [dict(type='normal', start=0, end=2)])[0], [plain])
@@ -146,14 +148,15 @@ class LadderCeilingTests(unittest.TestCase):
         phases = ladder_units(schedule)
         self.assertTrue(any(u['type'] == 'ladder_climb' and u['start'] <= 2 < u['end'] for u in phases))
         schedule = copy.deepcopy(schedule)
-        schedule['contactEvents'].append(ceiling_contact(box, 2))
+        schedule['contactEvents'].append(ceiling_contact(ceiling_options([box])[0], 2))
         with self.assertRaises(ValueError):
             own_schedule_ceilings(schedule)
 
     def test_composed_entry_ceiling_transfers_ownership_without_duplicate_contact_or_effect(self):
         initial = dict(position=1, velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
-        wall = dict(leg=0, offset=0, axis='X', direction=1, plane=.7, box=[1, 0, 0, 2, 3, 1], role='contact')
-        ceiling = ceiling_contact([-1, 3, -1, 2, 4, 2], 0)
+        wall = dict(leg=0, offset=0, axis='X', direction=1, plane=.7, boxes=[[1, 0, 0, 2, 3, 1]], surface=None,
+                    regions=[expanded_face([1, 0, 0, 2, 3, 1], 0, -1, 1e-6)], role='contact')
+        ceiling = ceiling_contact(ceiling_options([[-1, 3, -1, 2, 4, 2]])[0], 0)
         approach = event_choice({}, 'ceiling', initial, 1, jumping=True, finite=[wall, ceiling],
                                 vertical=[dict(state=1, plane=ceiling['plane'], direction=1)])
         program = append_choice(empty_program(initial), approach)
@@ -182,7 +185,7 @@ class LadderCeilingTests(unittest.TestCase):
         self.assertEqual(combined['ladderEvents'][0]['schedule']['ladderCeilingEvents'][0]['ownerRegion'], 'entry')
 
     def test_second_ladder_contact_effects_and_schedule_offsets_agree_after_retiming(self):
-        evidence = json.loads((ROOT / 'experiments/contact-combinations/appended-ladder-ceiling.json').read_text())
+        evidence = current_events(json.loads((ROOT / 'experiments/contact-combinations/appended-ladder-ceiling.json').read_text()))
         program = empty_program(evidence['route']['initial'])
         cut = 0
         for event in evidence['route']['ladderEvents']:
@@ -246,7 +249,7 @@ class LadderCeilingNumericalTests(unittest.TestCase):
                     compiled = compile_program(scene, program)
                     result = solve_contact_branches(compiled['route'], compiled['profiles'],
                         floor_checks(scene, ['start', 'goal'], compiled['profiles']), self.compiler,
-                        seconds=15, candidate_seconds=2, retries=1, max_branches=16, geometry=scene['collisionScene'],
+                        seconds=15, candidate_seconds=2, retries=1, geometry=scene['collisionScene'],
                         motion_bound=dict(storedSpeedNorm=2, movementAfterSupportCheck=2),
                         python_executable=os.environ['PKC_IPOPT_PYTHON'])
                     self.assertEqual(result['status'], 'feasible', result.get('termination'))
@@ -269,7 +272,7 @@ class LadderCeilingNumericalTests(unittest.TestCase):
                         elif mutation == 'mistimed':
                             selected['state'] += 1
                         elif mutation == 'wrong_box':
-                            selected['box'] = [v + (20 if i in (0, 3) else 0) for i, v in enumerate(selected['box'])]
+                            selected['boxes'] = [[v + (20 if i in (0, 3) else 0) for i, v in enumerate(box)] for box in selected['boxes']]
                         else:
                             broken['sceneContacts'].append(dict(selected, state=3))
                         checked = check_geometry(scene['collisionScene'], broken, best['candidate'], vertical, self.compiler, 5)

@@ -1,6 +1,6 @@
 # Reusing the broader Parkour Calculator
 
-All relative links below resolve inside the **physical research worktree**. From the main checkout's symlinked standalone directory, do not navigate via its logical `..` to read a different code revision.
+Relative links below resolve inside the same worktree, so they show the mod source at the same revision as this standalone code.
 
 ## Orientation and rules
 
@@ -24,7 +24,7 @@ All relative links below resolve inside the **physical research worktree**. From
 
 ## Constraint derivation runbook
 
-Use [CONSTRAINT_GENERATION_RUNBOOK.md](design/CONSTRAINT_GENERATION_RUNBOOK.md) for exact conventions. The mod's key-selection flow supplies support boxes, nearby obstacle boxes, reference point, facing and collision mode to `deriveFootprint`. `SupportOverlap` includes precise player overhang; obstacle clipping handles body/corners. The standalone convenience footprint operation currently passes no obstacle list, so it is not a replacement for neighbor-aware derivation. [DeriveSelectedFootprints.java](../research/linkcraft11-opening/DeriveSelectedFootprints.java) demonstrates calling the real code with neighbors.
+Use [MOD_REFERENCES.md](MOD_REFERENCES.md) for exact conventions. The mod's key-selection flow supplies support boxes, nearby obstacle boxes, reference point, facing and collision mode to `deriveFootprint`. `SupportOverlap` includes precise player overhang; obstacle clipping handles body/corners. The standalone convenience footprint operation currently passes no obstacle list, so it is not a replacement for neighbor-aware derivation. [DeriveSelectedFootprints.java](../research/linkcraft11-opening/DeriveSelectedFootprints.java) demonstrates calling the real code with neighbors.
 
 A GUI-selected footprint rectangle is one selected region, not the full nonconvex support domain. Preserve unions as multiple support regions/cells with the same physical owner; never create collision walls on artificial seams. The player's legacy half-width is float-promoted `0.30000001192092896`, height is float-promoted `1.8F`. Do not use hand-rounded `0.3` in tight production constraints or expand already-authored player-center rows twice.
 

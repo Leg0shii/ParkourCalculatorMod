@@ -1,0 +1,236 @@
+[
+  {
+    "index": 1,
+    "fingerprint": "4a639fe6b0c8ab81e1629f18e64e3008bcd5ac4926ad28f27cd0efbe8f008ebd",
+    "ticks": 17,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": false,
+    "workerStatus": null
+  },
+  {
+    "index": 2,
+    "fingerprint": "f2e339dc4f0af973c54db6816aee9d31180d81d591c480e195487362bcda1267",
+    "ticks": 27,
+    "stopOnFeasible": true,
+    "status": "unknown",
+    "workerLaunched": true,
+    "workerStatus": "Infeasible_Problem_Detected"
+  },
+  {
+    "index": 3,
+    "fingerprint": "4d4b7a1bf7412534d0c0ab6d7b795370a908601472299d0cddba3290ddc26457",
+    "ticks": 28,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": null
+  },
+  {
+    "index": 4,
+    "fingerprint": "affc58de3775af6e0039480d72bbdfa5f99b10ae655a8ba7e3d95a23fe74f332",
+    "ticks": 40,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": null
+  },
+  {
+    "index": 5,
+    "fingerprint": "190f815c19eff8d72512ef0ba439c6bd47e2a30ba40757d77203168fd20d8636",
+    "ticks": 57,
+    "stopOnFeasible": true,
+    "status": "unknown",
+    "workerLaunched": true,
+    "workerStatus": "Infeasible_Problem_Detected"
+  },
+  {
+    "index": 6,
+    "fingerprint": "5ba73e9a911a1ac226e2b173823b42422ee538f164ee2175bd40063e9c868244",
+    "ticks": 58,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": null
+  },
+  {
+    "index": 7,
+    "fingerprint": "4c96a2f1beebb4bf4a31353b0b111b04f74c0561d9e995a8476bea60eb21d692",
+    "ticks": 67,
+    "stopOnFeasible": false,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": "Solve_Succeeded"
+  },
+  {
+    "index": 8,
+    "fingerprint": "62e2f948e6c87c62b04fd4e2a6fcc0cbf5e61942a37ddeb4d15fe7cfde14e3a8",
+    "ticks": 67,
+    "stopOnFeasible": false,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": "Solve_Succeeded"
+  },
+  {
+    "index": 9,
+    "fingerprint": "71c6f171ec5a9295977561f2d408dd83853c8988ac8587defa8cb82683289c9c",
+    "ticks": 58,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": false,
+    "workerStatus": null
+  },
+  {
+    "index": 10,
+    "fingerprint": "88bf84099ea4a155a11018b898a07c85644220d248e30f4bd56f3645d6cc7b05",
+    "ticks": 67,
+    "stopOnFeasible": false,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": "Solve_Succeeded"
+  },
+  {
+    "index": 11,
+    "fingerprint": "63fb889a144316d71632816187505a4de076db947b7fe2edb52ed195197b20fe",
+    "ticks": 67,
+    "stopOnFeasible": false,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": "Solve_Succeeded"
+  },
+  {
+    "index": 12,
+    "fingerprint": "4f988350a957399d715642c3f761878d3a30f8955901e555fcb8f28fca05509e",
+    "ticks": 12,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": false,
+    "workerStatus": null
+  },
+  {
+    "index": 13,
+    "fingerprint": "9e4dc0c7561745c3fb99a9bac92d778374392e3efa2d38f4459f1ed1c6d17d4d",
+    "ticks": 21,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": null
+  },
+  {
+    "index": 14,
+    "fingerprint": "8abfa224a01f4387d6463ace46223c21946b4251e565dc59ccbc404204af980f",
+    "ticks": 30,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": false,
+    "workerStatus": null
+  },
+  {
+    "index": 15,
+    "fingerprint": "9be0445d534def86098936046067a7291bbd7a7b4833ad21c984d5b64644c1df",
+    "ticks": 40,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": false,
+    "workerStatus": null
+  },
+  {
+    "index": 16,
+    "fingerprint": "0dc56ca5c3ea6e23e7531faa8972ed93d50e212e1920181a35506ffbed3cb3c1",
+    "ticks": 55,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": null
+  },
+  {
+    "index": 17,
+    "fingerprint": "1f1a52e04e4a81c07d23ca0aa92729b384ce81a29a21f0b505a275e1f54487f2",
+    "ticks": 64,
+    "stopOnFeasible": false,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": "Solve_Succeeded"
+  },
+  {
+    "index": 18,
+    "fingerprint": "ec13e5b2b2502c13e3eaef7dd7f4214a00cf6415c4662b05464508716c41b2a9",
+    "ticks": 55,
+    "stopOnFeasible": true,
+    "status": "feasible",
+    "workerLaunched": false,
+    "workerStatus": null
+  },
+  {
+    "index": 19,
+    "fingerprint": "cea0a097728b5d716af5727f6b54bee8a0334d31603bae019a57db3e46ddd072",
+    "ticks": 64,
+    "stopOnFeasible": false,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": "Solve_Succeeded"
+  },
+  {
+    "index": 20,
+    "fingerprint": "85c10c7b00619a819197d1c547cdaf313430183a9b3037ff4dbe8a38466cc022",
+    "ticks": 64,
+    "stopOnFeasible": false,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": "Solve_Succeeded"
+  },
+  {
+    "index": 21,
+    "fingerprint": "b1e386a831515762a4102c01271cd81f99d34926604819be59a02ce95cf57bb0",
+    "ticks": 55,
+    "stopOnFeasible": true,
+    "status": "unknown",
+    "workerLaunched": true,
+    "workerStatus": "Infeasible_Problem_Detected"
+  },
+  {
+    "index": 22,
+    "fingerprint": "fa8186c9e652db7a7fc1cf39b17f93ce18f76b538d884c7255ab5d57d5bff36c",
+    "ticks": 55,
+    "stopOnFeasible": true,
+    "status": "unknown",
+    "workerLaunched": true,
+    "workerStatus": "Infeasible_Problem_Detected"
+  },
+  {
+    "index": 23,
+    "fingerprint": "be95000c50b6f192cb3dfcea2156aa733aba2949b4b4ae7a4fd40a46f1125527",
+    "ticks": 64,
+    "stopOnFeasible": false,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": "Solve_Succeeded"
+  },
+  {
+    "index": 24,
+    "fingerprint": "69e3f3f2b8e791a90521fe7dad0af0548124ddb00dcb63a39f2c58d00ff2c474",
+    "ticks": 64,
+    "stopOnFeasible": false,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": "Solve_Succeeded"
+  },
+  {
+    "index": 25,
+    "fingerprint": "44afa2b7c6a15460a156a1a137cb2bb3d23fb7b88a27ca91b5343c57fe011957",
+    "ticks": 64,
+    "stopOnFeasible": false,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": "Solve_Succeeded"
+  },
+  {
+    "index": 26,
+    "fingerprint": "135f58a6195446de84a1ee962f73d8c618442df5ecccc80af2ac8a0cc7e8857c",
+    "ticks": 64,
+    "stopOnFeasible": false,
+    "status": "feasible",
+    "workerLaunched": true,
+    "workerStatus": "Solve_Succeeded"
+  }
+]

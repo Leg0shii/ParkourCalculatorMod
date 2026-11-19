@@ -6,6 +6,7 @@ import math
 import time
 
 from parkour_solver.physics.vertical import f32
+from parkour_solver.reachability.intervals import travel_radii
 from parkour_solver.schema import integer
 from parkour_solver.search.repair import solve_contact_branches
 from parkour_solver.constraints.contacts import floor_checks; from parkour_solver.validation.vertical import validate_vertical_schedule
@@ -94,11 +95,8 @@ def probe_entries(scene, graph, path, edges, target, allocation, column, wall, c
 
 
 def post_exit_reachable(schedule, coefficients, column, target):
-    reach, carry = 0., float(f32(.15))
-    for t in range(schedule['exitState'], schedule['ticks']):
-        move = carry + coefficients['magnitude'][t]
-        reach += move
-        carry = coefficients['friction'][t] * move
+    ticks = slice(schedule['exitState'], schedule['ticks'])
+    reach = travel_radii(float(f32(.15)), coefficients['magnitude'][ticks], coefficients['friction'][ticks])[-1]
     bounds = center_bounds(target)
     for a, origin in [(0, column['x']), (2, column['z'])]:
         hi = region_axis(column, 'X' if a == 0 else 'Z')[1]
@@ -364,7 +362,7 @@ def find_climbable_blocks(scene, compiler, normal_solver, *, seconds=60, route_s
                                         try:
                                             solved = solve_contact_branches(route, compiled['profiles'], floor_checks(scene, full_path, compiled['profiles']),
                                                 compiler, seconds=max(.001, context_deadline - time.monotonic()), candidate_seconds=candidate_seconds,
-                                                retries=retries, max_branches=scene['maxContactBranches'], rank_equal_cost=True, optimize_goal=True,
+                                                retries=retries, rank_equal_cost=True, optimize_goal=True,
                                                 python_executable=python_executable, cancel_event=cancel_event, geometry=scene['collisionScene'],
                                                 motion_bound=graph['bound'], solid_blocks=[b['sourceBlock'] for b in sorted(scene['blocks'], key=lambda b: b['solidIndex'])])
                                         except (ValueError, TimeoutError) as error:

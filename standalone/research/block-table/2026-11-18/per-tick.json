@@ -1,0 +1,2673 @@
+{
+ "tables": {
+  "real11": [
+   {
+    "owner": "b1",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 31,
+    "seconds": 0.0007619999999999849,
+    "perTickSeconds": 0.0010890000000000066
+   },
+   {
+    "owner": "b2",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 36,
+    "seconds": 0.0005059999999999787,
+    "perTickSeconds": 0.0009510000000000074
+   },
+   {
+    "owner": "b3",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 46,
+    "seconds": 0.0004609999999999892,
+    "perTickSeconds": 0.0009550000000000114
+   },
+   {
+    "owner": "b4",
+    "blocks": 7,
+    "perTickBlocks": 7,
+    "blockTicks": 56,
+    "seconds": 0.0004669999999999952,
+    "perTickSeconds": 0.00136
+   },
+   {
+    "owner": "b5",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 50,
+    "seconds": 8.299999999999974e-05,
+    "perTickSeconds": 0.0014460000000000028
+   },
+   {
+    "owner": "b6",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 67,
+    "seconds": 0.0005269999999999997,
+    "perTickSeconds": 0.0012749999999999984
+   },
+   {
+    "owner": "b7",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 46,
+    "seconds": 8.299999999999974e-05,
+    "perTickSeconds": 0.0015580000000000038
+   }
+  ],
+  "random0": [
+   {
+    "owner": "b0",
+    "blocks": 2,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 0.0008599999999999997,
+    "perTickSeconds": 0.0013739999999999863
+   },
+   {
+    "owner": "b1",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 5.7000000000001494e-05,
+    "perTickSeconds": 0.0011079999999999979
+   },
+   {
+    "owner": "b10",
+    "blocks": 8,
+    "perTickBlocks": 8,
+    "blockTicks": 73,
+    "seconds": 0.0006690000000000029,
+    "perTickSeconds": 0.0014909999999999923
+   },
+   {
+    "owner": "b11",
+    "blocks": 7,
+    "perTickBlocks": 6,
+    "blockTicks": 70,
+    "seconds": 0.0006210000000000104,
+    "perTickSeconds": 0.0013680000000000359
+   },
+   {
+    "owner": "b12",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 19,
+    "seconds": 0.0006070000000000242,
+    "perTickSeconds": 0.0010970000000000146
+   },
+   {
+    "owner": "b13",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 27,
+    "seconds": 0.0005579999999999474,
+    "perTickSeconds": 0.0009250000000000091
+   },
+   {
+    "owner": "b2",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 34,
+    "seconds": 0.00047399999999997444,
+    "perTickSeconds": 0.0009959999999999969
+   },
+   {
+    "owner": "b3",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 14,
+    "seconds": 4.999999999999449e-05,
+    "perTickSeconds": 0.0008970000000000367
+   },
+   {
+    "owner": "b4",
+    "blocks": 3,
+    "perTickBlocks": 2,
+    "blockTicks": 30,
+    "seconds": 6.699999999998374e-05,
+    "perTickSeconds": 0.0015249999999999986
+   },
+   {
+    "owner": "b5",
+    "blocks": 5,
+    "perTickBlocks": 4,
+    "blockTicks": 41,
+    "seconds": 0.0007169999999999677,
+    "perTickSeconds": 0.0011570000000000191
+   },
+   {
+    "owner": "b6",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 22,
+    "seconds": 0.00012599999999995948,
+    "perTickSeconds": 0.0015859999999999763
+   },
+   {
+    "owner": "b7",
+    "blocks": 6,
+    "perTickBlocks": 5,
+    "blockTicks": 41,
+    "seconds": 0.00012200000000001099,
+    "perTickSeconds": 0.0015490000000000226
+   },
+   {
+    "owner": "b8",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 24,
+    "seconds": 8.80000000000325e-05,
+    "perTickSeconds": 0.0013980000000000103
+   },
+   {
+    "owner": "b9",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 24,
+    "seconds": 0.0007369999999999877,
+    "perTickSeconds": 0.0011339999999999684
+   },
+   {
+    "owner": "goal",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 27,
+    "seconds": 6.40000000000085e-05,
+    "perTickSeconds": 0.0012860000000000094
+   },
+   {
+    "owner": "start",
+    "blocks": 7,
+    "perTickBlocks": 7,
+    "blockTicks": 68,
+    "seconds": 0.0008090000000000042,
+    "perTickSeconds": 0.001811000000000007
+   }
+  ],
+  "random1": [
+   {
+    "owner": "b0",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 31,
+    "seconds": 0.0009450000000000292,
+    "perTickSeconds": 0.0019409999999999705
+   },
+   {
+    "owner": "b1",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 36,
+    "seconds": 0.0008190000000000142,
+    "perTickSeconds": 0.0015319999999999778
+   },
+   {
+    "owner": "b10",
+    "blocks": 2,
+    "perTickBlocks": 1,
+    "blockTicks": 14,
+    "seconds": 0.0008360000000000034,
+    "perTickSeconds": 0.0012810000000000321
+   },
+   {
+    "owner": "b11",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 35,
+    "seconds": 0.0005260000000000264,
+    "perTickSeconds": 0.0009609999999999896
+   },
+   {
+    "owner": "b12",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 39,
+    "seconds": 0.00047199999999997244,
+    "perTickSeconds": 0.0011680000000000024
+   },
+   {
+    "owner": "b13",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 37,
+    "seconds": 0.0006849999999999912,
+    "perTickSeconds": 0.0010450000000000181
+   },
+   {
+    "owner": "b2",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 41,
+    "seconds": 9.00000000000345e-05,
+    "perTickSeconds": 0.0009669999999999956
+   },
+   {
+    "owner": "b3",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 39,
+    "seconds": 0.0004750000000000032,
+    "perTickSeconds": 0.0010839999999999739
+   },
+   {
+    "owner": "b4",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 14,
+    "seconds": 7.299999999998974e-05,
+    "perTickSeconds": 0.0011039999999999939
+   },
+   {
+    "owner": "b5",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 23,
+    "seconds": 0.0006190000000000362,
+    "perTickSeconds": 0.0009749999999999481
+   },
+   {
+    "owner": "b6",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 23,
+    "seconds": 6.20000000000065e-05,
+    "perTickSeconds": 0.0010729999999999906
+   },
+   {
+    "owner": "b7",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 52,
+    "seconds": 0.000124000000000013,
+    "perTickSeconds": 0.0011829999999999896
+   },
+   {
+    "owner": "b8",
+    "blocks": 7,
+    "perTickBlocks": 7,
+    "blockTicks": 65,
+    "seconds": 0.0006530000000000147,
+    "perTickSeconds": 0.001348999999999989
+   },
+   {
+    "owner": "b9",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 39,
+    "seconds": 0.00010699999999996823,
+    "perTickSeconds": 0.0010200000000000209
+   },
+   {
+    "owner": "goal",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 24,
+    "seconds": 7.099999999998774e-05,
+    "perTickSeconds": 0.0009660000000000224
+   },
+   {
+    "owner": "start",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 83,
+    "seconds": 8.799999999997699e-05,
+    "perTickSeconds": 0.0016229999999999856
+   }
+  ],
+  "random2": [
+   {
+    "owner": "b0",
+    "blocks": 3,
+    "perTickBlocks": 2,
+    "blockTicks": 27,
+    "seconds": 0.0007360000000000144,
+    "perTickSeconds": 0.0013170000000000126
+   },
+   {
+    "owner": "b1",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 34,
+    "seconds": 0.0005420000000000424,
+    "perTickSeconds": 0.0010009999999999741
+   },
+   {
+    "owner": "b10",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 31,
+    "seconds": 0.0004950000000000232,
+    "perTickSeconds": 0.0010009999999999741
+   },
+   {
+    "owner": "b11",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 27,
+    "seconds": 0.00048599999999998644,
+    "perTickSeconds": 0.0010220000000000229
+   },
+   {
+    "owner": "b12",
+    "blocks": 7,
+    "perTickBlocks": 7,
+    "blockTicks": 64,
+    "seconds": 0.0005890000000000062,
+    "perTickSeconds": 0.0010779999999999679
+   },
+   {
+    "owner": "b13",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 21,
+    "seconds": 0.0004899999999999904,
+    "perTickSeconds": 0.0012400000000000189
+   },
+   {
+    "owner": "b2",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 15,
+    "seconds": 7.499999999999174e-05,
+    "perTickSeconds": 0.0009590000000000432
+   },
+   {
+    "owner": "b3",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 44,
+    "seconds": 8.500000000000174e-05,
+    "perTickSeconds": 0.0010660000000000114
+   },
+   {
+    "owner": "b4",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 33,
+    "seconds": 0.0005149999999999877,
+    "perTickSeconds": 0.0012969999999999926
+   },
+   {
+    "owner": "b5",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 50,
+    "seconds": 0.00011700000000003374,
+    "perTickSeconds": 0.0011189999999999811
+   },
+   {
+    "owner": "b6",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 0.0004959999999999964,
+    "perTickSeconds": 0.0009570000000000412
+   },
+   {
+    "owner": "b7",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 26,
+    "seconds": 0.0004979999999999984,
+    "perTickSeconds": 0.0010290000000000021
+   },
+   {
+    "owner": "b8",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 47,
+    "seconds": 8.099999999999774e-05,
+    "perTickSeconds": 0.0009929999999999661
+   },
+   {
+    "owner": "b9",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 40,
+    "seconds": 0.0004959999999999964,
+    "perTickSeconds": 0.0010339999999999794
+   },
+   {
+    "owner": "goal",
+    "blocks": 7,
+    "perTickBlocks": 7,
+    "blockTicks": 62,
+    "seconds": 7.40000000000185e-05,
+    "perTickSeconds": 0.0011439999999999784
+   },
+   {
+    "owner": "start",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 32,
+    "seconds": 7.499999999999174e-05,
+    "perTickSeconds": 0.0010009999999999741
+   }
+  ],
+  "random3": [
+   {
+    "owner": "b0",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 28,
+    "seconds": 0.0005580000000000029,
+    "perTickSeconds": 0.0009679999999999689
+   },
+   {
+    "owner": "b1",
+    "blocks": 5,
+    "perTickBlocks": 4,
+    "blockTicks": 36,
+    "seconds": 0.0005319999999999769,
+    "perTickSeconds": 0.0011660000000000004
+   },
+   {
+    "owner": "b10",
+    "blocks": 2,
+    "perTickBlocks": 1,
+    "blockTicks": 14,
+    "seconds": 0.0007409999999999917,
+    "perTickSeconds": 0.0010809999999999986
+   },
+   {
+    "owner": "b11",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 44,
+    "seconds": 0.0005050000000000332,
+    "perTickSeconds": 0.0010709999999999886
+   },
+   {
+    "owner": "b12",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 56,
+    "seconds": 0.0005269999999999997,
+    "perTickSeconds": 0.0010679999999999579
+   },
+   {
+    "owner": "b13",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 14,
+    "seconds": 7.799999999996698e-05,
+    "perTickSeconds": 0.0009890000000000176
+   },
+   {
+    "owner": "b2",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 26,
+    "seconds": 7.00000000000145e-05,
+    "perTickSeconds": 0.0010000000000000009
+   },
+   {
+    "owner": "b3",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 35,
+    "seconds": 7.60000000000205e-05,
+    "perTickSeconds": 0.0010439999999999894
+   },
+   {
+    "owner": "b4",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 54,
+    "seconds": 9.299999999995423e-05,
+    "perTickSeconds": 0.0010249999999999981
+   },
+   {
+    "owner": "b5",
+    "blocks": 6,
+    "perTickBlocks": 4,
+    "blockTicks": 51,
+    "seconds": 0.0004919999999999924,
+    "perTickSeconds": 0.0011050000000000226
+   },
+   {
+    "owner": "b6",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 15,
+    "seconds": 0.0005180000000000184,
+    "perTickSeconds": 0.001314999999999955
+   },
+   {
+    "owner": "b7",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 31,
+    "seconds": 0.0005129999999999857,
+    "perTickSeconds": 0.0010809999999999986
+   },
+   {
+    "owner": "b8",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 34,
+    "seconds": 9.999999999998899e-05,
+    "perTickSeconds": 0.0010020000000000029
+   },
+   {
+    "owner": "b9",
+    "blocks": 6,
+    "perTickBlocks": 5,
+    "blockTicks": 57,
+    "seconds": 0.0004939999999999944,
+    "perTickSeconds": 0.0011490000000000111
+   },
+   {
+    "owner": "goal",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 24,
+    "seconds": 8.099999999999774e-05,
+    "perTickSeconds": 0.0010359999999999814
+   },
+   {
+    "owner": "start",
+    "blocks": 5,
+    "perTickBlocks": 4,
+    "blockTicks": 51,
+    "seconds": 0.00010500000000002174,
+    "perTickSeconds": 0.0012590000000000101
+   }
+  ],
+  "random4": [
+   {
+    "owner": "b0",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 44,
+    "seconds": 0.0006050000000000222,
+    "perTickSeconds": 0.0010169999999999901
+   },
+   {
+    "owner": "b1",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 23,
+    "seconds": 0.0004870000000000152,
+    "perTickSeconds": 0.0010589999999999766
+   },
+   {
+    "owner": "b10",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 27,
+    "seconds": 0.0007690000000000197,
+    "perTickSeconds": 0.0011079999999999979
+   },
+   {
+    "owner": "b11",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 7.499999999999174e-05,
+    "perTickSeconds": 0.0008989999999999831
+   },
+   {
+    "owner": "b12",
+    "blocks": 5,
+    "perTickBlocks": 4,
+    "blockTicks": 44,
+    "seconds": 0.0006120000000000014,
+    "perTickSeconds": 0.0010910000000000086
+   },
+   {
+    "owner": "b13",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 7.60000000000205e-05,
+    "perTickSeconds": 0.0010160000000000169
+   },
+   {
+    "owner": "b2",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 48,
+    "seconds": 0.00010300000000001974,
+    "perTickSeconds": 0.0010949999999999571
+   },
+   {
+    "owner": "b3",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 42,
+    "seconds": 0.00010199999999999099,
+    "perTickSeconds": 0.0009840000000000404
+   },
+   {
+    "owner": "b4",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 27,
+    "seconds": 0.0004770000000000052,
+    "perTickSeconds": 0.0010209999999999941
+   },
+   {
+    "owner": "b5",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 26,
+    "seconds": 7.20000000000165e-05,
+    "perTickSeconds": 0.0010099999999999554
+   },
+   {
+    "owner": "b6",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 34,
+    "seconds": 0.0006109999999999727,
+    "perTickSeconds": 0.0011529999999999596
+   },
+   {
+    "owner": "b7",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 39,
+    "seconds": 0.0005319999999999769,
+    "perTickSeconds": 0.0010569999999999746
+   },
+   {
+    "owner": "b8",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 40,
+    "seconds": 7.499999999999174e-05,
+    "perTickSeconds": 0.0009759999999999769
+   },
+   {
+    "owner": "b9",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 55,
+    "seconds": 0.0005170000000000452,
+    "perTickSeconds": 0.0010689999999999866
+   },
+   {
+    "owner": "goal",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 36,
+    "seconds": 8.799999999997699e-05,
+    "perTickSeconds": 0.0010270000000000001
+   },
+   {
+    "owner": "start",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 46,
+    "seconds": 7.300000000004525e-05,
+    "perTickSeconds": 0.0010939999999999839
+   }
+  ],
+  "random5": [
+   {
+    "owner": "b0",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 46,
+    "seconds": 0.0005299999999999749,
+    "perTickSeconds": 0.0009869999999999601
+   },
+   {
+    "owner": "b1",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 52,
+    "seconds": 0.0005010000000000292,
+    "perTickSeconds": 0.0010199999999999654
+   },
+   {
+    "owner": "b10",
+    "blocks": 3,
+    "perTickBlocks": 2,
+    "blockTicks": 20,
+    "seconds": 7.199999999996098e-05,
+    "perTickSeconds": 0.0009730000000000016
+   },
+   {
+    "owner": "b11",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 34,
+    "seconds": 0.00048599999999998644,
+    "perTickSeconds": 0.0010410000000000141
+   },
+   {
+    "owner": "b12",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 30,
+    "seconds": 7.099999999998774e-05,
+    "perTickSeconds": 0.0011140000000000039
+   },
+   {
+    "owner": "b13",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 33,
+    "seconds": 0.0005510000000000237,
+    "perTickSeconds": 0.0010989999999999611
+   },
+   {
+    "owner": "b2",
+    "blocks": 2,
+    "perTickBlocks": 1,
+    "blockTicks": 14,
+    "seconds": 0.0005099999999999549,
+    "perTickSeconds": 0.0009530000000000372
+   },
+   {
+    "owner": "b3",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 29,
+    "seconds": 6.999999999995898e-05,
+    "perTickSeconds": 0.0009180000000000299
+   },
+   {
+    "owner": "b4",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 36,
+    "seconds": 6.700000000003925e-05,
+    "perTickSeconds": 0.0009399999999999964
+   },
+   {
+    "owner": "b5",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 55,
+    "seconds": 0.0005099999999999549,
+    "perTickSeconds": 0.0012050000000000116
+   },
+   {
+    "owner": "b6",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 8.099999999999774e-05,
+    "perTickSeconds": 0.0010419999999999874
+   },
+   {
+    "owner": "b7",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 65,
+    "seconds": 8.499999999994623e-05,
+    "perTickSeconds": 0.0010640000000000094
+   },
+   {
+    "owner": "b8",
+    "blocks": 8,
+    "perTickBlocks": 8,
+    "blockTicks": 77,
+    "seconds": 0.0005580000000000029,
+    "perTickSeconds": 0.0012139999999999929
+   },
+   {
+    "owner": "b9",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 56,
+    "seconds": 9.100000000000774e-05,
+    "perTickSeconds": 0.0012650000000000161
+   },
+   {
+    "owner": "goal",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 34,
+    "seconds": 9.999999999998899e-05,
+    "perTickSeconds": 0.0010399999999999854
+   },
+   {
+    "owner": "start",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 7.299999999998974e-05,
+    "perTickSeconds": 0.0009230000000000071
+   }
+  ],
+  "random6": [
+   {
+    "owner": "b0",
+    "blocks": 3,
+    "perTickBlocks": 2,
+    "blockTicks": 30,
+    "seconds": 0.0005539999999999989,
+    "perTickSeconds": 0.0011890000000000511
+   },
+   {
+    "owner": "b1",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 29,
+    "seconds": 0.0006110000000000282,
+    "perTickSeconds": 0.0010890000000000066
+   },
+   {
+    "owner": "b10",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 27,
+    "seconds": 0.0005410000000000137,
+    "perTickSeconds": 0.0011180000000000079
+   },
+   {
+    "owner": "b11",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 37,
+    "seconds": 0.0006210000000000382,
+    "perTickSeconds": 0.0011950000000000016
+   },
+   {
+    "owner": "b12",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 0.0004769999999999497,
+    "perTickSeconds": 0.0009020000000000139
+   },
+   {
+    "owner": "b13",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 25,
+    "seconds": 5.900000000003125e-05,
+    "perTickSeconds": 0.0009190000000000031
+   },
+   {
+    "owner": "b2",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 21,
+    "seconds": 0.0005759999999999654,
+    "perTickSeconds": 0.0011640000000000539
+   },
+   {
+    "owner": "b3",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 46,
+    "seconds": 9.80000000000425e-05,
+    "perTickSeconds": 0.0010059999999999514
+   },
+   {
+    "owner": "b4",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 33,
+    "seconds": 0.00047600000000003195,
+    "perTickSeconds": 0.0010089999999999821
+   },
+   {
+    "owner": "b5",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 48,
+    "seconds": 0.00012999999999996348,
+    "perTickSeconds": 0.0011870000000000491
+   },
+   {
+    "owner": "b6",
+    "blocks": 7,
+    "perTickBlocks": 6,
+    "blockTicks": 70,
+    "seconds": 0.00013799999999997148,
+    "perTickSeconds": 0.0012369999999999881
+   },
+   {
+    "owner": "b7",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 28,
+    "seconds": 9.100000000000774e-05,
+    "perTickSeconds": 0.0010160000000000169
+   },
+   {
+    "owner": "b8",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 46,
+    "seconds": 0.0005030000000000312,
+    "perTickSeconds": 0.0010580000000000034
+   },
+   {
+    "owner": "b9",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 26,
+    "seconds": 8.299999999999974e-05,
+    "perTickSeconds": 0.0010029999999999761
+   },
+   {
+    "owner": "goal",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 49,
+    "seconds": 0.00011699999999997823,
+    "perTickSeconds": 0.0011280000000000179
+   },
+   {
+    "owner": "start",
+    "blocks": 3,
+    "perTickBlocks": 2,
+    "blockTicks": 30,
+    "seconds": 0.0004830000000000112,
+    "perTickSeconds": 0.0009649999999999936
+   }
+  ],
+  "random7": [
+   {
+    "owner": "b0",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 0.0006010000000000182,
+    "perTickSeconds": 0.0009279999999999844
+   },
+   {
+    "owner": "b1",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 14,
+    "seconds": 5.8000000000002494e-05,
+    "perTickSeconds": 0.0009589999999999876
+   },
+   {
+    "owner": "b10",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 27,
+    "seconds": 0.0005280000000000284,
+    "perTickSeconds": 0.0010780000000000234
+   },
+   {
+    "owner": "b11",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 58,
+    "seconds": 0.0005139999999999589,
+    "perTickSeconds": 0.0010700000000000154
+   },
+   {
+    "owner": "b12",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 30,
+    "seconds": 0.0006209999999999827,
+    "perTickSeconds": 0.0010549999999999726
+   },
+   {
+    "owner": "b13",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 41,
+    "seconds": 0.0005149999999999877,
+    "perTickSeconds": 0.0011439999999999784
+   },
+   {
+    "owner": "b2",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 21,
+    "seconds": 9.300000000000974e-05,
+    "perTickSeconds": 0.0009890000000000176
+   },
+   {
+    "owner": "b3",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 32,
+    "seconds": 6.699999999998374e-05,
+    "perTickSeconds": 0.0013179999999999858
+   },
+   {
+    "owner": "b4",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 21,
+    "seconds": 0.0006120000000000014,
+    "perTickSeconds": 0.0011849999999999916
+   },
+   {
+    "owner": "b5",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 41,
+    "seconds": 0.0005310000000000037,
+    "perTickSeconds": 0.0010430000000000161
+   },
+   {
+    "owner": "b6",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 67,
+    "seconds": 0.0004939999999999944,
+    "perTickSeconds": 0.0011450000000000071
+   },
+   {
+    "owner": "b7",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 41,
+    "seconds": 0.0005879999999999774,
+    "perTickSeconds": 0.0011209999999999831
+   },
+   {
+    "owner": "b8",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 36,
+    "seconds": 0.00010199999999999099,
+    "perTickSeconds": 0.0010089999999999821
+   },
+   {
+    "owner": "b9",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 15,
+    "seconds": 5.899999999997574e-05,
+    "perTickSeconds": 0.0010049999999999781
+   },
+   {
+    "owner": "goal",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 56,
+    "seconds": 0.00010100000000001774,
+    "perTickSeconds": 0.0012889999999999846
+   },
+   {
+    "owner": "start",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 37,
+    "seconds": 0.0006579999999999919,
+    "perTickSeconds": 0.0010749999999999926
+   }
+  ],
+  "random8": [
+   {
+    "owner": "b0",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 33,
+    "seconds": 0.0005999999999999894,
+    "perTickSeconds": 0.0010200000000000209
+   },
+   {
+    "owner": "b1",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 68,
+    "seconds": 0.0005330000000000057,
+    "perTickSeconds": 0.0012810000000000321
+   },
+   {
+    "owner": "b10",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 63,
+    "seconds": 0.0005200000000000204,
+    "perTickSeconds": 0.0010549999999999726
+   },
+   {
+    "owner": "b11",
+    "blocks": 8,
+    "perTickBlocks": 8,
+    "blockTicks": 87,
+    "seconds": 0.0005600000000000049,
+    "perTickSeconds": 0.0012330000000000396
+   },
+   {
+    "owner": "b12",
+    "blocks": 2,
+    "perTickBlocks": 1,
+    "blockTicks": 17,
+    "seconds": 0.0005629999999999802,
+    "perTickSeconds": 0.0010550000000000281
+   },
+   {
+    "owner": "b13",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 21,
+    "seconds": 0.0005709999999999882,
+    "perTickSeconds": 0.001040000000000041
+   },
+   {
+    "owner": "b2",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 53,
+    "seconds": 0.0005149999999999877,
+    "perTickSeconds": 0.0010139999999999594
+   },
+   {
+    "owner": "b3",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 24,
+    "seconds": 7.799999999996698e-05,
+    "perTickSeconds": 0.0010720000000000174
+   },
+   {
+    "owner": "b4",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 56,
+    "seconds": 0.0005730000000000457,
+    "perTickSeconds": 0.0011400000000000299
+   },
+   {
+    "owner": "b5",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 27,
+    "seconds": 0.00010399999999999299,
+    "perTickSeconds": 0.0009870000000000156
+   },
+   {
+    "owner": "b6",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 46,
+    "seconds": 7.199999999996098e-05,
+    "perTickSeconds": 0.0009660000000000224
+   },
+   {
+    "owner": "b7",
+    "blocks": 7,
+    "perTickBlocks": 7,
+    "blockTicks": 75,
+    "seconds": 0.0004889999999999617,
+    "perTickSeconds": 0.0010880000000000334
+   },
+   {
+    "owner": "b8",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 31,
+    "seconds": 8.60000000000305e-05,
+    "perTickSeconds": 0.0011309999999999931
+   },
+   {
+    "owner": "b9",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 36,
+    "seconds": 0.00014399999999997748,
+    "perTickSeconds": 0.0011269999999999891
+   },
+   {
+    "owner": "goal",
+    "blocks": 6,
+    "perTickBlocks": 5,
+    "blockTicks": 40,
+    "seconds": 9.300000000000974e-05,
+    "perTickSeconds": 0.0010840000000000294
+   },
+   {
+    "owner": "start",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 61,
+    "seconds": 0.00010299999999996423,
+    "perTickSeconds": 0.0011039999999999939
+   }
+  ],
+  "random9": [
+   {
+    "owner": "b0",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 37,
+    "seconds": 0.0005649999999999822,
+    "perTickSeconds": 0.0011070000000000246
+   },
+   {
+    "owner": "b1",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 27,
+    "seconds": 0.0005269999999999997,
+    "perTickSeconds": 0.0009470000000000312
+   },
+   {
+    "owner": "b10",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 43,
+    "seconds": 0.0006129999999999747,
+    "perTickSeconds": 0.0012980000000000214
+   },
+   {
+    "owner": "b11",
+    "blocks": 3,
+    "perTickBlocks": 2,
+    "blockTicks": 19,
+    "seconds": 0.0006849999999999912,
+    "perTickSeconds": 0.0010189999999999921
+   },
+   {
+    "owner": "b12",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 29,
+    "seconds": 0.0005100000000000104,
+    "perTickSeconds": 0.0010290000000000021
+   },
+   {
+    "owner": "b13",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 34,
+    "seconds": 0.00047800000000003395,
+    "perTickSeconds": 0.0010209999999999941
+   },
+   {
+    "owner": "b2",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 27,
+    "seconds": 7.199999999996098e-05,
+    "perTickSeconds": 0.0009580000000000144
+   },
+   {
+    "owner": "b3",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 14,
+    "seconds": 0.00011700000000003374,
+    "perTickSeconds": 0.0010200000000000209
+   },
+   {
+    "owner": "b4",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 47,
+    "seconds": 0.0004790000000000072,
+    "perTickSeconds": 0.0010149999999999881
+   },
+   {
+    "owner": "b5",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 35,
+    "seconds": 8.700000000000374e-05,
+    "perTickSeconds": 0.0010310000000000041
+   },
+   {
+    "owner": "b6",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 46,
+    "seconds": 8.900000000000574e-05,
+    "perTickSeconds": 0.0011229999999999851
+   },
+   {
+    "owner": "b7",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 38,
+    "seconds": 9.700000000001374e-05,
+    "perTickSeconds": 0.0011230000000000406
+   },
+   {
+    "owner": "b8",
+    "blocks": 2,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 0.0005370000000000097,
+    "perTickSeconds": 0.0012059999999999849
+   },
+   {
+    "owner": "b9",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 15,
+    "seconds": 0.0005509999999999682,
+    "perTickSeconds": 0.0009590000000000432
+   },
+   {
+    "owner": "goal",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 15,
+    "seconds": 5.6000000000000494e-05,
+    "perTickSeconds": 0.0009660000000000224
+   },
+   {
+    "owner": "start",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 26,
+    "seconds": 9.300000000000974e-05,
+    "perTickSeconds": 0.0012020000000000364
+   }
+  ],
+  "random10": [
+   {
+    "owner": "b0",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 0.0009210000000000051,
+    "perTickSeconds": 0.0012949999999999906
+   },
+   {
+    "owner": "b1",
+    "blocks": 7,
+    "perTickBlocks": 6,
+    "blockTicks": 82,
+    "seconds": 0.0008099999999999774,
+    "perTickSeconds": 0.0012179999999999969
+   },
+   {
+    "owner": "b10",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 32,
+    "seconds": 8.900000000000574e-05,
+    "perTickSeconds": 0.0011269999999999891
+   },
+   {
+    "owner": "b11",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 41,
+    "seconds": 0.0005830000000000002,
+    "perTickSeconds": 0.0011410000000000031
+   },
+   {
+    "owner": "b12",
+    "blocks": 7,
+    "perTickBlocks": 7,
+    "blockTicks": 70,
+    "seconds": 8.700000000000374e-05,
+    "perTickSeconds": 0.0011120000000000019
+   },
+   {
+    "owner": "b13",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 17,
+    "seconds": 0.0006730000000000347,
+    "perTickSeconds": 0.0011940000000000284
+   },
+   {
+    "owner": "b2",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 42,
+    "seconds": 0.0006059999999999954,
+    "perTickSeconds": 0.0011029999999999651
+   },
+   {
+    "owner": "b3",
+    "blocks": 6,
+    "perTickBlocks": 5,
+    "blockTicks": 40,
+    "seconds": 0.0005549999999999722,
+    "perTickSeconds": 0.0010740000000000194
+   },
+   {
+    "owner": "b4",
+    "blocks": 9,
+    "perTickBlocks": 8,
+    "blockTicks": 81,
+    "seconds": 0.00010799999999999699,
+    "perTickSeconds": 0.001367000000000007
+   },
+   {
+    "owner": "b5",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 30,
+    "seconds": 0.00011600000000000499,
+    "perTickSeconds": 0.0012349999999999861
+   },
+   {
+    "owner": "b6",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 24,
+    "seconds": 0.00013799999999997148,
+    "perTickSeconds": 0.0010429999999999606
+   },
+   {
+    "owner": "b7",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 32,
+    "seconds": 0.0004979999999999984,
+    "perTickSeconds": 0.001306999999999947
+   },
+   {
+    "owner": "b8",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 0.00010299999999996423,
+    "perTickSeconds": 0.0012140000000000484
+   },
+   {
+    "owner": "b9",
+    "blocks": 8,
+    "perTickBlocks": 7,
+    "blockTicks": 72,
+    "seconds": 0.00013100000000010326,
+    "perTickSeconds": 0.0011510000000000131
+   },
+   {
+    "owner": "goal",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 21,
+    "seconds": 0.0006730000000000347,
+    "perTickSeconds": 0.001052000000000053
+   },
+   {
+    "owner": "start",
+    "blocks": 8,
+    "perTickBlocks": 8,
+    "blockTicks": 86,
+    "seconds": 0.00010100000000001774,
+    "perTickSeconds": 0.0013330000000000286
+   }
+  ],
+  "random11": [
+   {
+    "owner": "b0",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 22,
+    "seconds": 0.0007360000000000699,
+    "perTickSeconds": 0.0011320000000000219
+   },
+   {
+    "owner": "b1",
+    "blocks": 6,
+    "perTickBlocks": 5,
+    "blockTicks": 57,
+    "seconds": 0.0005429999999999602,
+    "perTickSeconds": 0.0011950000000000571
+   },
+   {
+    "owner": "b10",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 31,
+    "seconds": 0.0005579999999999474,
+    "perTickSeconds": 0.0011740000000000084
+   },
+   {
+    "owner": "b11",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 0.0006579999999999364,
+    "perTickSeconds": 0.0012670000000000181
+   },
+   {
+    "owner": "b12",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 21,
+    "seconds": 0.0005249999999999977,
+    "perTickSeconds": 0.0011499999999999844
+   },
+   {
+    "owner": "b13",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 19,
+    "seconds": 0.00010500000000002174,
+    "perTickSeconds": 0.0011799999999999589
+   },
+   {
+    "owner": "b2",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 37,
+    "seconds": 0.0006300000000000194,
+    "perTickSeconds": 0.0010850000000000026
+   },
+   {
+    "owner": "b3",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 22,
+    "seconds": 8.000000000008001e-05,
+    "perTickSeconds": 0.0010539999999999994
+   },
+   {
+    "owner": "b4",
+    "blocks": 6,
+    "perTickBlocks": 4,
+    "blockTicks": 36,
+    "seconds": 8.60000000000305e-05,
+    "perTickSeconds": 0.0010080000000000089
+   },
+   {
+    "owner": "b5",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 43,
+    "seconds": 0.0006309999999999372,
+    "perTickSeconds": 0.0011810000000000986
+   },
+   {
+    "owner": "b6",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 39,
+    "seconds": 8.399999999997299e-05,
+    "perTickSeconds": 0.0011280000000000179
+   },
+   {
+    "owner": "b7",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 40,
+    "seconds": 0.0005740000000000745,
+    "perTickSeconds": 0.0011110000000000841
+   },
+   {
+    "owner": "b8",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 32,
+    "seconds": 8.699999999994823e-05,
+    "perTickSeconds": 0.0010660000000000114
+   },
+   {
+    "owner": "b9",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 43,
+    "seconds": 8.700000000005925e-05,
+    "perTickSeconds": 0.0012300000000000644
+   },
+   {
+    "owner": "goal",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 25,
+    "seconds": 0.0006099999999999994,
+    "perTickSeconds": 0.0011479999999999269
+   },
+   {
+    "owner": "start",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 28,
+    "seconds": 0.00010199999999993548,
+    "perTickSeconds": 0.0010490000000000776
+   }
+  ],
+  "random12": [
+   {
+    "owner": "b0",
+    "blocks": 5,
+    "perTickBlocks": 4,
+    "blockTicks": 36,
+    "seconds": 0.0007009999999999517,
+    "perTickSeconds": 0.0011130000000000306
+   },
+   {
+    "owner": "b1",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 19,
+    "seconds": 0.0005159999999999609,
+    "perTickSeconds": 0.0010360000000000369
+   },
+   {
+    "owner": "b10",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 35,
+    "seconds": 6.799999999995698e-05,
+    "perTickSeconds": 0.0010689999999999866
+   },
+   {
+    "owner": "b11",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 48,
+    "seconds": 0.0004969999999999697,
+    "perTickSeconds": 0.0010049999999999226
+   },
+   {
+    "owner": "b12",
+    "blocks": 5,
+    "perTickBlocks": 4,
+    "blockTicks": 48,
+    "seconds": 6.8000000000068e-05,
+    "perTickSeconds": 0.0010439999999999339
+   },
+   {
+    "owner": "b13",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 50,
+    "seconds": 6.799999999995698e-05,
+    "perTickSeconds": 0.0011839999999999629
+   },
+   {
+    "owner": "b2",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 36,
+    "seconds": 8.800000000008801e-05,
+    "perTickSeconds": 0.0009549999999999281
+   },
+   {
+    "owner": "b3",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 45,
+    "seconds": 0.00048800000000004395,
+    "perTickSeconds": 0.0011099999999999444
+   },
+   {
+    "owner": "b4",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 30,
+    "seconds": 6.799999999995698e-05,
+    "perTickSeconds": 0.0009589999999999321
+   },
+   {
+    "owner": "b5",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 21,
+    "seconds": 5.6000000000056005e-05,
+    "perTickSeconds": 0.0009069999999999911
+   },
+   {
+    "owner": "b6",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 14,
+    "seconds": 4.999999999999449e-05,
+    "perTickSeconds": 0.0008809999999999096
+   },
+   {
+    "owner": "b7",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 14,
+    "seconds": 0.0004669999999999952,
+    "perTickSeconds": 0.0010299999999999754
+   },
+   {
+    "owner": "b8",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 38,
+    "seconds": 0.0005789999999999962,
+    "perTickSeconds": 0.0010679999999999579
+   },
+   {
+    "owner": "b9",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 51,
+    "seconds": 9.40000000000385e-05,
+    "perTickSeconds": 0.0013170000000000126
+   },
+   {
+    "owner": "goal",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 35,
+    "seconds": 0.0005929999999999547,
+    "perTickSeconds": 0.0011280000000000179
+   },
+   {
+    "owner": "start",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 47,
+    "seconds": 0.0005370000000000097,
+    "perTickSeconds": 0.0011140000000000594
+   }
+  ],
+  "random13": [
+   {
+    "owner": "b0",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 27,
+    "seconds": 0.0006749999999999812,
+    "perTickSeconds": 0.0011529999999999596
+   },
+   {
+    "owner": "b1",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 20,
+    "seconds": 0.000496000000000052,
+    "perTickSeconds": 0.0009720000000000839
+   },
+   {
+    "owner": "b10",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 53,
+    "seconds": 0.0005180000000000184,
+    "perTickSeconds": 0.0010439999999999339
+   },
+   {
+    "owner": "b11",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 49,
+    "seconds": 0.0007010000000000627,
+    "perTickSeconds": 0.0011349999999999971
+   },
+   {
+    "owner": "b12",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 19,
+    "seconds": 7.199999999996098e-05,
+    "perTickSeconds": 0.0009460000000000024
+   },
+   {
+    "owner": "b13",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 55,
+    "seconds": 0.0005060000000000064,
+    "perTickSeconds": 0.0010329999999999506
+   },
+   {
+    "owner": "b2",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 0.00046199999999996244,
+    "perTickSeconds": 0.0010019999999999474
+   },
+   {
+    "owner": "b3",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 45,
+    "seconds": 9.700000000001374e-05,
+    "perTickSeconds": 0.0011979999999999214
+   },
+   {
+    "owner": "b4",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 49,
+    "seconds": 0.0006030000000000202,
+    "perTickSeconds": 0.0010490000000000776
+   },
+   {
+    "owner": "b5",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 28,
+    "seconds": 0.0005249999999999977,
+    "perTickSeconds": 0.0010000000000000009
+   },
+   {
+    "owner": "b6",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 28,
+    "seconds": 0.00010799999999999699,
+    "perTickSeconds": 0.0012030000000000651
+   },
+   {
+    "owner": "b7",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 30,
+    "seconds": 0.00011799999999995148,
+    "perTickSeconds": 0.0009919999999999929
+   },
+   {
+    "owner": "b8",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 56,
+    "seconds": 0.0005420000000000424,
+    "perTickSeconds": 0.0012900000000000134
+   },
+   {
+    "owner": "b9",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 26,
+    "seconds": 0.00010399999999999299,
+    "perTickSeconds": 0.0009730000000000016
+   },
+   {
+    "owner": "goal",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 41,
+    "seconds": 7.499999999993623e-05,
+    "perTickSeconds": 0.0009599999999999609
+   },
+   {
+    "owner": "start",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 14,
+    "seconds": 5.699999999997374e-05,
+    "perTickSeconds": 0.0009120000000000239
+   }
+  ],
+  "random14": [
+   {
+    "owner": "b0",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 52,
+    "seconds": 0.0005560000000000009,
+    "perTickSeconds": 0.0010299999999999754
+   },
+   {
+    "owner": "b1",
+    "blocks": 3,
+    "perTickBlocks": 2,
+    "blockTicks": 27,
+    "seconds": 6.699999999992823e-05,
+    "perTickSeconds": 0.0010260000000000824
+   },
+   {
+    "owner": "b10",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 42,
+    "seconds": 0.0005110000000000392,
+    "perTickSeconds": 0.0010389999999999011
+   },
+   {
+    "owner": "b11",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 29,
+    "seconds": 0.0005299999999999194,
+    "perTickSeconds": 0.0011670000000000291
+   },
+   {
+    "owner": "b12",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 56,
+    "seconds": 0.0005419999999999314,
+    "perTickSeconds": 0.0011280000000000179
+   },
+   {
+    "owner": "b13",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 44,
+    "seconds": 9.300000000000974e-05,
+    "perTickSeconds": 0.0010229999999999961
+   },
+   {
+    "owner": "b2",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 27,
+    "seconds": 0.0006310000000000482,
+    "perTickSeconds": 0.0010370000000000656
+   },
+   {
+    "owner": "b3",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 64,
+    "seconds": 0.0004919999999999369,
+    "perTickSeconds": 0.0011409999999999476
+   },
+   {
+    "owner": "b4",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 0.0005049999999999777,
+    "perTickSeconds": 0.0011849999999999916
+   },
+   {
+    "owner": "b5",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 46,
+    "seconds": 0.00013199999999990997,
+    "perTickSeconds": 0.0010460000000001024
+   },
+   {
+    "owner": "b6",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 54,
+    "seconds": 7.999999999996898e-05,
+    "perTickSeconds": 0.0011139999999999484
+   },
+   {
+    "owner": "b7",
+    "blocks": 7,
+    "perTickBlocks": 7,
+    "blockTicks": 55,
+    "seconds": 0.0005020000000000024,
+    "perTickSeconds": 0.0012099999999999334
+   },
+   {
+    "owner": "b8",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 29,
+    "seconds": 9.500000000006725e-05,
+    "perTickSeconds": 0.0010780000000000234
+   },
+   {
+    "owner": "b9",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 36,
+    "seconds": 0.0001020000000000465,
+    "perTickSeconds": 0.0009780000000000344
+   },
+   {
+    "owner": "goal",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 15,
+    "seconds": 7.299999999998974e-05,
+    "perTickSeconds": 0.001587000000000005
+   },
+   {
+    "owner": "start",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 21,
+    "seconds": 7.80000000000225e-05,
+    "perTickSeconds": 0.0009460000000000024
+   }
+  ],
+  "random15": [
+   {
+    "owner": "b0",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 30,
+    "seconds": 0.0007009999999999517,
+    "perTickSeconds": 0.0009869999999999601
+   },
+   {
+    "owner": "b1",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 26,
+    "seconds": 0.0005760000000000209,
+    "perTickSeconds": 0.0011369999999999436
+   },
+   {
+    "owner": "b10",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 38,
+    "seconds": 9.999999999998899e-05,
+    "perTickSeconds": 0.0012910000000000421
+   },
+   {
+    "owner": "b11",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 33,
+    "seconds": 0.0005999999999999339,
+    "perTickSeconds": 0.0012539999999999774
+   },
+   {
+    "owner": "b12",
+    "blocks": 2,
+    "perTickBlocks": 1,
+    "blockTicks": 17,
+    "seconds": 0.0007690000000000197,
+    "perTickSeconds": 0.0012020000000000364
+   },
+   {
+    "owner": "b13",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 0.0005349999999999522,
+    "perTickSeconds": 0.0012159999999999949
+   },
+   {
+    "owner": "b2",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 58,
+    "seconds": 0.00010599999999993948,
+    "perTickSeconds": 0.0010250000000000536
+   },
+   {
+    "owner": "b3",
+    "blocks": 3,
+    "perTickBlocks": 2,
+    "blockTicks": 24,
+    "seconds": 6.899999999998574e-05,
+    "perTickSeconds": 0.0012410000000000476
+   },
+   {
+    "owner": "b4",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 15,
+    "seconds": 0.0005910000000000082,
+    "perTickSeconds": 0.0010320000000000329
+   },
+   {
+    "owner": "b5",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 27,
+    "seconds": 0.0004999999999999449,
+    "perTickSeconds": 0.0009630000000000472
+   },
+   {
+    "owner": "b6",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 50,
+    "seconds": 0.0005629999999999802,
+    "perTickSeconds": 0.0011600000000000499
+   },
+   {
+    "owner": "b7",
+    "blocks": 2,
+    "perTickBlocks": 1,
+    "blockTicks": 18,
+    "seconds": 0.0005419999999999314,
+    "perTickSeconds": 0.0009890000000000176
+   },
+   {
+    "owner": "b8",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 39,
+    "seconds": 8.799999999997699e-05,
+    "perTickSeconds": 0.0010200000000000209
+   },
+   {
+    "owner": "b9",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 51,
+    "seconds": 9.399999999992747e-05,
+    "perTickSeconds": 0.0010609999999999786
+   },
+   {
+    "owner": "goal",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 15,
+    "seconds": 7.300000000010076e-05,
+    "perTickSeconds": 0.0011879999999999669
+   },
+   {
+    "owner": "start",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 37,
+    "seconds": 0.00011200000000000099,
+    "perTickSeconds": 0.0010569999999999746
+   }
+  ],
+  "random16": [
+   {
+    "owner": "b0",
+    "blocks": 3,
+    "perTickBlocks": 2,
+    "blockTicks": 38,
+    "seconds": 0.0008169999999999566,
+    "perTickSeconds": 0.0011839999999999629
+   },
+   {
+    "owner": "b1",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 0.0005429999999999602,
+    "perTickSeconds": 0.0009879999999999889
+   },
+   {
+    "owner": "b10",
+    "blocks": 9,
+    "perTickBlocks": 9,
+    "blockTicks": 92,
+    "seconds": 0.0006380000000000274,
+    "perTickSeconds": 0.0012689999999999646
+   },
+   {
+    "owner": "b11",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 22,
+    "seconds": 0.0005460000000000464,
+    "perTickSeconds": 0.0009949999999999681
+   },
+   {
+    "owner": "b12",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 38,
+    "seconds": 8.099999999999774e-05,
+    "perTickSeconds": 0.0010390000000000121
+   },
+   {
+    "owner": "b13",
+    "blocks": 9,
+    "perTickBlocks": 9,
+    "blockTicks": 87,
+    "seconds": 0.0005649999999999267,
+    "perTickSeconds": 0.0013250000000000206
+   },
+   {
+    "owner": "b2",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 36,
+    "seconds": 0.00013099999999999223,
+    "perTickSeconds": 0.0010510000000000241
+   },
+   {
+    "owner": "b3",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 22,
+    "seconds": 0.00046800000000002395,
+    "perTickSeconds": 0.0011849999999999916
+   },
+   {
+    "owner": "b4",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 12,
+    "seconds": 9.900000000007125e-05,
+    "perTickSeconds": 0.0011069999999999691
+   },
+   {
+    "owner": "b5",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 37,
+    "seconds": 8.700000000005925e-05,
+    "perTickSeconds": 0.0010850000000000026
+   },
+   {
+    "owner": "b6",
+    "blocks": 4,
+    "perTickBlocks": 2,
+    "blockTicks": 20,
+    "seconds": 7.899999999994023e-05,
+    "perTickSeconds": 0.0011109999999999731
+   },
+   {
+    "owner": "b7",
+    "blocks": 5,
+    "perTickBlocks": 4,
+    "blockTicks": 39,
+    "seconds": 0.0005300000000000304,
+    "perTickSeconds": 0.0011410000000000586
+   },
+   {
+    "owner": "b8",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 40,
+    "seconds": 8.20000000000265e-05,
+    "perTickSeconds": 0.0009770000000000056
+   },
+   {
+    "owner": "b9",
+    "blocks": 7,
+    "perTickBlocks": 7,
+    "blockTicks": 72,
+    "seconds": 0.0005479999999999929,
+    "perTickSeconds": 0.0012619999999999854
+   },
+   {
+    "owner": "goal",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 15,
+    "seconds": 9.999999999998899e-05,
+    "perTickSeconds": 0.0011139999999999484
+   },
+   {
+    "owner": "start",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 18,
+    "seconds": 7.999999999996898e-05,
+    "perTickSeconds": 0.0009209999999999496
+   }
+  ],
+  "random17": [
+   {
+    "owner": "b0",
+    "blocks": 5,
+    "perTickBlocks": 4,
+    "blockTicks": 43,
+    "seconds": 0.0005840000000000289,
+    "perTickSeconds": 0.0010359999999999259
+   },
+   {
+    "owner": "b1",
+    "blocks": 8,
+    "perTickBlocks": 7,
+    "blockTicks": 55,
+    "seconds": 0.000520000000000076,
+    "perTickSeconds": 0.0010799999999999699
+   },
+   {
+    "owner": "b10",
+    "blocks": 5,
+    "perTickBlocks": 4,
+    "blockTicks": 45,
+    "seconds": 0.0004970000000000807,
+    "perTickSeconds": 0.0011619999999999964
+   },
+   {
+    "owner": "b11",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 57,
+    "seconds": 0.0005399999999999849,
+    "perTickSeconds": 0.0010479999999999379
+   },
+   {
+    "owner": "b12",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 44,
+    "seconds": 0.0005169999999999897,
+    "perTickSeconds": 0.0012560000000000349
+   },
+   {
+    "owner": "b13",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 19,
+    "seconds": 0.0005819999999999714,
+    "perTickSeconds": 0.0009549999999999281
+   },
+   {
+    "owner": "b2",
+    "blocks": 6,
+    "perTickBlocks": 5,
+    "blockTicks": 58,
+    "seconds": 0.0006159999999999499,
+    "perTickSeconds": 0.0010729999999999906
+   },
+   {
+    "owner": "b3",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 51,
+    "seconds": 0.0004929999999999657,
+    "perTickSeconds": 0.0011470000000000091
+   },
+   {
+    "owner": "b4",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 20,
+    "seconds": 0.00010500000000002174,
+    "perTickSeconds": 0.0012199999999999989
+   },
+   {
+    "owner": "b5",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 20,
+    "seconds": 0.00010799999999999699,
+    "perTickSeconds": 0.0010799999999999699
+   },
+   {
+    "owner": "b6",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 29,
+    "seconds": 8.399999999997299e-05,
+    "perTickSeconds": 0.001108000000000109
+   },
+   {
+    "owner": "b7",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 40,
+    "seconds": 9.599999999998499e-05,
+    "perTickSeconds": 0.0011100000000000554
+   },
+   {
+    "owner": "b8",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 22,
+    "seconds": 0.00019000000000002348,
+    "perTickSeconds": 0.0012890000000000956
+   },
+   {
+    "owner": "b9",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 18,
+    "seconds": 0.0006880000000000219,
+    "perTickSeconds": 0.0011079999999999979
+   },
+   {
+    "owner": "goal",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 21,
+    "seconds": 0.0004970000000000807,
+    "perTickSeconds": 0.0011170000000000346
+   },
+   {
+    "owner": "start",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 53,
+    "seconds": 0.00010999999999994348,
+    "perTickSeconds": 0.0010319999999999219
+   }
+  ],
+  "random18": [
+   {
+    "owner": "b0",
+    "blocks": 8,
+    "perTickBlocks": 8,
+    "blockTicks": 63,
+    "seconds": 0.0005840000000000289,
+    "perTickSeconds": 0.0010569999999999746
+   },
+   {
+    "owner": "b1",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 35,
+    "seconds": 0.0005689999999999307,
+    "perTickSeconds": 0.0011229999999999851
+   },
+   {
+    "owner": "b10",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 35,
+    "seconds": 0.0005570000000000297,
+    "perTickSeconds": 0.0010489999999999666
+   },
+   {
+    "owner": "b11",
+    "blocks": 7,
+    "perTickBlocks": 7,
+    "blockTicks": 62,
+    "seconds": 0.0004849999999999577,
+    "perTickSeconds": 0.0011830000000000451
+   },
+   {
+    "owner": "b12",
+    "blocks": 6,
+    "perTickBlocks": 6,
+    "blockTicks": 40,
+    "seconds": 0.00016700000000002824,
+    "perTickSeconds": 0.0012310000000000931
+   },
+   {
+    "owner": "b13",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 38,
+    "seconds": 0.0004950000000000232,
+    "perTickSeconds": 0.0009740000000000304
+   },
+   {
+    "owner": "b2",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 54,
+    "seconds": 8.20000000000265e-05,
+    "perTickSeconds": 0.0010930000000000106
+   },
+   {
+    "owner": "b3",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 19,
+    "seconds": 0.0005310000000000592,
+    "perTickSeconds": 0.0011059999999999404
+   },
+   {
+    "owner": "b4",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 21,
+    "seconds": 0.0005680000000000129,
+    "perTickSeconds": 0.0009530000000000927
+   },
+   {
+    "owner": "b5",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 25,
+    "seconds": 7.80000000000225e-05,
+    "perTickSeconds": 0.0009439999999999449
+   },
+   {
+    "owner": "b6",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 35,
+    "seconds": 0.00047399999999997444,
+    "perTickSeconds": 0.0010539999999999994
+   },
+   {
+    "owner": "b7",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 47,
+    "seconds": 9.499999999995623e-05,
+    "perTickSeconds": 0.0011079999999999979
+   },
+   {
+    "owner": "b8",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 18,
+    "seconds": 0.00014500000000006175,
+    "perTickSeconds": 0.0010580000000000034
+   },
+   {
+    "owner": "b9",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 29,
+    "seconds": 8.999999999992347e-05,
+    "perTickSeconds": 0.0010050000000000336
+   },
+   {
+    "owner": "goal",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 27,
+    "seconds": 7.500000000004725e-05,
+    "perTickSeconds": 0.0009689999999999976
+   },
+   {
+    "owner": "start",
+    "blocks": 6,
+    "perTickBlocks": 5,
+    "blockTicks": 64,
+    "seconds": 7.699999999999374e-05,
+    "perTickSeconds": 0.0011309999999999931
+   }
+  ],
+  "random19": [
+   {
+    "owner": "b0",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 40,
+    "seconds": 0.0006530000000000147,
+    "perTickSeconds": 0.0010360000000000369
+   },
+   {
+    "owner": "b1",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 22,
+    "seconds": 0.00048199999999998244,
+    "perTickSeconds": 0.0009549999999999281
+   },
+   {
+    "owner": "b10",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 32,
+    "seconds": 0.0004830000000000112,
+    "perTickSeconds": 0.0009730000000000016
+   },
+   {
+    "owner": "b11",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 33,
+    "seconds": 0.0005079999999999529,
+    "perTickSeconds": 0.0012969999999999926
+   },
+   {
+    "owner": "b12",
+    "blocks": 2,
+    "perTickBlocks": 2,
+    "blockTicks": 20,
+    "seconds": 0.0006770000000000387,
+    "perTickSeconds": 0.0010409999999999586
+   },
+   {
+    "owner": "b13",
+    "blocks": 1,
+    "perTickBlocks": 1,
+    "blockTicks": 14,
+    "seconds": 0.00047799999999997844,
+    "perTickSeconds": 0.0009219999999999784
+   },
+   {
+    "owner": "b2",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 35,
+    "seconds": 7.599999999996498e-05,
+    "perTickSeconds": 0.0009870000000000712
+   },
+   {
+    "owner": "b3",
+    "blocks": 5,
+    "perTickBlocks": 5,
+    "blockTicks": 39,
+    "seconds": 7.699999999999374e-05,
+    "perTickSeconds": 0.0010780000000000234
+   },
+   {
+    "owner": "b4",
+    "blocks": 4,
+    "perTickBlocks": 3,
+    "blockTicks": 34,
+    "seconds": 0.000492000000000048,
+    "perTickSeconds": 0.0010390000000000121
+   },
+   {
+    "owner": "b5",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 33,
+    "seconds": 8.099999999999774e-05,
+    "perTickSeconds": 0.0010259999999999714
+   },
+   {
+    "owner": "b6",
+    "blocks": 8,
+    "perTickBlocks": 7,
+    "blockTicks": 61,
+    "seconds": 0.0001020000000000465,
+    "perTickSeconds": 0.0012559999999999238
+   },
+   {
+    "owner": "b7",
+    "blocks": 3,
+    "perTickBlocks": 3,
+    "blockTicks": 32,
+    "seconds": 0.0005890000000000617,
+    "perTickSeconds": 0.0009700000000000264
+   },
+   {
+    "owner": "b8",
+    "blocks": 3,
+    "perTickBlocks": 2,
+    "blockTicks": 20,
+    "seconds": 8.099999999999774e-05,
+    "perTickSeconds": 0.0010669999999999291
+   },
+   {
+    "owner": "b9",
+    "blocks": 4,
+    "perTickBlocks": 4,
+    "blockTicks": 41,
+    "seconds": 9.199999999998099e-05,
+    "perTickSeconds": 0.0010850000000000026
+   },
+   {
+    "owner": "goal",
+    "blocks": 6,
+    "perTickBlocks": 5,
+    "blockTicks": 46,
+    "seconds": 0.0005450000000000177,
+    "perTickSeconds": 0.0011400000000000299
+   },
+   {
+    "owner": "start",
+    "blocks": 2,
+    "perTickBlocks": 1,
+    "blockTicks": 15,
+    "seconds": 7.699999999999374e-05,
+    "perTickSeconds": 0.0009480000000000599
+   }
+  ]
+ },
+ "real11Run": {
+  "questions": {
+   "total": 514,
+   "perTickExcluded": 52,
+   "perTickExcludedGateRuledOut": 52
+  },
+  "encounterItems": {
+   "kept": 312,
+   "perTickExcluded": 128
+  }
+ }
+}

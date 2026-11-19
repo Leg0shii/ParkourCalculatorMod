@@ -1,0 +1,4488 @@
+{
+  "sourceRevision": "e2b5e02c6d41f89e04ba64622a9cecb3db33c3e3",
+  "sourceHashes": {
+    "parkour_solver/__init__.py": "c4a2be2b2ae28cd703b1148a8ec075a25bfe17bdac8e0d707854d5d05c7eaf82",
+    "parkour_solver/__main__.py": "5c4ba19ac42186dbe753a84cd8410758786d0d9ffb5c30e1785091dabdcac00f",
+    "parkour_solver/api.py": "673a1364226bc802f59f2eda3687f816aa113093f141fe4bcf7afe55f17c1091",
+    "parkour_solver/bridge/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/bridge/compiler.py": "d591cf42360aad740687c14eb194b122fc62e62a41d7f66587e697f48dd3a190",
+    "parkour_solver/bridge/counting.py": "d10d2f39f43e7f83132c1a71cdc58c85326db872c90660cc31afed0d9251415b",
+    "parkour_solver/cli/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/cli/blocks.py": "c77b8cb9129685770e1b836095c04cddd4a1e8859be44949afdf77594652de0c",
+    "parkour_solver/cli/fixed_clock.py": "67b39d1319b9776b219872f290cc4206f904eea65188ca6a2a117edd1429a557",
+    "parkour_solver/cli/numerical.py": "491ba989dcd89d2372c207d2b1a51f425430278ec9eecf389874f94205b96c46",
+    "parkour_solver/cli/ordered_route.py": "838c86cb5097149fc5a826c40bb77da67f69ad2ea2310f3ed3f1e0222542c032",
+    "parkour_solver/cli/solve.py": "db030f5d0ae7eb6d3be59e0155bd47433a6584f1ebb321f1a850d97ba03b4559",
+    "parkour_solver/constraints/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/constraints/avoidance.py": "bd662cc1c737590426019113a21eb0b3ed9bbda0fbfff6dffb8451e43d8fff07",
+    "parkour_solver/constraints/contacts.py": "b11d096191fa1b3ae79446f685be39bf014f8f4305cf1813052079181b8fb227",
+    "parkour_solver/constraints/encounters.py": "09c29959e51ef032c906c15d990ca21b67b4fa906d486451b922a648babbf9c8",
+    "parkour_solver/constraints/hit_events.py": "54a7bab31768068bda87b81c43e68d22526af443d1cd8d52ee4d448171b79877",
+    "parkour_solver/constraints/route_guards.py": "630a765966748ffeb3af72cfeb5e39b4f8ef70eefe6234168fc5fb265921b9c6",
+    "parkour_solver/constraints/variants.py": "4accc31609990a0f9bb88b1ba88ddf89ddc599cff14a85d48e475b2a50c57343",
+    "parkour_solver/io/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/io/capture.py": "017748397c17e34a353b25e18b27a63501819fd510599e127779a1898c4b8389",
+    "parkour_solver/io/checkpoint_store.py": "82bb51c2e8e0096525e2635fcad5b0c3203e0c12f6e414d84714eae9c264ab1c",
+    "parkour_solver/io/linkcraft.py": "afca485b9aef5769a50817c34059db9a8a851bd63526dfda72a5dddba1ed650e",
+    "parkour_solver/io/provenance.py": "6713c7446152324c085cb279113711cea8d94e6126076634b628566b2c07cb0f",
+    "parkour_solver/io/reports.py": "f917d30abce6fb53ccd5c62be065e91d2262a144059b0072e8a93456cd3285c2",
+    "parkour_solver/io/search_checkpoint.py": "f4d809f616b11c6d53a3ae83d994dfbbabab83857e9e6e9064eb41147eaabff1",
+    "parkour_solver/movement/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/movement/cases.py": "b260bb08ed478ec72f66b21d3db78b5123b40c62c644ba22be4207877cd736b8",
+    "parkour_solver/movement/ceiling_contacts.py": "e9df9ead6b44be83deced8a5a360344afba199ee0735a40d7a982eb15f6e5a5a",
+    "parkour_solver/movement/ceiling_generation.py": "83a6a271da6d3c9acfe2610db88bfdb74eee4106125023ef3c3f9e55efce197f",
+    "parkour_solver/movement/ceiling_profiles.py": "0b581d731f57f58873efaf4eac9a7c702196e8eaa291d4d35786693b57d03ac9",
+    "parkour_solver/movement/contact_combinations.py": "b5ad99856d7289abeed556bc86cedfecb960847a60a09ec74c05c3de5f5d720f",
+    "parkour_solver/movement/contact_profiles.py": "af8cfc549c7cf7b5c19e0761db7cf4aff28e96bc0970bdb882313ee0c3a2958a",
+    "parkour_solver/movement/contacts.py": "647577e84a096d2b172cea5ace94a7a6c3c2fa47e9bf343a80b6f8cebe5b09e5",
+    "parkour_solver/movement/generation.py": "d27a8aa0cd234de9a4e7bde9427604e724fffc797828bef05341a1800cb2abcc",
+    "parkour_solver/movement/ladder/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/movement/ladder/ceiling.py": "f1d25438964cec421a4851f892d307e8bbfd1b9af117845e09fc1b0e0a77ecd2",
+    "parkour_solver/movement/ladder/contacts.py": "7139a7b1f1841cf9c25af6c4cbfbd6bfc1e81160a2676b51e21a50fe15c3f84b",
+    "parkour_solver/movement/ladder/episodes.py": "c680f287436800757a87e5ad63b16018ce491769019a9cd3e74f02ecada937d3",
+    "parkour_solver/movement/ladder/events.py": "f7e6e068343813693b655cc3f67815a5c6ee9f22deb85a8ecddaa78f4e0415a9",
+    "parkour_solver/movement/ladder/generation.py": "5919758bacc8bf6dc3b9fe82f067ecda4c5f6efdb4198df85d0a4fe347d2aff8",
+    "parkour_solver/movement/ladder/schedules.py": "c7414074deaf45b21a76443926e7774fac6ee0b41f2986db764b739efcf2d5bb",
+    "parkour_solver/movement/ladder/settings.py": "f51abc1b869ca7d4fa8fe0844c1da54225059f894abb72d384b6a13f4034dd05",
+    "parkour_solver/movement/ladder/transfers.py": "bb195e0c751d4e966f2a74d69ccc41d8fe7a9e5cc40b54fa6886095d9f795fcd",
+    "parkour_solver/movement/normal.py": "734a73a69e257b9961aabdf638c6c06a8af9cebc9f103d6cd01037d4c19a9c85",
+    "parkour_solver/movement/profiles.py": "0d45c17afd69a52903c72e1761775979c6a026584a77c386a5ece626e1b38284",
+    "parkour_solver/movement/program.py": "25df12348bf6b3da3b6f3c38fed03fbf4b13c7b7bc73041fcc10dfbee5dd911f",
+    "parkour_solver/movement/settings.py": "e933e5009d9ba38bcd472ff49f55f4e0fc62e9f7601b287b565c4bb2f6d7ad5e",
+    "parkour_solver/movement/stepping.py": "e827b365b7c78ef6d1a58cf5f1b1a2645f1654c41ad884ba248bbe0ae30dcf40",
+    "parkour_solver/movement/units.py": "f6b8741fa612e2271425ffab6a9243d04610789bac4b7c3ad68aab87a2d1ea26",
+    "parkour_solver/movement/vertical_profiles.py": "b2826fecbdc34aa64951c6b4737a6a07bcac8e6e4a4a1a8c0a199bfcb020c1c7",
+    "parkour_solver/numerics/__init__.py": "a69d5dd6fac0d39b773490f89b324f805366a657b5abc6c00a091c5f0910b150",
+    "parkour_solver/numerics/builders.py": "40e3b03896ccf64a85891321ed2f653989b98bfdc3ebb1a8166a6d148abd31f3",
+    "parkour_solver/numerics/constraints.py": "0f445f37945a794f131fc2ff9149d6b5ae4589cc1af2a4d968dd8d87ffcc06b5",
+    "parkour_solver/numerics/continuation.py": "5c2e672517efc2dd4eae6f5a620bf7a8adc24a78789a9b5312f82c114daff41e",
+    "parkour_solver/numerics/model.py": "597424aff1c543f6b6b77f67fbe6e7aad4cca78a447b3deccee8b175bac4da55",
+    "parkour_solver/numerics/solver.py": "54c573c21643fa0bd6a7bbd52ffd123608188717ced13b6e7b7a1852072d5bfd",
+    "parkour_solver/numerics/worker.py": "900fa147aa3b9c3f127639b43de08bafb506d52e459de4716aa72864b9e0bb0f",
+    "parkour_solver/observability/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/observability/turns.py": "e2a599a323d4f26ff04ada7e6c0c44cdabfd790573fd1bec5acf129234f2cf44",
+    "parkour_solver/physics/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/physics/angles.py": "cf528e1b47fb594998702883314e76a4cd787cc2a8f7c5beee86e1a9a2c51f00",
+    "parkour_solver/physics/vertical.py": "72f46adf6a4f81a2cc123362daf9f4a847c2326fbd6a14b101124a695a80b3b8",
+    "parkour_solver/reachability/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/reachability/intervals.py": "a4c89282473dc031765b17c01cf290514e93fa84947129cb16744a77635aba61",
+    "parkour_solver/reachability/linear.py": "42ed9786ba3883a8a69369c26a9cc393ad7b68801e0251007b823eb693befa55",
+    "parkour_solver/reachability/screen.py": "970005d01fc024b451a558a1c860e14ee9e3472a4f1960a3f9a7466f0673f629",
+    "parkour_solver/reachability/service.py": "6f3940521f1ffd4da0ed1c0809e0ec0c85773a654a13d14e1bad4c5269d92a76",
+    "parkour_solver/reachability/viability.py": "16926a05bfa51d1bfdaba1cce88a97e0356138d15d48f3f4762ae609004bc1d8",
+    "parkour_solver/scene/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/scene/geometry.py": "773566bc50f6177673c52007ec11a8f9cdc0844a931e2355877b627e0545b69e",
+    "parkour_solver/scene/ladders.py": "5d89b58f219b70225396d61d5aac3d4458b7290eb9eb8f3f3a76399cec9c6d18",
+    "parkour_solver/scene/normalize.py": "8ff9be4a9477383526cad70a2af947339b81c6ac5a58fe85b588f1ad42e4762e",
+    "parkour_solver/scene/objectives.py": "8b894bb5bfb72711fdc694942eb2ef97b6ceee9332f47ebb6dbdbf02e8f5b72e",
+    "parkour_solver/scene/route.py": "d324489d0b1ff2b2e92ae94a06a16582d7a7be448449ee8eb4403b64a5c0dafd",
+    "parkour_solver/schema.py": "6166bdbf436b6642efd92d8cff15649db45f05b6fa75b8d4d010a33f06477bf3",
+    "parkour_solver/search/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/search/anchors/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/search/anchors/adapter.py": "a44cf8a2d8342d64170662a4ee06ed30f0aa81ff87ae95fc975738d2e9b0747d",
+    "parkour_solver/search/anchors/policy.py": "3b380ae0fd46835114ee79e407fec74dc2e294d479203f9b1bab1d7ce27944d0",
+    "parkour_solver/search/application.py": "4f7539d9a9922caa513ff80d2f22e134bb281a8e090276299c76bda2cb21af35",
+    "parkour_solver/search/bounds/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/search/bounds/flight.py": "a042aedf20dbd2af8e0f03d25740c8b78b1faf65251aa2d383a643ecc0b65325",
+    "parkour_solver/search/bounds/remaining.py": "01d6b5b6226236ff6e1845dc75c7a8fff2aed8e607f185d093200f24dccbcf5d",
+    "parkour_solver/search/climbable.py": "d00d4876e0b18a8f46c815c17f0249839916978606c1d812d110fba642320ca0",
+    "parkour_solver/search/comparison.py": "7e6799481533b2e2e489fdd77ff099f04d8317194a7556bf43577203aece1cee",
+    "parkour_solver/search/compat/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/search/compat/corridor_queue.py": "e7ffdef9cee532364c9bdee7c90e3da5e87348bbbe25834d7de43b316c3074ed",
+    "parkour_solver/search/compat/decision_windows.py": "ea1f753d788b46615924fca075f44a8e42fe458739103f39c154b604bfb2017f",
+    "parkour_solver/search/compat/minimum_runs.py": "acbd988ad327f72ce1251560805990c7fe740c0327e033c5fa62a465565ddfeb",
+    "parkour_solver/search/compat/semantic_adapter.py": "6a9b94125589363980cb66708a691486fee25797146582d17dc6b19abc28ab53",
+    "parkour_solver/search/compat/support_order.py": "14a3ec0e1786b83c690e4cef5c2d2786ac87708e954890b86693167d7a28441f",
+    "parkour_solver/search/compat/time_progress.py": "8d372d60f47b22736463aedbe075c37c6035cb7ba22e416aa921fda8e1bd7847",
+    "parkour_solver/search/completion.py": "124b448fabf5c76cb82477dc1313fbee73c3207b5041c2e2f919545004a956a0",
+    "parkour_solver/search/deferrals.py": "1a7541e7e5197e23727c3b07efda76c42cc3ae2fed72c52af463707a265afb4b",
+    "parkour_solver/search/dfs.py": "7212039ec4c7d8c7bef01d5159ec70968bcca4b9fbf8fed1eee5aeb1fa421229",
+    "parkour_solver/search/domain.py": "fc93f75f6aaf8d11eeceab23775d2d30a5b239fa4b0c3b49ef0484b674b9fc66",
+    "parkour_solver/search/engine.py": "39b9866629350245181d8fbd30464470b67e17f5335b90353391c8dea8aa17f8",
+    "parkour_solver/search/entry.py": "d1cd7d5c816d24ec8d2931715a1445bc38ca49dd593edadc3bf5b86d1af1c23b",
+    "parkour_solver/search/events/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/search/events/adapter.py": "750151c78689216617906ab63ddcf070feb396577925ee469d90c4dca5a3eb78",
+    "parkour_solver/search/events/engine.py": "bb5202c24ac8681fe1b72f14c1da9e8f98aa5b16fee066208cb0593e9e178089",
+    "parkour_solver/search/feasibility.py": "3aabbeddb37d32e4a7d46bfae8e1c8d965124cb72eecf9f1261cc0d8424cb666",
+    "parkour_solver/search/frontier.py": "ca372a2b67122ce6e558942f8ee356b8bf63337e0c065372fbc3aff0ae8538d2",
+    "parkour_solver/search/goals.py": "1ef57287de145c3e81af47dbf2f6c5e7237da163b2b6df4f98d9bde88d74654b",
+    "parkour_solver/search/identity.py": "3c40ffaf779ecf3b7ef9be8830a5b9fd7030fc2bc75a632d7b699c83580fade7",
+    "parkour_solver/search/ladder_ranking.py": "8c4b78a76c3b580a2a913d626113660bdb925afb06eb797b5f72de38aa02469e",
+    "parkour_solver/search/movement.py": "6f27e00702710ba15d490539c5d07dc893972efc3ea6c9cb1b0518cd79987dc6",
+    "parkour_solver/search/ordered_route.py": "244f318655f8cc95210f3f70b841ea3d033773f539cd711ee1372a87f2c19836",
+    "parkour_solver/search/ranking.py": "e10a4e13c5b8ecc5905197ae0d3195cef085318c053288bb44f957e3456e64ac",
+    "parkour_solver/search/repair.py": "1de2c3f444dad06cdbfd86a858fa2cc772c397afe03646197043f2644cb26a37",
+    "parkour_solver/search/repair_state.py": "30fcd4bc32753219b4f9b8b6737f3ce058332993e1e32c52a9b21487f7302165",
+    "parkour_solver/search/support_profiles.py": "8d302c6e78803b04e4e759b445077223728344f8d7078f41c08e308e52bdd83b",
+    "parkour_solver/search/virtual_goals.py": "f35f0528179a7f35443ea950bcddb6f75c718d1805d481fc9a65ab20773d7192",
+    "parkour_solver/search/work.py": "15aaea9301b8de28d955b03af9346fc39572db8a340e045e4a62c6180ce06fbd",
+    "parkour_solver/spatial/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/spatial/anchor_guides.py": "93476fde67d23269a0cd082e6dcd01ddf86b08670a7d248065bb0e2ee749cc70",
+    "parkour_solver/spatial/cells.py": "372d67383d6085e17543e57c10841d52e4928cc94d2cc54dacb4341f393e766d",
+    "parkour_solver/spatial/checkpoints.py": "c6fba25eb54e5c22e903d3da4257708a8f46b0ea0c700fc08529ee94f3f4824c",
+    "parkour_solver/spatial/compat/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/spatial/compat/corridor_guards.py": "2070e4773373c26ef8225efd7a9ab9aa4653d1c6db4f7bfce7299efcb9a3fdd4",
+    "parkour_solver/spatial/compat/corridors.py": "55c0bc1612afddee70b0339b733debe6ff95bb35f60888b9aa6cf0bba624efea",
+    "parkour_solver/spatial/compat/progress.py": "e30608c850717a0829ad69343346e3f2683c300a556baf884259e1cdb25e663f",
+    "parkour_solver/spatial/event_routes.py": "2f319066970533c7a14de95df15b89e9314b916b9cbaac7655d6f805ff049feb",
+    "parkour_solver/spatial/guides.py": "481d16b407ec4d5be46f502756bcf0ab8258046e6feac2f37bc22ce826f5bbc9",
+    "parkour_solver/spatial/regions.py": "f08f23ffbcf3e9e99633782b23d5e5bb9a9762dfade8b23a3438471025ea1e5d",
+    "parkour_solver/validation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parkour_solver/validation/numerical.py": "3e89038930f25a96bca9f0e52d815cd0c69870d99dafb85b611dd1736deadeb9",
+    "parkour_solver/validation/scene.py": "f4d3b72fa4d30df1ca3b0092fd958eb9bd93002725ef001edcd8cc67fbbdc71d",
+    "parkour_solver/validation/scoped_scene.py": "d871bbd7663fd07e0f38f399265f24613039ca3828bc2cf57f86a756bfc305b2",
+    "parkour_solver/validation/vertical.py": "3915d22a5da659ddfb550464e5e03d22482d876d5e05c9846f2ce44bb0ee43e9",
+    "parkour_solver/validation/witness.py": "450249a7e64d459f779c7d1f9be745cbd5bc73d114fe5939411b8e0fad979a20"
+  },
+  "inputs": {
+    "history-A-input.json.gz": "e493283960c57c36be7456765b61fc57e1a81aba432dccd7dd0de5a62c40549f",
+    "history-B-input.json.gz": "78622cb49642a82c407d83e9126b27a5c6941d54bb0de2700bd09161614ec878",
+    "history-C-input.json.gz": "3740ba4ed1581340d0477d33c85b0816bfaa36acf3a35e866a53cc56f8a785d9",
+    "history-D-input.json.gz": "8fe3a30045c6a3569403bedf271a64377a0136f8465aa2b1fae5046d907d2805"
+  },
+  "histories": [
+    {
+      "history": "A",
+      "oldDescriptions": 277,
+      "oldRetainedDescriptions": 40,
+      "newRetainedAlternatives": 7,
+      "oldRetainedCovered": [
+        "A001",
+        "A002",
+        "A003",
+        "A004",
+        "A006",
+        "A009",
+        "A010",
+        "A011",
+        "A012",
+        "A013",
+        "A015",
+        "A018",
+        "A069",
+        "A070",
+        "A071",
+        "A072",
+        "A074",
+        "A077",
+        "A078",
+        "A079",
+        "A080",
+        "A081",
+        "A083",
+        "A086",
+        "A087",
+        "A088",
+        "A089",
+        "A090",
+        "A092",
+        "A095",
+        "A129",
+        "A173",
+        "A228",
+        "A233",
+        "A252",
+        "A253",
+        "A254",
+        "A255",
+        "A257",
+        "A260"
+      ],
+      "seconds": 0.44376374781131744,
+      "metrics": {
+        "analysisMisses": 63,
+        "phaseChecks": 201,
+        "excludedPhases": 176,
+        "preparedEncounters": 20,
+        "excludedFaces": 28,
+        "optionLeaves": 105,
+        "analysisHits": 126,
+        "optionNodes": 882,
+        "generatedChildren": 967,
+        "duplicateOptions": 24,
+        "screenExclusions": 55
+      },
+      "timings": {
+        "preparationSeconds": 0.00141177698969841,
+        "variantGenerationSeconds": 0.44375694915652275,
+        "conditionalAnalysisSeconds": 0.2438688986003399
+      },
+      "variants": [
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                61
+              ],
+              "switchPhases": [
+                185
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  184,
+                  4
+                ],
+                [
+                  185,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "cross_neo",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                61
+              ],
+              "switchPhases": [
+                185
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  184,
+                  4
+                ],
+                [
+                  185,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "score": 1
+        },
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                60
+              ],
+              "switchPhases": [
+                182
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  181,
+                  4
+                ],
+                [
+                  182,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "cross_neo",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                60
+              ],
+              "switchPhases": [
+                182
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  181,
+                  4
+                ],
+                [
+                  182,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "score": 2
+        },
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                62
+              ],
+              "switchPhases": [
+                188
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  185,
+                  4
+                ],
+                [
+                  188,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "cross_neo",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                62
+              ],
+              "switchPhases": [
+                188
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  185,
+                  4
+                ],
+                [
+                  188,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "score": 3
+        },
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                63
+              ],
+              "switchPhases": [
+                191
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  188,
+                  4
+                ],
+                [
+                  191,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "cross_neo",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                63
+              ],
+              "switchPhases": [
+                191
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  188,
+                  4
+                ],
+                [
+                  191,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "score": 4
+        },
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                64
+              ],
+              "switchPhases": [
+                194
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  191,
+                  4
+                ],
+                [
+                  194,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "cross_neo",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                64
+              ],
+              "switchPhases": [
+                194
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  191,
+                  4
+                ],
+                [
+                  194,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "score": 5
+        },
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                65
+              ],
+              "switchPhases": [
+                197
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  194,
+                  4
+                ],
+                [
+                  197,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "cross_neo",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                65
+              ],
+              "switchPhases": [
+                197
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  194,
+                  4
+                ],
+                [
+                  197,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "score": 6
+        },
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "X",
+              "cmp": "GE",
+              "rhs": 731.3000010119209,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "X",
+              "cmp": "GE",
+              "rhs": 731.3000010119209,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "X",
+              "cmp": "GE",
+              "rhs": 731.3000010119209,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "X",
+              "cmp": "GE",
+              "rhs": 731.3000010119209,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "Z",
+              "cmp": "GE",
+              "rhs": -1093.699998988079,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "Z",
+              "cmp": "GE",
+              "rhs": -1093.699998988079,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "Z",
+              "cmp": "GE",
+              "rhs": -1093.699998988079,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "Z",
+              "cmp": "GE",
+              "rhs": -1093.699998988079,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "Z",
+              "cmp": "GE",
+              "rhs": -1093.699998988079,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": 1,
+                  "plane": 731.3000000119209
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                58,
+                62,
+                66
+              ],
+              "switchPhases": [
+                176,
+                187,
+                200
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  184,
+                  1
+                ],
+                [
+                  187,
+                  197,
+                  5
+                ],
+                [
+                  200,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "long_neo",
+              "blockageCounts": {
+                "horizontal": 3,
+                "vertical": 0,
+                "total": 3
+              },
+              "blockageCount": 3
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": 1,
+                  "plane": 731.3000000119209
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                58,
+                62,
+                66
+              ],
+              "switchPhases": [
+                176,
+                187,
+                200
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  184,
+                  1
+                ],
+                [
+                  187,
+                  197,
+                  5
+                ],
+                [
+                  200,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 3,
+                "vertical": 0,
+                "total": 3
+              },
+              "blockageCount": 3
+            }
+          ],
+          "score": 7
+        }
+      ],
+      "screenExclusions": [
+        {
+          "rowsHash": "de090b6c6b7530849e2af22b8f679d4f6c63266cf45584beca5cb99c1d402cc9",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        },
+        {
+          "rowsHash": "5cd6db1d7063487087d0716126401088f29600487dc9641b456cd062ce6f568e",
+          "proof": {
+            "ruledOut": true,
+            "state": 65,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "44fb3e37ee86b473a6d0a071c13eda6157c4fd915fed7f331d6576f4a64ffadd",
+          "proof": {
+            "ruledOut": true,
+            "state": 64,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "cdc2594b791f86aaefdd4b20f51647245d6a46eec20abcef0d2f3a06e5fb6317",
+          "proof": {
+            "ruledOut": true,
+            "state": 63,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "f02727e319b9ebbfbb5f49c3da0020a9c047f770cf1c16230c835497f30ed23f",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "61f016edc367a5c2e3c1b8423711236bd92113f9e9cb9cced25895736fc0c9e2",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "16e70f18c20ba444efb92bb52f36c9949fa3cd0782097858da7a1b3cbd180bf3",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "baecf3b6cc19ddecd6f9607fd811bc11eae5e4721816465024e92fad9021d90e",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "277546fb8af37fc3ef52ba34fee8185baaf61d1e0526cd93a92d39c2ae0e03ec",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "ae883d6343383eb015995dc02913550c3f47dc79db5a671ae6ee186f38920667",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "6a73acf62aa9e2bd8643f2b4a21b10a8cb973bf63100e2b97cc88b71a8d46a62",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "b24745bc97c6db43d7d500aa05da807c23c2de70bedbb4e157587a46e1572b4e",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        },
+        {
+          "rowsHash": "0e5103d0c9ac2c63730643740500287088a5c470edbe06a67d9f8a5e9ab45264",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        },
+        {
+          "rowsHash": "d77713e853a20e6238c62b27ceeb8ccfab0388e6a43abefe1e5eb9a9490b9cbe",
+          "proof": {
+            "ruledOut": true,
+            "state": 64,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "cebc2252ae1ef9de15bd6a81294df7aa7f67b3b4d39b7125e13efa4e0867c4f2",
+          "proof": {
+            "ruledOut": true,
+            "state": 63,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "2897683f4bc123c6c38d6905ab711eb1c537b94971003b689c11ab34e18d0b75",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "540e25f998651646d04014406f64639baf283db26f0891f2400e2c0a0d5fcba3",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "05fdadb982528a4a724c43ab071ded7b33f5bac136662a5f1a6c67de79c8eadf",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "75ae2b8a0ef911dc7c9192ed6f934af61b2d5c6c1cdb0c24cd7ba687581008f8",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "4e077846910c6da9cf8a7caa0b1ac8c0cf0dbd4cf09fecefbf2234ffcda148b9",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "baa925e8f84bdbbc1be2a233e070aa2a091b4e36f3fcbb89721759da0292f6e1",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "8302a7af26dcfacf1aa48f80b089888db543c9fa8bb762de62946a62315394e9",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "234e316169f604cf6f5eb589f09d3b12ae82f00b9615224da80bc91341095cbe",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        },
+        {
+          "rowsHash": "7cef4a28a2a7340843ae5d5743d2bebc0afa59ff15bd45f2fde367a6385d81e2",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        },
+        {
+          "rowsHash": "1683c02124b423250bcabf7da608150ab383fabf28ba5d7dd1c96d431d2fc9e9",
+          "proof": {
+            "ruledOut": true,
+            "state": 60,
+            "previousState": 0,
+            "reason": "norm_reach_contradiction",
+            "gap": 19.117420193788373,
+            "travelUpperBound": 19.07125540149478
+          }
+        },
+        {
+          "rowsHash": "cb04ad97349a793b9144c9e58451555dd3985c6def41ff3087a5fd07b38e5195",
+          "proof": {
+            "ruledOut": true,
+            "state": 59,
+            "previousState": 0,
+            "reason": "norm_reach_contradiction",
+            "gap": 18.799488392424017,
+            "travelUpperBound": 18.721285914137535
+          }
+        },
+        {
+          "rowsHash": "d5496074ef95bf4180b96c3453b79e518e3ab9c025cda98769aee454591bb00f",
+          "proof": {
+            "ruledOut": true,
+            "state": 63,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "e513ab5036dae96ad7f3896bfe8897744f40fa782e812287eb02c01056c97392",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "2137215adea4cf92ef82ea0e19ee28c9e3d67d8238f7c57db4997588b5769b49",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "fc991ca3073cba1fb3525e57a1fafe97ad99b0b99a02a7d4e69b19918f6aefe2",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "2b72e6cdd03576590aa586bc1bcf1b2c91625c24b326e5346e21139b9180a691",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "b429f0d0ea0bca11b26b1d5bbe922010843c1025c2c16409eceb45ca595ba957",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "bdf2b6c02237cf70bc6acbf2301cc558696469d4ade659dd17a51c7eaf0724e2",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "bcb23847621c56efa34e6548005dc3dfb3bc177e5787ffaaa642c809916511d2",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "b61176b389a0b2cf5adad54cc8099f737358ccf724fe65b3c9d09cca84c015ad",
+          "proof": {
+            "ruledOut": true,
+            "state": 66,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "eaa1660bc344e1bb9e373dfab174b06cd5b7e0d7879bc772a42974dce895cc56",
+          "proof": {
+            "ruledOut": true,
+            "state": 65,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "79021b27c45b9d6ff9e91a90d2d228aa7cb5afe90cea90b837f19d87ac4a59bb",
+          "proof": {
+            "ruledOut": true,
+            "state": 64,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "6fa9ab9e96763768ced924bc4c6f5d050eb9d23d6f89a18fa90fe34a9541245e",
+          "proof": {
+            "ruledOut": true,
+            "state": 63,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "a034ad752360e108a85e004de6aa4abf0af5f74bcaec1ba3238d7877def50819",
+          "proof": {
+            "ruledOut": true,
+            "state": 66,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "0b7953f362bc7f30d5a12a4b51126d27c496dc729e0bc31ef1698bf0d8ac8de6",
+          "proof": {
+            "ruledOut": true,
+            "state": 65,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "1bb3e8b53f28e0032a549416376a7842c12c7a0e08aab4b29d457b06c31110ad",
+          "proof": {
+            "ruledOut": true,
+            "state": 64,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "b5bb4f882a92861824597ea5c63f0344c2140f14826cb8d6cba0d125b9db53cb",
+          "proof": {
+            "ruledOut": true,
+            "state": 66,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "c6b5ef0231551b6cdb4c778ec609c63f8c30684f87bb3a3a2a3f1907ec67e79d",
+          "proof": {
+            "ruledOut": true,
+            "state": 65,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "3edcaac70f90bbfce81d706fddf53549b7f6e1ad38dbf8bed39c494f05b58887",
+          "proof": {
+            "ruledOut": true,
+            "state": 57,
+            "previousState": 0,
+            "reason": "norm_reach_contradiction",
+            "gap": 17.902738503159235,
+            "travelUpperBound": 17.835681856428483
+          }
+        },
+        {
+          "rowsHash": "67b89baca2d0e9e407a69e9c2d0824d9d2a2850e532b658bde413e45125bc54d",
+          "proof": {
+            "ruledOut": true,
+            "state": 57,
+            "previousState": 0,
+            "reason": "norm_reach_contradiction",
+            "gap": 17.902738503159235,
+            "travelUpperBound": 17.835681856428483
+          }
+        },
+        {
+          "rowsHash": "2b0bf8171c6f7d170aaf80bae0a35175d892b645a5e6a6f21b5a075992193957",
+          "proof": {
+            "ruledOut": true,
+            "state": 57,
+            "previousState": 0,
+            "reason": "norm_reach_contradiction",
+            "gap": 17.902738503159235,
+            "travelUpperBound": 17.835681856428483
+          }
+        },
+        {
+          "rowsHash": "371fdb3cf376666b2130c3ba0e1b951a22efa54052801e58c7774c9a8426f053",
+          "proof": {
+            "ruledOut": true,
+            "state": 57,
+            "previousState": 0,
+            "reason": "norm_reach_contradiction",
+            "gap": 17.909518673807856,
+            "travelUpperBound": 17.835681856428483
+          }
+        },
+        {
+          "rowsHash": "c548f6c181f49af826de641eabad0f8c8a7c450b8848d556e22227ae8d2bf8ea",
+          "proof": {
+            "ruledOut": true,
+            "state": 55,
+            "previousState": 0,
+            "reason": "norm_reach_contradiction",
+            "gap": 17.272405830260272,
+            "travelUpperBound": 17.250143864837135
+          }
+        },
+        {
+          "rowsHash": "caf9a2d790fc7d64db638cdfc61cb7ef85ffe478279298c0338d5d1e6a7325a7",
+          "proof": {
+            "ruledOut": true,
+            "state": 54,
+            "previousState": 0,
+            "reason": "norm_reach_contradiction",
+            "gap": 17.032085465745052,
+            "travelUpperBound": 16.956790234491294
+          }
+        },
+        {
+          "rowsHash": "3c8b0e5185b0e879796f8a44718a403759aa9bcb4547ed2c302e152c4dd6e433",
+          "proof": {
+            "ruledOut": true,
+            "state": 66,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "d6aed2240c4685118bc7d8d16e0b26e9f48956bf899c3ceb1d4ec83c7a4b5bed",
+          "proof": {
+            "ruledOut": true,
+            "state": 63,
+            "axis": 0,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "5d691eef1733550714ec0af17e27f9a8b500eb7d1cd531e0c1f4044a52fe4a4d",
+          "proof": {
+            "ruledOut": true,
+            "state": 64,
+            "axis": 0,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "dbc2a665963ee6e168219202f7a2e01eb7acf261bfa901f8e31f1be1a065c06c",
+          "proof": {
+            "ruledOut": true,
+            "state": 65,
+            "axis": 0,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "e849c5a245bd6632eb896568d45d1781edd5b5c3c2efc9cb60e8b71a2dbab243",
+          "proof": {
+            "ruledOut": true,
+            "state": 66,
+            "axis": 0,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "e7f4cb463881a1849f5f9a850cf31613e91f113d326f43e82bd6713796d36a4a",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        }
+      ]
+    },
+    {
+      "history": "B",
+      "oldDescriptions": 153,
+      "oldRetainedDescriptions": 36,
+      "newRetainedAlternatives": 6,
+      "oldRetainedCovered": [
+        "B001",
+        "B002",
+        "B003",
+        "B004",
+        "B005",
+        "B006",
+        "B007",
+        "B008",
+        "B009",
+        "B010",
+        "B011",
+        "B012",
+        "B034",
+        "B035",
+        "B036",
+        "B037",
+        "B038",
+        "B039",
+        "B040",
+        "B041",
+        "B042",
+        "B043",
+        "B044",
+        "B045",
+        "B046",
+        "B047",
+        "B048",
+        "B049",
+        "B050",
+        "B051",
+        "B125",
+        "B126",
+        "B127",
+        "B128",
+        "B129",
+        "B130"
+      ],
+      "seconds": 0.32005970925092697,
+      "metrics": {
+        "analysisMisses": 51,
+        "phaseChecks": 201,
+        "excludedPhases": 176,
+        "preparedEncounters": 20,
+        "excludedFaces": 34,
+        "optionLeaves": 91,
+        "analysisHits": 113,
+        "optionNodes": 648,
+        "generatedChildren": 719,
+        "duplicateOptions": 22,
+        "screenExclusions": 44
+      },
+      "timings": {
+        "preparationSeconds": 0.0013509392738342285,
+        "variantGenerationSeconds": 0.3200526684522629,
+        "conditionalAnalysisSeconds": 0.17862220853567123
+      },
+      "variants": [
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                62
+              ],
+              "switchPhases": [
+                188
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  187,
+                  4
+                ],
+                [
+                  188,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "cross_neo",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                62
+              ],
+              "switchPhases": [
+                188
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  187,
+                  4
+                ],
+                [
+                  188,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "score": 1
+        },
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                61
+              ],
+              "switchPhases": [
+                185
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  184,
+                  4
+                ],
+                [
+                  185,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "cross_neo",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                61
+              ],
+              "switchPhases": [
+                185
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  184,
+                  4
+                ],
+                [
+                  185,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "score": 2
+        },
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                60
+              ],
+              "switchPhases": [
+                182
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  181,
+                  4
+                ],
+                [
+                  182,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "cross_neo",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                60
+              ],
+              "switchPhases": [
+                182
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  181,
+                  4
+                ],
+                [
+                  182,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "score": 3
+        },
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                63
+              ],
+              "switchPhases": [
+                191
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  188,
+                  4
+                ],
+                [
+                  191,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "cross_neo",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                63
+              ],
+              "switchPhases": [
+                191
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  188,
+                  4
+                ],
+                [
+                  191,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "score": 4
+        },
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                64
+              ],
+              "switchPhases": [
+                194
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  191,
+                  4
+                ],
+                [
+                  194,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "cross_neo",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                64
+              ],
+              "switchPhases": [
+                194
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  191,
+                  4
+                ],
+                [
+                  194,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "score": 5
+        },
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 59,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 60,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 61,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 62,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 63,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 64,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 65,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 66,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 67,
+              "mode": "X",
+              "cmp": "LE",
+              "rhs": 729.6999989880791,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                65
+              ],
+              "switchPhases": [
+                197
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  194,
+                  4
+                ],
+                [
+                  197,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "cross_neo",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                58,
+                67
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                },
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                }
+              ],
+              "gates": [
+                65
+              ],
+              "switchPhases": [
+                197
+              ],
+              "phaseSpans": [
+                [
+                  176,
+                  194,
+                  4
+                ],
+                [
+                  197,
+                  200,
+                  0
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "X",
+                  "direction": -1,
+                  "plane": 729.6999999880791
+                },
+                {
+                  "axis": "Z",
+                  "direction": 1,
+                  "plane": -1093.699999988079
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 1,
+                "vertical": 0,
+                "total": 1
+              },
+              "blockageCount": 1
+            }
+          ],
+          "score": 6
+        }
+      ],
+      "screenExclusions": [
+        {
+          "rowsHash": "b61176b389a0b2cf5adad54cc8099f737358ccf724fe65b3c9d09cca84c015ad",
+          "proof": {
+            "ruledOut": true,
+            "state": 66,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "eaa1660bc344e1bb9e373dfab174b06cd5b7e0d7879bc772a42974dce895cc56",
+          "proof": {
+            "ruledOut": true,
+            "state": 65,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "79021b27c45b9d6ff9e91a90d2d228aa7cb5afe90cea90b837f19d87ac4a59bb",
+          "proof": {
+            "ruledOut": true,
+            "state": 64,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "6fa9ab9e96763768ced924bc4c6f5d050eb9d23d6f89a18fa90fe34a9541245e",
+          "proof": {
+            "ruledOut": true,
+            "state": 63,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "f02727e319b9ebbfbb5f49c3da0020a9c047f770cf1c16230c835497f30ed23f",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "61f016edc367a5c2e3c1b8423711236bd92113f9e9cb9cced25895736fc0c9e2",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "16e70f18c20ba444efb92bb52f36c9949fa3cd0782097858da7a1b3cbd180bf3",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "baecf3b6cc19ddecd6f9607fd811bc11eae5e4721816465024e92fad9021d90e",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "277546fb8af37fc3ef52ba34fee8185baaf61d1e0526cd93a92d39c2ae0e03ec",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "ae883d6343383eb015995dc02913550c3f47dc79db5a671ae6ee186f38920667",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "6a73acf62aa9e2bd8643f2b4a21b10a8cb973bf63100e2b97cc88b71a8d46a62",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "cdc2594b791f86aaefdd4b20f51647245d6a46eec20abcef0d2f3a06e5fb6317",
+          "proof": {
+            "ruledOut": true,
+            "state": 63,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "de090b6c6b7530849e2af22b8f679d4f6c63266cf45584beca5cb99c1d402cc9",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        },
+        {
+          "rowsHash": "5cd6db1d7063487087d0716126401088f29600487dc9641b456cd062ce6f568e",
+          "proof": {
+            "ruledOut": true,
+            "state": 65,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "44fb3e37ee86b473a6d0a071c13eda6157c4fd915fed7f331d6576f4a64ffadd",
+          "proof": {
+            "ruledOut": true,
+            "state": 64,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "540e25f998651646d04014406f64639baf283db26f0891f2400e2c0a0d5fcba3",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "05fdadb982528a4a724c43ab071ded7b33f5bac136662a5f1a6c67de79c8eadf",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "75ae2b8a0ef911dc7c9192ed6f934af61b2d5c6c1cdb0c24cd7ba687581008f8",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "4e077846910c6da9cf8a7caa0b1ac8c0cf0dbd4cf09fecefbf2234ffcda148b9",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "baa925e8f84bdbbc1be2a233e070aa2a091b4e36f3fcbb89721759da0292f6e1",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "8302a7af26dcfacf1aa48f80b089888db543c9fa8bb762de62946a62315394e9",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "2897683f4bc123c6c38d6905ab711eb1c537b94971003b689c11ab34e18d0b75",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "b24745bc97c6db43d7d500aa05da807c23c2de70bedbb4e157587a46e1572b4e",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        },
+        {
+          "rowsHash": "0e5103d0c9ac2c63730643740500287088a5c470edbe06a67d9f8a5e9ab45264",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        },
+        {
+          "rowsHash": "d77713e853a20e6238c62b27ceeb8ccfab0388e6a43abefe1e5eb9a9490b9cbe",
+          "proof": {
+            "ruledOut": true,
+            "state": 64,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "cebc2252ae1ef9de15bd6a81294df7aa7f67b3b4d39b7125e13efa4e0867c4f2",
+          "proof": {
+            "ruledOut": true,
+            "state": 63,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "2137215adea4cf92ef82ea0e19ee28c9e3d67d8238f7c57db4997588b5769b49",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "fc991ca3073cba1fb3525e57a1fafe97ad99b0b99a02a7d4e69b19918f6aefe2",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "2b72e6cdd03576590aa586bc1bcf1b2c91625c24b326e5346e21139b9180a691",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "b429f0d0ea0bca11b26b1d5bbe922010843c1025c2c16409eceb45ca595ba957",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "bdf2b6c02237cf70bc6acbf2301cc558696469d4ade659dd17a51c7eaf0724e2",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "bcb23847621c56efa34e6548005dc3dfb3bc177e5787ffaaa642c809916511d2",
+          "proof": {
+            "ruledOut": true,
+            "state": 62,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "a034ad752360e108a85e004de6aa4abf0af5f74bcaec1ba3238d7877def50819",
+          "proof": {
+            "ruledOut": true,
+            "state": 66,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "0b7953f362bc7f30d5a12a4b51126d27c496dc729e0bc31ef1698bf0d8ac8de6",
+          "proof": {
+            "ruledOut": true,
+            "state": 65,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "1bb3e8b53f28e0032a549416376a7842c12c7a0e08aab4b29d457b06c31110ad",
+          "proof": {
+            "ruledOut": true,
+            "state": 64,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "b5bb4f882a92861824597ea5c63f0344c2140f14826cb8d6cba0d125b9db53cb",
+          "proof": {
+            "ruledOut": true,
+            "state": 66,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "c6b5ef0231551b6cdb4c778ec609c63f8c30684f87bb3a3a2a3f1907ec67e79d",
+          "proof": {
+            "ruledOut": true,
+            "state": 65,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "d6aed2240c4685118bc7d8d16e0b26e9f48956bf899c3ceb1d4ec83c7a4b5bed",
+          "proof": {
+            "ruledOut": true,
+            "state": 63,
+            "axis": 0,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "5d691eef1733550714ec0af17e27f9a8b500eb7d1cd531e0c1f4044a52fe4a4d",
+          "proof": {
+            "ruledOut": true,
+            "state": 64,
+            "axis": 0,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "dbc2a665963ee6e168219202f7a2e01eb7acf261bfa901f8e31f1be1a065c06c",
+          "proof": {
+            "ruledOut": true,
+            "state": 65,
+            "axis": 0,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "e849c5a245bd6632eb896568d45d1781edd5b5c3c2efc9cb60e8b71a2dbab243",
+          "proof": {
+            "ruledOut": true,
+            "state": 66,
+            "axis": 0,
+            "reason": "interval_reach_contradiction"
+          }
+        },
+        {
+          "rowsHash": "85e90cebbfd654df39549eba5c12c8c5342462b61c2c71f67ac5abfe6b7fba22",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        },
+        {
+          "rowsHash": "e7f4cb463881a1849f5f9a850cf31613e91f113d326f43e82bd6713796d36a4a",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        },
+        {
+          "rowsHash": "3c8b0e5185b0e879796f8a44718a403759aa9bcb4547ed2c302e152c4dd6e433",
+          "proof": {
+            "ruledOut": true,
+            "state": 66,
+            "axis": 1,
+            "reason": "interval_reach_contradiction"
+          }
+        }
+      ]
+    },
+    {
+      "history": "C",
+      "oldDescriptions": 18,
+      "oldRetainedDescriptions": 8,
+      "newRetainedAlternatives": 1,
+      "oldRetainedCovered": [
+        "C001",
+        "C002",
+        "C003",
+        "C004",
+        "C005",
+        "C006",
+        "C007",
+        "C008"
+      ],
+      "seconds": 0.02646162360906601,
+      "metrics": {
+        "analysisMisses": 4,
+        "phaseChecks": 171,
+        "excludedPhases": 169,
+        "preparedEncounters": 18,
+        "excludedFaces": 4,
+        "optionLeaves": 20,
+        "analysisHits": 55,
+        "optionNodes": 2,
+        "generatedChildren": 4,
+        "screenExclusions": 2
+      },
+      "timings": {
+        "preparationSeconds": 0.0009365007281303406,
+        "variantGenerationSeconds": 0.02645821124315262,
+        "conditionalAnalysisSeconds": 0.024244841188192368
+      },
+      "variants": [
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 56,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 57,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                42,
+                57
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "gates": [],
+              "switchPhases": [],
+              "phaseSpans": [
+                [
+                  169,
+                  170,
+                  4
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "X",
+                  "direction": 1,
+                  "plane": 731.3000000119209
+                },
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "kind": "vertical_passage",
+              "blockageCounts": {
+                "horizontal": 0,
+                "vertical": 0,
+                "total": 0
+              },
+              "blockageCount": 0
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                42,
+                57
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "gates": [],
+              "switchPhases": [],
+              "phaseSpans": [
+                [
+                  169,
+                  170,
+                  4
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "X",
+                  "direction": 1,
+                  "plane": 731.3000000119209
+                },
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 0,
+                "vertical": 0,
+                "total": 0
+              },
+              "blockageCount": 0
+            }
+          ],
+          "score": 1
+        }
+      ],
+      "screenExclusions": [
+        {
+          "rowsHash": "fbf1a2a5a5dd8a8ab939207924b796fe5485df7af8728186d5ddf1b9e2745fea",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        },
+        {
+          "rowsHash": "76d083899f9c1b5f5923338b6a22f68cb49b3e6df419715c4cd6cb8949973254",
+          "proof": {
+            "ruledOut": true,
+            "state": 48,
+            "previousState": 0,
+            "reason": "norm_reach_contradiction",
+            "gap": 15.271443389958845,
+            "travelUpperBound": 15.212912022037772
+          }
+        }
+      ]
+    },
+    {
+      "history": "D",
+      "oldDescriptions": 34,
+      "oldRetainedDescriptions": 13,
+      "newRetainedAlternatives": 1,
+      "oldRetainedCovered": [
+        "D001",
+        "D002",
+        "D004",
+        "D005",
+        "D006",
+        "D007",
+        "D009",
+        "D010",
+        "D012",
+        "D013",
+        "D014",
+        "D016",
+        "D018"
+      ],
+      "seconds": 0.02799028903245926,
+      "metrics": {
+        "analysisMisses": 4,
+        "phaseChecks": 174,
+        "excludedPhases": 169,
+        "preparedEncounters": 19,
+        "excludedFaces": 13,
+        "optionLeaves": 21,
+        "analysisHits": 58,
+        "optionNodes": 5,
+        "generatedChildren": 7,
+        "screenExclusions": 2
+      },
+      "timings": {
+        "preparationSeconds": 0.0009011030197143555,
+        "variantGenerationSeconds": 0.027986496686935425,
+        "conditionalAnalysisSeconds": 0.025573965162038803
+      },
+      "variants": [
+        {
+          "rows": [
+            {
+              "leg": 0,
+              "offset": 56,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 57,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            },
+            {
+              "leg": 0,
+              "offset": 58,
+              "mode": "Z",
+              "cmp": "LE",
+              "rhs": -1095.300001011921,
+              "name": "avoidance"
+            }
+          ],
+          "passages": [],
+          "selectedPassages": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                43,
+                58
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "gates": [],
+              "switchPhases": [],
+              "phaseSpans": [
+                [
+                  169,
+                  173,
+                  4
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "X",
+                  "direction": 1,
+                  "plane": 731.3000000119209
+                },
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "kind": "vertical_passage",
+              "blockageCounts": {
+                "horizontal": 0,
+                "vertical": 0,
+                "total": 0
+              },
+              "blockageCount": 0
+            }
+          ],
+          "semanticObservations": [
+            {
+              "leg": 0,
+              "solidIndex": 0,
+              "blockId": "b6",
+              "segment": [
+                43,
+                58
+              ],
+              "faces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "gates": [],
+              "switchPhases": [],
+              "phaseSpans": [
+                [
+                  169,
+                  173,
+                  4
+                ]
+              ],
+              "entryFaces": [
+                {
+                  "axis": "X",
+                  "direction": 1,
+                  "plane": 731.3000000119209
+                },
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "exitFaces": [
+                {
+                  "axis": "Z",
+                  "direction": -1,
+                  "plane": -1095.300000011921
+                }
+              ],
+              "kind": "passage",
+              "blockageCounts": {
+                "horizontal": 0,
+                "vertical": 0,
+                "total": 0
+              },
+              "blockageCount": 0
+            }
+          ],
+          "score": 1
+        }
+      ],
+      "screenExclusions": [
+        {
+          "rowsHash": "5444cd46383a20dad010a48edc290d52066861d06bf02f862345a1c70181e86f",
+          "proof": {
+            "ruledOut": true,
+            "reason": "linear_control_relaxation_infeasible",
+            "relaxation": "circumscribed_16_face_acceleration_polygon",
+            "dynamicsMargin": 2e-08,
+            "constraintMargin": 2e-07
+          }
+        },
+        {
+          "rowsHash": "a65db8ab923dc8ca8eb842fe2e86f2acba9b9fb0c6d27e17ce6495798e27c69f",
+          "proof": {
+            "ruledOut": true,
+            "state": 51,
+            "previousState": 0,
+            "reason": "norm_reach_contradiction",
+            "gap": 16.09019036987694,
+            "travelUpperBound": 16.073901044190272
+          }
+        }
+      ]
+    }
+  ],
+  "accounting": "Fixed complete B6 catalogues under the same recorded movement/parent requirements. Old ledger descriptions are source-era evidence; the new union is compared by entailed requirements, not cursor/order equality. Retained means pre-checks did not exclude; no NLP feasibility/optimality claim.",
+  "sourceUnchanged": true
+}

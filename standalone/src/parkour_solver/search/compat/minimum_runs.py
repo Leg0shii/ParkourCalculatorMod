@@ -6,7 +6,7 @@ from parkour_solver.search.identity import digest
 from parkour_solver.search.comparison import comparison_label, priority_key, compare_candidates
 
 
-POLICY_VERSION = 2
+POLICY_VERSION = 3
 
 
 def _shift(event, tick):
@@ -31,15 +31,17 @@ def latest_jump(program, scene):
     while ground and p['grounded'][ground-1] and not p['jump'][ground-1]:ground-=1
     if any(p['sneak'][ground:takeoff]):return None
     events=p.get('contactEvents',[]);cases=p.get('caseEvents',[])
-    boxes={tuple(e['box']) for e in events if e['offset']==ground-1 and e['axis']=='Y' and e['direction']==-1}
-    boxes.update(tuple(e['box']) for e in cases if e['input']==ground-1 and 'box' in e)
+    boxes={tuple(b) for e in events if e['offset']==ground-1 and e['axis']=='Y' and e['direction']==-1 for b in e['boxes']}
+    boxes.update(tuple(b) for e in cases if e['input']==ground-1 for b in e.get('boxes',()))
     if ground==0:
         boxes.update(tuple(scene['collisionScene']['solids'][b['solidIndex']]) for b in scene['blocks']
             if b['id']==scene['startBlock'] or b.get('sourceBlock')==scene['startBlock'])
     if not boxes:return None
     if any(ground<=e['input']<takeoff for e in cases):return None
     holds=[e for e in events if ground<=e['offset']<takeoff]
-    if any(e['axis']!='Y' or e['direction']!=-1 or tuple(e['box']) not in boxes for e in holds):return None
+    if any(e['axis']!='Y' or e['direction']!=-1 or not any(tuple(b) in boxes for b in e['boxes']) for e in holds):return None
+    choices=p.get('regionChoices',[])
+    if any(ground<=c['offset']<takeoff for c in choices):return None # An open choice inside the hold.
     before=truncate_program(program,ground) if ground else empty_program(program['initial'],threshold=program.get('threshold',.005))
     rows=[]
     owners=p.get('constraintOwners',[0]*len(p['positionConstraints']))
@@ -53,9 +55,7 @@ def latest_jump(program, scene):
         end=max(row['t1'],row.get('t2') if row.get('t2') is not None else row['t1'])
         if end<=ground and owner<=ground:continue
         if not owner or owner<=ground:return None # Unclassified task row across the preparation.
-        if owner<=takeoff:
-            if row.get('name')!='normal:landing':return None
-            continue # Ordinary finite-support hold, already identified above.
+        if owner<=takeoff:return None
         if row['t1']<takeoff or row.get('t2') is not None and row['t2']<takeoff:return None
         normalized={k:v for k,v in row.items() if k!='name'}
         for k in ('t1','t2'):
@@ -65,6 +65,8 @@ def latest_jump(program, scene):
     suffix.update(contacts=[_shift(e,takeoff) for e in p.get('contacts',[]) if e['state']>takeoff],
         contactEvents=[_shift(e,takeoff) for e in events if e['offset']>=takeoff],
         caseEvents=[_shift(e,takeoff) for e in cases if e['input']>=takeoff],
+        regionChoices=[dict(_shift(c,takeoff),options=[[_shift(r,takeoff) for r in rows] for rows in c['options']])
+                       for c in choices if c['offset']>=takeoff],
         rows=sorted(rows,key=digest),terminalSupport=program.get('terminalSupport'),
         terminalGoal=program.get('terminalGoal'),landingPhase=p.get('landingPhase'))
     return dict(pattern=digest(dict(version=POLICY_VERSION,before=program_physics_key(before),suffix=suffix)),

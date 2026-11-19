@@ -69,16 +69,17 @@ class CorridorAdapter:
                 hi = row['rhs'] if row['cmp'] in ('LE','EQ') else float('inf')
                 tighten(row['t1'], 0 if row['mode']=='X' else 1, lo, hi)
             for contact in contacts:
-                at, axis = contact['offset'], contact['axis']
-                box = expanded_box(contact['box'])
+                at, axis, regions = contact['offset'], contact['axis'], contact['regions']
+                low = [min(r[k] for r in regions) for k in (0, 1)]
+                high = [max(r[k] for r in regions) for k in (2, 3)]
                 if axis == 'Y':
-                    tighten(at, 0, box[0], box[3])
-                    tighten(at, 1, box[2], box[5])
+                    tighten(at, 0, low[0], high[0])
+                    tighten(at, 1, low[1], high[1])
                 elif axis == 'X':
                     tighten(at+1, 0, contact['plane'], contact['plane'])
-                    tighten(at, 1, box[2], box[5])
+                    tighten(at, 1, low[1], high[1])
                 elif axis == 'Z':
-                    tighten(at+1, 0, box[0], box[3])
+                    tighten(at+1, 0, low[0], high[0])
                     tighten(at+1, 1, contact['plane'], contact['plane'])
             phases = [(domains[0][0], domains[0][1])]
             for t in range(n):

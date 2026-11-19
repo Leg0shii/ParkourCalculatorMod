@@ -1,5 +1,5 @@
 {
-  "source": "dd738c98 acceptance (same 600 tests) plus 10 package/profiler boundary regressions",
+  "source": "dd738c98 acceptance (same 600 tests) plus package/profiler and exact-option continuation regressions; geometry-driven encounter replacement controls",
   "modules": [
     "tests.integration.test_acceptance",
     "tests.unit.movement.test_block_contacts",
@@ -49,6 +49,7 @@
     "tests.unit.search.test_terminal_goals",
     "tests.unit.search.test_time_progress",
     "tests.unit.spatial.test_event_domain",
+    "tests.unit.spatial.test_surfaces",
     "tests.unit.spatial.test_event_routes",
     "tests.unit.reachability.test_interaction_normalization",
     "tests.unit.spatial.test_guide_progress",
@@ -72,7 +73,9 @@
     "tests.unit.numerics.test_solver",
     "tests.unit.numerics.test_worker_bounds",
     "tests.integration.test_package_layout",
-    "tests.integration.test_profiling"
+    "tests.integration.test_profiling",
+    "tests.unit.constraints.test_option_keys",
+    "tests.unit.constraints.test_encounters"
   ],
   "excluded": "Dedicated ladder/climbable/vine/movement-entry modules, as in baseline; generic mixed ladder controls remain included",
   "baselineTests": 600

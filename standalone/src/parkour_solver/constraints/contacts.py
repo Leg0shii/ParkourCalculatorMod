@@ -1,7 +1,17 @@
 """Physical floor requirements and their alternative constraint rows."""
 import copy
 from parkour_solver.physics.vertical import f32, vertical_move, vertical_step
-from parkour_solver.scene.route import center_bounds, supports
+from parkour_solver.scene.route import center_bounds
+from parkour_solver.spatial.surfaces import scene_geometry
+
+
+def exposed_tops(scene, block):
+    """The block's exact exposed top rectangles in player space (no clearance: a floor check must flag every overlap)."""
+    if 'collisionScene' not in scene:
+        bounds = center_bounds(block)
+        return [[bounds[0], bounds[2], bounds[1], bounds[3]]]
+    return [list(r) for option in scene_geometry(scene['collisionScene']).contact_options(
+        1, 1, clearance=0., members=[block['solidIndex']]) for r in option.regions]
 
 
 def floor_checks(scene, block_ids, profiles, *, envelopes=None):
@@ -26,10 +36,11 @@ def floor_checks(scene, block_ids, profiles, *, envelopes=None):
                         continue
                 top = block['top']
                 planned_floor = any(e['offset'] == offset and e.get('role') in ('landing', 'step')
-                                    and e['plane'] == top and e['box'] == scene['collisionScene']['solids'][block['solidIndex']]
+                                    and e['plane'] == top and scene['collisionScene']['solids'][block['solidIndex']] in e['boxes']
                                     for e in profile.get('contactEvents', []))
                 if next_y <= top <= y and not planned_floor and not (offset + 1 == profile['airtime'] and top == target_top):
-                    checks.append({'leg': leg, 'offset': offset, 'block': copy.deepcopy(block), 'reason': 'earlier_floor'})
+                    checks.extend({'leg': leg, 'offset': offset, 'block': copy.deepcopy(block), 'region': region,
+                                   'reason': 'earlier_floor'} for region in exposed_tops(scene, block))
         for block in scene['blocks']:
             if envelopes is not None:
                 from parkour_solver.reachability.service import block_interaction
@@ -38,12 +49,13 @@ def floor_checks(scene, block_ids, profiles, *, envelopes=None):
                     continue
             selected_step = profile.get('profileKind') in ('stair', 'step') and block['id'] == block_ids[leg + 1]
             selected_step |= any(e['input'] == 0 and e['case'] in ('normal_step', 'slab_boost')
-                                 and e['box'] == scene['collisionScene']['solids'][block['solidIndex']]
+                                 and scene['collisionScene']['solids'][block['solidIndex']] in e['boxes']
                                  for e in profile.get('caseEvents', []))
             step_config = dict(config, contacts=[{'state': 1, 'plane': block['top'], 'direction': -1, 'step': True}])
             _, _, _, failures = vertical_step(step_config, 0, profile['position'][0], profile['velocity'][0], False, True, 0)
             if not selected_step and not failures:
-                checks.append({'leg': leg, 'offset': 1, 'block': copy.deepcopy(block), 'reason': 'unplanned_stair'})
+                checks.extend({'leg': leg, 'offset': 1, 'block': copy.deepcopy(block), 'region': region,
+                               'reason': 'unplanned_stair'} for region in exposed_tops(scene, block))
     return checks
 
 
@@ -52,16 +64,17 @@ def contact_conflicts(checks, plan, candidate):
     for check in checks:
         tick = plan['events'][check['leg']]['jump'] + check['offset']
         x, z = candidate['positions'][tick]
-        if supports(check['block'], x, z):
+        region = check['region']
+        if region[0] < x < region[2] and region[1] < z < region[3]:
             conflicts.append(dict(check, state=tick, position=[x, z]))
     return conflicts
 
 
 def avoid_contact_rows(conflict, clearance):
-    bounds = center_bounds(conflict['block'])
+    region = conflict['region']
     x, z = conflict['position']
     rows = []
-    for axis, coordinate, lo, hi in [('X', x, bounds[0], bounds[1]), ('Z', z, bounds[2], bounds[3])]:
+    for axis, coordinate, lo, hi in [('X', x, region[0], region[2]), ('Z', z, region[1], region[3])]:
         for cmp, edge in [('LE', lo - clearance), ('GE', hi + clearance)]:
             rows.append((abs(coordinate - edge), {'leg': conflict['leg'], 'offset': conflict['offset'],
                                                  'mode': axis, 'cmp': cmp, 'rhs': edge,

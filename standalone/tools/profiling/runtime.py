@@ -126,7 +126,7 @@ def instrument(profiler):
         profiler.requests.append(row)
         result=profiler.call('solver.invoke',original_solve,problem,**kwargs)
         row.update(status=result['status'],workerLaunched=result.get('workerLaunched'),
-                   workerStatus=result.get('workerStatus'))
+                   workerStatus=result.get('workerStatus'),seconds=result.get('elapsedSeconds'))
         return result
 
     original_search = depth_first.search_goals

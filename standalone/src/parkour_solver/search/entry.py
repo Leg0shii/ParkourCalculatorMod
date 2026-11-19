@@ -4,7 +4,7 @@ import time
 from parkour_solver.numerics import prepare, validate
 from parkour_solver.numerics import solve
 from parkour_solver.physics.vertical import f32
-from parkour_solver.movement.contact_combinations import compile_contact_events, merge_contacts
+from parkour_solver.movement.contact_combinations import compile_contact_events, merge_contacts, scene_contact_options
 from parkour_solver.scene.ladders import entry_channels, region_contains, schedule_constraints
 from parkour_solver.numerics.builders import _raw_candidate, _vertical, ladder_waypoints, waypoint_seed
 from parkour_solver.validation.scene import check_geometry
@@ -97,15 +97,16 @@ def entry_contact_options(context, prefix=None, max_entry=14):
         seed = program_seed(prefix, cut + max_entry)
         return [[dict(c, offset=c['offset'] - cut) for c in choice['contactEvents']]
                 for choice in generate_choices('ceiling', dict(mode='timeline', schedule=seed,
-                    solids=scene['collisionScene']['solids']), start=cut)]
+                    options=scene_contact_options(scene, 1, -1), interactionGate=None), start=cut)]
     route = context['route']
     top = route['blocks'][-2]['top']
     options = []
-    for index, box in enumerate(scene['collisionScene']['solids']):
-        profile = ceiling_profile(top, top, box, index, 'entry_ceiling')
+    for option in scene_contact_options(scene, 1, -1):
+        profile = ceiling_profile(top, top, option, 'entry_ceiling')
         if profile:
             c = profile['ceilingEvent']
-            options.append([dict(leg=0, offset=c['offset'], axis='Y', direction=1, plane=c['plane'], box=box, role='ceiling')])
+            options.append([dict(leg=0, offset=c['offset'], axis='Y', direction=1, plane=c['plane'],
+                                 boxes=c['boxes'], surface=c['surface'], regions=c['regions'], role='ceiling')])
     return options
 
 

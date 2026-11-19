@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "buckets": {
+    "preparation.analyze_model": {
+      "calls": 4,
+      "inclusiveSeconds": 0.16963666304945946,
+      "selfSeconds": 0.16963666304945946,
+      "maxSeconds": 0.13036316633224487
+    },
+    "reachability.linear_exclusion": {
+      "calls": 36,
+      "inclusiveSeconds": 0.6997557580471039,
+      "selfSeconds": 0.6997557580471039,
+      "maxSeconds": 0.3255228325724602
+    },
+    "reachability.condition_envelopes": {
+      "calls": 122,
+      "inclusiveSeconds": 0.47150255367159843,
+      "selfSeconds": 0.12953808531165123,
+      "maxSeconds": 0.04199399799108505
+    }
+  },
+  "sessions": [],
+  "active": [],
+  "accounting": "Inclusive buckets overlap; selfSeconds exclude instrumented children. Unwrapped work stays in its parent."
+}

@@ -2,15 +2,15 @@
 
 The reviewed folder refactor is implemented. This changes ownership and packaging,
 while preserving solver policy, physical equations and saved request/checkpoint
-schemas. [Implementation and validation](STANDALONE_REFACTOR_IMPLEMENTATION.md)
-and the [original inventory/review](STANDALONE_STRUCTURE_REVIEW.md) record its scope.
+schemas. [Implementation and validation](LAYOUT.md)
+and the [original inventory/review](LAYOUT.md) record its scope.
 
 | Root | Contents and dependency direction |
 | --- | --- |
 | `src/parkour_solver/` | Installed production code. Cannot import research, tools, tests or old checkout namespaces. |
 | `tests/unit/`, `tests/integration/`, `tests/research/` | Domain checks, native/package boundaries and deliberate research/archive regressions. |
 | `tests/support/`, `tests/fixtures/` | Shared builders/harnesses and small reusable test data. No test imports another test case. |
-| `cases/` | Curated runnable user tasks. Real11 physical anchors are a byte-identical promoted input with provenance in its README. |
+| `cases/` | Curated runnable user tasks. Real11 physical anchors are a maintained derived input; its README records domain/configuration changes. |
 | `tools/` | Current native gate, scoped profiling, saved-report audits and optional plotting. Tools may import production APIs. |
 | `native/java/`, `native/gradle/` | Four Java bridge sources and their standalone build/export/replay adapters. They reuse existing mod physics. |
 | `research/` | Scientific prototype, maintained older experiment drivers and immutable dated evidence bundles. Excluded from the installed package. |
@@ -51,6 +51,21 @@ on the import path. Old private module paths and direct execution of moved
 implementation files are not supported. Maintained tests/tools use current names.
 Use module or console entrypoints, rather than executing `src/.../*.py` by filename.
 
+## Boundary rules
+
+1. Schema, physics and scene primitives do not depend on search or research. Search
+   composes movement, spatial, constraint, reachability and numerical services; the
+   numerical worker does not import the DFS.
+2. Ordinary import stays light: CasADi belongs to the numerical worker, plotting and
+   Clarabel are optional. SciPy backs the optional runtime LP screen.
+3. The generic CLI takes task and config paths; the solver never locates Real11 or a
+   benchmark through `Path(__file__).parents[...]`. Install the package for both the
+   parent and the worker interpreter.
+4. Compatibility code is a supported older strategy or format, kept tested and using
+   the shared physical, model and policy helpers.
+5. Historical evidence stays immutable: keep manifest and SQLite pairs together and
+   never rewrite recorded paths, hashes or results to look current.
+
 ## Evidence, relocation and reproduction
 
 [tools/layout-migration.json](../tools/layout-migration.json) maps original paths
@@ -71,6 +86,6 @@ Do not rewrite old provenance to resemble the current checkout.
 
 Regenerate navigation with `python -m tools.docs_index` from `standalone/`.
 `python -m tools.validate_layout` checks production import boundaries and protected
-file hashes. The native gate preserves all600 baseline tests and adds10 package/
-profiler regressions; it does not silently include or retire excluded capability
-suites. No physical/decision policy version was bumped for directory moves.
+file hashes. The native gate keeps its declared module scope plus package and profiler
+regressions; it does not silently include or retire excluded capability suites
+([current gate](TESTING.md#current-gate)). No physical/decision policy version was bumped for directory moves.

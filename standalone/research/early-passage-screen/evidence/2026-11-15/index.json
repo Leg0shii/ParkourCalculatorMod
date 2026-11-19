@@ -1,0 +1,52 @@
+{
+  "baseRevision": "641c68b51ffd6621717bc86c3f08ddecf30faf9d",
+  "branch": "perf/early-passage-screen",
+  "files": {
+    "b6-prefix-screen.json": {
+      "bytes": 508,
+      "sha256": "e7d056c4c300ea2cfa611fbe0dc227323096660f827b8ac198e209ebd96a0317"
+    },
+    "cold-provenance.json": {
+      "bytes": 20797,
+      "sha256": "0068a6d3c8fa447f760b425f3fe12225cd6d5cc51956534e66683ae389dd1062"
+    },
+    "cold-requests.json": {
+      "bytes": 14831,
+      "sha256": "46a1af23d35767002680f6cb172d401790009e68684f541f77118702a805c64c"
+    },
+    "cold-summary.json": {
+      "bytes": 4033,
+      "sha256": "65769a849bd184c9078e103f9f288843c6586e68ba838a99f1a1dbcaf54ae2bc"
+    },
+    "comparison.json": {
+      "bytes": 970,
+      "sha256": "90a6ea468c0b27cb411a906148e704804bae0e2fbd5e8411c168e440150411b0"
+    },
+    "implementation.patch": {
+      "bytes": 10005,
+      "sha256": "3996c236e9918373d2eac72c081d7de1f3ee95acc964f0d0fc450f31f618b3b8"
+    },
+    "native-report.json": {
+      "bytes": 18561,
+      "sha256": "0acdad39f83ca0746455ad7c10a31f179b6e8902d064c006582b7e0bd0235039"
+    },
+    "resume-provenance.json": {
+      "bytes": 20889,
+      "sha256": "23d7a47d9aad044638f8716c14a8c5aa334d99a4dc120ff37ccfd34b47373bd2"
+    },
+    "resume-requests.json": {
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "resume-summary.json": {
+      "bytes": 3840,
+      "sha256": "85fb15ac3aaeabdf9e25b6d79fb1bfdfcffe7873bdae93d888f5a4f103fa8e9d"
+    }
+  },
+  "rawRuns": [
+    "runs/early-passage-screen-native",
+    "runs/early-passage-screen-cold300",
+    "runs/early-passage-screen-legacy-resume10"
+  ],
+  "notes": "Source patch and hashes identify the measured working tree. Native, cold and resume tests use the same production source. Keep original report/SQLite companions paired."
+}

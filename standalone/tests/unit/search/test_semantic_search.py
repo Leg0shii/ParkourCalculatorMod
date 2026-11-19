@@ -1,6 +1,4 @@
-from tests.support.paths import AUTONOMY_DATA
 import copy
-import gzip
 import json
 import os
 from pathlib import Path
@@ -39,7 +37,7 @@ class SemanticStageTests(unittest.TestCase):
                 plan=dict(ticks=n,walls=[]),profiles=[p['profile']],allocation=[0],cost=0)
             work.deadline=0.
             return dict(status='feasible',termination='done',best=best,work=dict(solverCalls=1),fullSceneValidated=True)
-        with patch('parkour_solver.search.engine._motion_bound',return_value={}), \
+        with patch('parkour_solver.search.engine.motion_bound',return_value={}), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate):
             result=find_checkpoint_route(scene,object(),corridor=route,seconds=3,max_solver_calls=8)
@@ -89,7 +87,7 @@ class SemanticStageTests(unittest.TestCase):
                                 'Published a tried arrival without its child execution owner')
         def interrupt(window):
             raise TimeoutError('suspend_at_promotion')
-        with patch('parkour_solver.search.engine._motion_bound',return_value={}), \
+        with patch('parkour_solver.search.engine.motion_bound',return_value={}), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate):
             result=find_checkpoint_route(scene,object(),corridor=route,seconds=3,max_solver_calls=8,
@@ -186,30 +184,6 @@ class SemanticNumericalTests(unittest.TestCase):
             self.assertTrue(result['windows'])
             self.assertTrue(replay_witness(scene,result['best'],compiler)['passed'])
             self.assertEqual(result['searchState']['version'],6)
-
-    def test_stored_real11_witness_has_an_unseeded_automatic_corridor(self):
-        from research.legacy_cell_routes.coverage_audit import audit
-        from parkour_solver.search.goals import _landing_prefixes
-        from parkour_solver.scene.normalize import prepare_scene
-        from parkour_solver.spatial.compat.corridors import Corridor
-        root=AUTONOMY_DATA/'experiments'
-        fixture=json.loads((root/'automatic-corridors/fixture.json').read_text())
-        archived=json.loads(gzip.decompress((root/'virtual-finish/evidence/initial0-cold.json.gz').read_bytes()))
-        with self.compiler() as compiler:
-            report,_,_=audit(fixture,compiler,archived['result']['best'])
-        self.assertTrue(report['witnessReplay']['passed'])
-        self.assertTrue(report['acceptedRoutes'])
-        self.assertLessEqual(len(report['routes']),fixture['spatialSettings']['max_routes'])
-        scene=prepare_scene(report['request']);best=archived['result']['best']
-        route=Corridor(**dict(report['routes'][report['acceptedRoutes'][0]],region_graph=report['graph']))
-        adapter=SemanticCorridorAdapter(scene,route)
-        goal=adapter.goals()[0]
-        prefix=next(_landing_prefixes(scene,best['movementProgram'],goal['block']))
-        prefix.pop('terminalGoal',None)
-        n=prefix['profile']['airtime']
-        candidate=dict(best['candidate'],positions=best['candidate']['positions'][:n+1],y=best['candidate']['y'][:n+1])
-        verdict=adapter.for_goal(0).bind_program(prefix).candidate(best['plan'],candidate,dict(y=candidate['y']))
-        self.assertTrue(verdict['accepted'],verdict)
 
     def test_automatic_finite_landing_without_points_support_list_or_clocks(self):
         from parkour_solver.search.engine import find_checkpoint_route

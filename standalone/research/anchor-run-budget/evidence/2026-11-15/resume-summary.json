@@ -1,0 +1,166 @@
+{
+  "ticks": 67,
+  "objective": -1093.823129063534,
+  "firstFullSolutionSeconds": 19.283206958323717,
+  "searchSeconds": 12.821427252143621,
+  "work": {
+    "solverCalls": 1,
+    "workerLaunches": 1,
+    "feasibleSeedReturns": 0,
+    "maxSolverCalls": 1024
+  },
+  "expandedPrefixes": 1,
+  "termination": "deadline",
+  "runDeferrals": 11,
+  "runRestorations": 0,
+  "deferredNodes": 0,
+  "comparisonWork": {
+    "assessments": 30,
+    "cacheHits": 11,
+    "peerChecks": 29
+  },
+  "interactionMetrics": {
+    "preparationMisses": 6,
+    "coefficientMisses": 6,
+    "analysisMisses": 6,
+    "screenMisses": 2,
+    "preparationHits": 2,
+    "coefficientHits": 2,
+    "analysisHits": 2,
+    "linearChecks": 2
+  },
+  "transferTimeBounds": {
+    "b1\u2192b2": {
+      "version": 1,
+      "source": "b1",
+      "target": "b2",
+      "sourceTop": 5,
+      "sourceBox": [
+        742,
+        0,
+        -1105,
+        747,
+        5,
+        -1103
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 9,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 9,
+      "ceilingDomain": "disabled",
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:e0429bc9f638d4aebcfd6839da120c7077ab6febf8fe62fdb3741a6ec9150d06"
+    },
+    "b2\u2192b3": {
+      "version": 1,
+      "source": "b2",
+      "target": "b3",
+      "sourceTop": 6,
+      "sourceBox": [
+        741,
+        0,
+        -1104,
+        742,
+        6,
+        -1103
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 9,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 9,
+      "ceilingDomain": "disabled",
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:28c637c9b554043348e4e7f0a85b760b8c86a7cfc12b5bd3604f80ead82ac501"
+    },
+    "b3\u2192b4": {
+      "version": 1,
+      "source": "b3",
+      "target": "b4",
+      "sourceTop": 7,
+      "sourceBox": [
+        738,
+        0,
+        -1101,
+        739,
+        7,
+        -1100
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 10,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 10,
+      "ceilingDomain": "disabled",
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:823f86b7d52a6074e2136a85ae764a04b8cf09cc2389fd30ee2b81d3f3af717b"
+    },
+    "b4\u2192b5": {
+      "version": 1,
+      "source": "b4",
+      "target": "b5",
+      "sourceTop": 7.5,
+      "sourceBox": [
+        734,
+        0,
+        -1100,
+        735,
+        7.5,
+        -1099
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 15,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 15,
+      "ceilingDomain": "disabled",
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:9e6fc4ccbfb4e5d17c313a9c8774252e9795299bd877b1851913a17af4180503"
+    },
+    "b5\u2192b7": {
+      "version": 1,
+      "source": "b5",
+      "target": "b7",
+      "sourceTop": 6,
+      "sourceBox": [
+        730,
+        0,
+        -1096,
+        731,
+        6,
+        -1095
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 9,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 9,
+      "ceilingDomain": "disabled",
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:f1ae702dff654b85b1cf9199c40a0e79b6c4125f4e3834d7bf7dc9710da8e219"
+    }
+  },
+  "wrappers": 1,
+  "workers": 1,
+  "validatedWitnesses": 11,
+  "allReplaysPassed": true,
+  "sourceUnchanged": true,
+  "sessions": [],
+  "resume": {
+    "exact": true,
+    "session": 2
+  },
+  "profileMode": "enumeration",
+  "durable": true
+}

@@ -21,6 +21,7 @@ from tests.support.ladder_composition import airborne_case
 from parkour_solver.numerics import validate
 from parkour_solver.numerics import solve
 from parkour_solver.physics.vertical import CLIMB_CARRY
+from tests.support.archived_events import current_events
 
 
 class MovementEntryTests(unittest.TestCase):
@@ -68,7 +69,7 @@ class MovementEntryTests(unittest.TestCase):
 
     def test_appended_entry_discovers_ceilings_from_the_carried_airborne_trace(self):
         folder=AUTONOMY_DATA
-        evidence=json.loads((folder/'experiments/contact-combinations/appended-air-ceiling.json').read_text())
+        evidence=current_events(json.loads((folder/'experiments/contact-combinations/appended-air-ceiling.json').read_text()))
         scene=prepare_scene(json.loads((folder/evidence['fixture']).read_text()))
         prefix=compose_ladder_episodes(1,None,evidence['episodes'][:1],max_inputs=48)
         choices=entry_contact_options({'scene':scene},prefix,6)
@@ -176,7 +177,7 @@ class MovementEntryIntegrationTests(unittest.TestCase):
 
     def test_append_entry_ceiling_uses_its_global_tick_and_original_y_history(self):
         folder=AUTONOMY_DATA
-        evidence=json.loads((folder/'experiments/contact-combinations/appended-air-ceiling.json').read_text())
+        evidence=current_events(json.loads((folder/'experiments/contact-combinations/appended-air-ceiling.json').read_text()))
         self.scene=prepare_scene(json.loads((folder/evidence['fixture']).read_text()))
         root=entry_context(self.scene,{},('start',),(),self.scene['goalBlock'],[0],self.compiler,5)
         episodes=evidence['episodes']

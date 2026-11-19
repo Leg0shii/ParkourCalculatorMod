@@ -47,6 +47,25 @@ Fabric's simulator delegates to the corresponding Minecraft version too. Its API
 
 The scene producer must not encode unsupported block behavior as an inert box and interpret a passing replay as validation of that behavior. Unknown scene fields/effects/medium overrides are rejected where represented explicitly. Geometry completeness and correct block classification remain input responsibilities.
 
+## Indexing and support conventions
+
+- Feet-center position p[t], stored incoming velocity v[t] and grounded state are
+  the state at the start of input t; input t produces state t+1. Yaw and input arrays
+  have n entries, position and velocity arrays n+1.
+- X/Z velocity carries between blocks; landing cancels only clipped vertical velocity.
+  Resting stored Y velocity is `-(0.08 * (double) 0.98F)`, about -0.0784000015, not zero.
+- If state L is the first grounded state after a landing, r inserted run ticks are
+  inputs L to L+r-1 and input L+r is the next jump; with r=0 the player jumps at input L.
+- Legacy support uses half-width `(double) (0.6F / 2.0F)` = 0.30000001192092896 with
+  strict overlap on both axes (`center + halfWidth > a` and `center - halfWidth < b`);
+  exact edge touch is not support. IPOPT row residuals up to 1e-7 exceed a one-ULP
+  support adjustment, so check the support predicate independently.
+- Movement resolves Y, then X, then Z: a floor collision during input t is evaluated at
+  the pre-horizontal X/Z p[t], so constraining only p[t+1] over a top can claim a
+  landing that arrived too late.
+- Feasibility for exactly r added run ticks is not monotone; search allocations of the
+  total instead of binary-searching a count.
+
 ## Validation boundaries
 
 Final validation against the actual world belongs to the mod. The standalone result is a TAS JSON checked against the supplied movement/block contract, which the user can import and replay in Minecraft later. A complete scene export is optional for this workflow. Conditional accuracy requires that declarations cover all relevant swept obstructions and support/contact/ladder/friction states; endpoint bounds alone do not establish that completeness.

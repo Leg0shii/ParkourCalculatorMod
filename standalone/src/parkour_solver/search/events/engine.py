@@ -30,7 +30,7 @@ def discovery_settings(settings=None):
 
 
 def search_event_routes(request, compiler, *, task_goal=None, discovery=None, anchor_search=None, **options):
-    from parkour_solver.search.engine import _motion_bound
+    from parkour_solver.search.engine import motion_bound
     from parkour_solver.search.dfs import search_goals
     started=time.monotonic(); deadline=started+options['seconds']
     limits=discovery_settings(discovery)
@@ -54,7 +54,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
     scene['movementSearch']=cfg
     context=digest(dict(policy=4 if anchor_policy else 3,comparisonPolicy=COMPARISON_POLICY_VERSION,
         **(dict(anchorPolicy=semantic_settings(anchor_policy)) if anchor_policy else {}),
-        constraintPolicy=7,scene={k:v for k,v in scene.items() if k!='movementSearch'},
+        constraintPolicy=14,scene={k:v for k,v in scene.items() if k!='movementSearch'},
         task=task,roots=roots,filter=getattr(policy,'checkpoint_identity',None),
         minimumRuns=options['minimum_run_pruning'],
         domain={k:v for k,v in cfg.items() if k not in
@@ -86,7 +86,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
         state['best']=saved_best
     motion=state.get('motion')
     if motion is None:
-        motion=_motion_bound(scene,counted,max(.001,min(options['candidate_seconds'],deadline-time.monotonic())))
+        motion=motion_bound(scene,counted,max(.001,min(options['candidate_seconds'],deadline-time.monotonic())))
         state['motion']=motion
     adapter=EventGuideAdapter(state['domain'],state['graph'],motion=motion,compiler=counted,
                               candidate_seconds=options['candidate_seconds'])
@@ -116,8 +116,12 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
         adapter.discovery_settings=dict(limits,
             maxGraphExpansions=max(0,limits['maxGraphExpansions']-used['expansions']),
             maxGuideMaterializations=max(0,limits['maxGuideMaterializations']-used['materializations']))
-        local_deadline=min(deadline,time.monotonic()+options['score_seconds'])
-        work=SearchWork(min(options['score_call_limit'],options['max_solver_calls']-calls),deadline=local_deadline)
+        # Anchor DFS owns its traversal until the run budget ends. It does not
+        # rotate stalled branches, so service slices only interrupt that work.
+        local_deadline=deadline if anchor_policy is not None else min(deadline,time.monotonic()+options['score_seconds'])
+        remaining_calls=options['max_solver_calls']-calls
+        work=SearchWork(remaining_calls if anchor_policy is not None else min(options['score_call_limit'],remaining_calls),
+                        deadline=local_deadline)
         dfs=state['dfs']
         before_depth=max((f['index'] for f in dfs.get('stack',[])),default=-1) if dfs else -1
         before_frames=dfs['nextFrame'] if dfs else 0
@@ -141,8 +145,10 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
             cfg=dict(cfg,maxPrefixes=cfg['maxPrefixes']-expanded),plans=[],goals=None,default_goal=task,terminal_plan=None,
             accepted_program=accepted_program,program_filter=policy,roots=roots,
             resume_state=dfs,retry_unknown=options['retry_unknown'],deadline=local_deadline,started=started,
-            candidate_seconds=options['candidate_seconds'],score_seconds=options['score_seconds'],
-            score_calls=options['score_call_limit'],final_calls=options['final_call_limit'],batch_size=options['max_candidates'],
+            candidate_seconds=options['candidate_seconds'],
+            score_seconds=options['seconds'] if anchor_policy is not None else options['score_seconds'],
+            score_calls=None if anchor_policy is not None else options['score_call_limit'],
+            final_calls=None if anchor_policy is not None else options['final_call_limit'],batch_size=options['max_candidates'],
             python_executable=options.get('python_executable'),cancel_event=options.get('cancel_event'),
             on_progress=publish,on_window=options.get('on_window'),time_margin=options['time_margin'],
             progress_margin=options['progress_margin'] if options['progress_margin'] is not None else .25,

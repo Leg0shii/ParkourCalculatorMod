@@ -1,0 +1,3584 @@
+{
+  "python": "/private/tmp/pkc-bookkeeping-performance/.venv-bookkeeping/bin/python",
+  "version": "3.12.6 (main, Sep  6 2024, 19:03:47) [Clang 15.0.0 (clang-1500.3.9.4)]",
+  "dependencies": {
+    "casadi": "3.8.1",
+    "numpy": "2.5.4",
+    "pycparser": "3.12",
+    "clarabel": "0.11.1",
+    "cffi": "2.1.1",
+    "pip": "24.2",
+    "parkour-solver": "0.1.0",
+    "scipy": "1.18.1"
+  },
+  "compiler": {
+    "command": [
+      "/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home/bin/java",
+      "-cp",
+      "/private/tmp/pkc-bookkeeping-performance/standalone/build/native/autonomy/classes:/private/tmp/pkc-bookkeeping-performance/core/build/classes/java/main:/private/tmp/pkc-bookkeeping-performance/core/build/resources/main:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-math3/3.6.1/e4ba98f1d4b3c80ec46392f25e094a6a2e58fcbf/commons-math3-3.6.1.jar:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.8.0/c4ba5371a29ac9b2ad6129b1d39ea38750043eff/gson-2.8.0.jar:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/io.github.spair/imgui-java-binding/1.86.12/a13fa049c952f68753b7f7a3a38facea59f390be/imgui-java-binding-1.86.12.jar:/Users/arvindmurty/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar:/private/tmp/pkc-bookkeeping-performance/forge-core/build/classes/java/main:/private/tmp/pkc-bookkeeping-performance/forge-core/build/resources/main",
+      "de.legoshi.parkourcalc.autonomy.CompileRunTicksPhysics"
+    ]
+  },
+  "nativeClasses": {
+    "standalone/build/native/autonomy/classes/de/legoshi/parkourcalc/autonomy/CompileRunTicksPhysics$Block.class": {
+      "bytes": 554,
+      "sha256": "08b6403b78c268d73394a0d24e93ebeb5df70fd07a559c670a0d57ca0e967a5a"
+    },
+    "standalone/build/native/autonomy/classes/de/legoshi/parkourcalc/autonomy/CompileRunTicksPhysics$PlannedContact.class": {
+      "bytes": 672,
+      "sha256": "a46cbc3da85003dd154bee969182cb8e6a6f03643876241044c9a055e07b0bdc"
+    },
+    "standalone/build/native/autonomy/classes/de/legoshi/parkourcalc/autonomy/CompileRunTicksPhysics$Policy.class": {
+      "bytes": 572,
+      "sha256": "d2902fd31dc3d804e9aa20fdfe2cfc68285d513c9e23dbbce35d7b0262c4ca72"
+    },
+    "standalone/build/native/autonomy/classes/de/legoshi/parkourcalc/autonomy/CompileRunTicksPhysics$Request.class": {
+      "bytes": 1323,
+      "sha256": "fc60cc2063c10139feac58132575ec649a745be65e7382ec78bbe9df2758e248"
+    },
+    "standalone/build/native/autonomy/classes/de/legoshi/parkourcalc/autonomy/CompileRunTicksPhysics.class": {
+      "bytes": 19410,
+      "sha256": "3c52fa0a30dc4132409f3a54d288b598970558494005b16bf493d0fe0457a27b"
+    },
+    "standalone/build/native/ipopt/classes/de/legoshi/parkourcalc/anglesolver/harness/CompileStandaloneIpoptPhysics.class": {
+      "bytes": 2869,
+      "sha256": "2160434724f3be83a3e6119af559582e45fe4b3895c4670a4d2c2134143d528b"
+    },
+    "standalone/build/native/ipopt/classes/de/legoshi/parkourcalc/anglesolver/harness/ExportStandaloneIpopt.class": {
+      "bytes": 18468,
+      "sha256": "0abb812a5f60078549c7ed6e13d21be3a87cd28686d4e69fbff7bb7fcd918ea3"
+    },
+    "standalone/build/native/ipopt/classes/de/legoshi/parkourcalc/anglesolver/harness/ReplayStandaloneIpopt.class": {
+      "bytes": 7204,
+      "sha256": "abe0ad0988985d5d760c5b9fbf0b5a45a592685aa3274451a0ff914f40cc8340"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/Application$1.class": {
+      "bytes": 1497,
+      "sha256": "4a0046439c4a7cb82465d7ffd483893d384dd8ddd931096584a2b61596e89b26"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/Application$2.class": {
+      "bytes": 2121,
+      "sha256": "3296a181d9d54daa740939514570659608df6217a80dc9cea90921598cc9d9e0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/Application.class": {
+      "bytes": 67408,
+      "sha256": "8466b51295b206d40acf0cf348f6a5eb59ba00389de6249385a7cc7f013f0cc8"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/AttemptTracker.class": {
+      "bytes": 15385,
+      "sha256": "d189b56cf761a1efd75ccb0cde60e8b345b118beb20c8ab4ea47caa7816cf35b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/DebugFlags.class": {
+      "bytes": 4282,
+      "sha256": "109a1d043141992021300107095004570b3d946817b097610c261db164674605"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/DeepCheck$Grid.class": {
+      "bytes": 5430,
+      "sha256": "89f26465ff13147d15c0d5175eb1ace25d6943de774bb1dc8bddd5025410d577"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/DeepCheck.class": {
+      "bytes": 11650,
+      "sha256": "ee088ddf8759c170b9b16c7572afa738eac58d1e63527bcbee207373e04e7573"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/LandingForecast$Result.class": {
+      "bytes": 761,
+      "sha256": "26d5e3438662c7cd9d876f587da03809d26fdd718c2afb2a278f48205dab3432"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/LandingForecast.class": {
+      "bytes": 9890,
+      "sha256": "58f18e1c11ea9cfb269b021f1a858713d3a0e0d005b005489668b7a5b6e9e70a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/NoTurnSearchController$1.class": {
+      "bytes": 1459,
+      "sha256": "d1cdc2fd37d48cdba0d2a7c2ea2d0d46e0ee0374cce0b340a4bca7164e0ce363"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/NoTurnSearchController$2.class": {
+      "bytes": 1799,
+      "sha256": "05db94036d348514cd7a4be98dc4e4679e37690d09d6f7eebcfd523d69cdd5fa"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/NoTurnSearchController$3.class": {
+      "bytes": 1796,
+      "sha256": "3576531aa73c623bbf3ec7796fd3bb3311241cf4d39d73273f27e74f6a5641de"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/NoTurnSearchController.class": {
+      "bytes": 27710,
+      "sha256": "2ec3514928586f9da7a56519455d00d9dc9118389a3e7283987bbe3fcc36bddd"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/PlaybackController$StartRange.class": {
+      "bytes": 977,
+      "sha256": "c8f2ecc09298f194449e3dd507018252709108e75b855c0961bd39ac4e6b6d83"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/PlaybackController.class": {
+      "bytes": 14271,
+      "sha256": "4e7fe68ab80fc7b174e8e555ae93cde8cc3a35b8ba0aa77947ccd7024365bb29"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/PracticeMacro.class": {
+      "bytes": 5727,
+      "sha256": "9f7f39e484d5eb4f1fa80f539869da6557f6eba00ad75599766ce690e8937cb5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/RunTicksController$1.class": {
+      "bytes": 1198,
+      "sha256": "a43111ce63df4bb8f7c2fb8eb9c4c16945c2a0f700e63731935d6431d91aaf48"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/RunTicksController$DocumentSnapshot.class": {
+      "bytes": 4623,
+      "sha256": "20c09e02f22dd1f6446a41509e9e0826901ff5dfa1abe32729837395c24be824"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/RunTicksController$Phase.class": {
+      "bytes": 1371,
+      "sha256": "6436c0a1304b0081b44c423f0a29270b344ddc2acd6862f3c0aa9eb7fdb58cec"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/RunTicksController.class": {
+      "bytes": 20644,
+      "sha256": "f41a7335b4a51f9652210466cf336229b39f58b00647c1b8923409b5b7204300"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/SaveController$DocumentListener.class": {
+      "bytes": 335,
+      "sha256": "a57944ca9f12e386cf2bdd3e54ff8a1cb5827dc3a252ff1bb434e25f1c1d9248"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/SaveController.class": {
+      "bytes": 24707,
+      "sha256": "dccd20955e4171171f01c24b68f1af34fddac1384e7986638cb14bfb05dbe742"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/SenseSearchController.class": {
+      "bytes": 18513,
+      "sha256": "54f92898bcc772adcd2b031326588bec8aebbc6cdf736847556b79d23b66251d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnAttempt$Forecast.class": {
+      "bytes": 1265,
+      "sha256": "1731df37dc3373ab7b099fa42a26a4c5ab01044bf55de9203e3eea557682e065"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnAttempt.class": {
+      "bytes": 7254,
+      "sha256": "fb4feef8bdd4398d494c7aba9f1b73807954b690fc9868e522f38c822d7ce04a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileController$1.class": {
+      "bytes": 1039,
+      "sha256": "291117446117b2abcfd370d1ede849b28aae80159e1a48010a282844eeddfc96"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileController$Built.class": {
+      "bytes": 1104,
+      "sha256": "e66da2474d3f691172ebe884ae0bd63235de570603d21a0138645d74b09a4bb2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileController$Current.class": {
+      "bytes": 3226,
+      "sha256": "1f7d728a68273287f977644ee9a961ed35ce00703c4a577f089c93db5fb29add"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileController$SetupCheck$Item.class": {
+      "bytes": 761,
+      "sha256": "fa64fcf227ae85b81b83dd9752d90844c422dd292d867ddaece449ede0f3200c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileController$SetupCheck.class": {
+      "bytes": 1376,
+      "sha256": "dd45df2c0aa35aecf52c5247b226a8864f6f12be02ffca8d263fd3d12a860742"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileController.class": {
+      "bytes": 43680,
+      "sha256": "8f688322a61a3f91ca26d5ac62dbda378647a8f8f8f83b4dd39195e603186919"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileDocument$Stats.class": {
+      "bytes": 1257,
+      "sha256": "3ad85bc31ced018381a6b9cf631570c49986ac418ee6918659147f4ebeea1a45"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileDocument.class": {
+      "bytes": 6849,
+      "sha256": "4678a58a3ad66cca46a3df2f1cf3b4bb28e9d3901af67f9b665c7abbfd8af8a8"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileStore$AttemptData.class": {
+      "bytes": 1175,
+      "sha256": "fbfea61982708a35f867855d0cce1f430fa0ea56b040fbe86bb468ac66c05b69"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileStore$ForecastData.class": {
+      "bytes": 771,
+      "sha256": "6c7a77dfe54f7f0c218a526bb3e9a1db1d706e1e76b4473806ffe7cb77867d39"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileStore$HeaderData.class": {
+      "bytes": 954,
+      "sha256": "9e76420160d3e958eef2d8c8c8cbb2d114244e16ac7b6eb26ccdb01b56d58156"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileStore$LandingData.class": {
+      "bytes": 544,
+      "sha256": "ec8cdf9f18cc8d4be698c6e0db4862388ecc7af2f7824530460280de9160ac47"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileStore$RowData.class": {
+      "bytes": 585,
+      "sha256": "b8f113cce6f8e718a33726d240579814e463d748e85f87a1fa230d79c1a96c24"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnProfileStore.class": {
+      "bytes": 17056,
+      "sha256": "a0046ec3eb063b8c1a1f4056830706a69e994c13c08068bf14acff60273c8c4b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnReference$Landing.class": {
+      "bytes": 2788,
+      "sha256": "b9348231208202d276a7398f0f2d6f46ed45d0bcd218e3f07283b47770974b41"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnReference.class": {
+      "bytes": 8540,
+      "sha256": "ae10b5b4147d3b8a28a36aa6a855f618a278542a7483c2269a907c28004b6298"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnTiming$Onset.class": {
+      "bytes": 520,
+      "sha256": "85f846791d21a52c4fcb3df1d533574ff4bc51364c699a62fe1b247f40b16a0b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnTiming$TickTrace.class": {
+      "bytes": 2534,
+      "sha256": "2cda4a7fc4ded8eb6f51203d63ee115726973256e1a6c77ceb07638641ffe4c2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/TurnTiming.class": {
+      "bytes": 3110,
+      "sha256": "21310c0d2fa8db97dec913a9ac4442c232ce40db6c9a7f478da1c43cfcebba79"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/VelocityMapController$1.class": {
+      "bytes": 2574,
+      "sha256": "3767900db1001babd4ecd26a4f85debe3df3f25629e521fa2d95817fcce5bdb9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/VelocityMapController.class": {
+      "bytes": 14225,
+      "sha256": "faee741fd5c68a921bb919ea4b70c7f72b0c5096183132fdac278aaeeb65d99b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverEngine$1.class": {
+      "bytes": 2177,
+      "sha256": "7ab3a1380a7eaadbe381e29ccd041c60ce4eda3130c408af7af58128e4fc45f4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverEngine$ConstraintAt.class": {
+      "bytes": 749,
+      "sha256": "80d859ef1bf0a0d8a4623067eb512db396d47d05d8ce181d39f5e684ef1845b1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverEngine$Job.class": {
+      "bytes": 3424,
+      "sha256": "802b8f1bb3238e5eeb2bc7263258838de325e1eab0ca257370b99188c3e9d9dd"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverEngine$Outcome.class": {
+      "bytes": 899,
+      "sha256": "17596b274cf39923e06e3953d1f13df7bdffd3a4c120b62fdda169ba81fb3334"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverEngine$PathSnapshot.class": {
+      "bytes": 825,
+      "sha256": "6556ef70485d314cf9037838080faad78664595f8a3e62df17417b8bba862c97"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverEngine$Phys.class": {
+      "bytes": 825,
+      "sha256": "9e5f7ba6c633f713caf48932f612b38f2baee1d94ab3b06d85258f23568081e4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverEngine$Plan.class": {
+      "bytes": 1418,
+      "sha256": "01d65e8dc6e65b470656b40bccd56eb30ee63eaaadcf80c9ce67078b557e3763"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverEngine$RunRecording.class": {
+      "bytes": 1759,
+      "sha256": "913e392a9d9bb345bf74dfa11dea70f2d1c0f0e0e7dbd23224c642a061f09465"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverEngine.class": {
+      "bytes": 102343,
+      "sha256": "3700ae7d370fc7d1342931d4329cb4064e76222d0f7dda72e93d645306ea801e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState$1.class": {
+      "bytes": 1007,
+      "sha256": "9fba4b3594e61ae905e7ada1a987e2ac721ac1fbaaeedd81c44b7c82cb34ac72"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState$Axis.class": {
+      "bytes": 1386,
+      "sha256": "52ffac45dd01f132ef188d350801e76066ee4b3d73c3edb7f8420459fd824ecb"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState$CustomAngleType.class": {
+      "bytes": 1622,
+      "sha256": "858f2790c6cfde5ce951f348779e81fb4b1182b867851e1e2adcb647f61e6352"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState$DeviationKind.class": {
+      "bytes": 1496,
+      "sha256": "23588115bb10afa94a8dd4bc4eae8e3b225a8c6f41f7fa699c3bc4b2ac2c463d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState$Effort.class": {
+      "bytes": 1813,
+      "sha256": "dab59a811a89b156fe7408813b558d654d6bd54c6c32621498faabfac172e838"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState$Goal.class": {
+      "bytes": 1390,
+      "sha256": "ecc09651ee78eee32ca36c50e7feb8a39382d74eedf29b47cb1f0027c8d0a5e5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState$InputMode.class": {
+      "bytes": 1584,
+      "sha256": "b932127cd31c4cfa365cd8744e2f1ae0e0a1887dc6776c2979ae61be1b892ccc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState$SolveBudget.class": {
+      "bytes": 1849,
+      "sha256": "1d1f9c9a837945d76d983cadceb90bf9a690977b65f6e8c6422bd14c1367cce1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState$SprintMode.class": {
+      "bytes": 1591,
+      "sha256": "db0765f061f3bb64cbb1b92e184f4bf24faba44842f17f36b11b5483170a80cc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState$StrafeSide.class": {
+      "bytes": 1620,
+      "sha256": "aba1d37c5ffaf21085f52039506e457143aa8b3ee7102e0edc4408373bd9c141"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/AngleSolverState.class": {
+      "bytes": 29882,
+      "sha256": "7edb7e2e5c208cfffe0b56a264de9cce65221b3e3b70cc0dc86d53a87ac30972"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/BlockSelection$Kind.class": {
+      "bytes": 1436,
+      "sha256": "c22d7bcf89d9da2bea475053421378687eded9442f330b788d3b2175de603a6a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/BlockSelection.class": {
+      "bytes": 2476,
+      "sha256": "8d1ade7da646cc63d2437cf9708ac00ddafeff7dfd39ab0a8b781ae80c64055c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/BudgetText.class": {
+      "bytes": 2255,
+      "sha256": "70f0a3fe34fdc63608b7f7b765613f395c54259e38a430d78c96269c8bffaec2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/Constraint$Field.class": {
+      "bytes": 1755,
+      "sha256": "1674146e5740fca47286fb243a295263d723c08e3d17a50673f80d86adf2c3fe"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/Constraint$Op.class": {
+      "bytes": 1706,
+      "sha256": "e855fe4d11d7ea683b0c4a68531471d3140b42141f60c0be5a930e72b5be3016"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/Constraint.class": {
+      "bytes": 5868,
+      "sha256": "27bff61556961e237180b7696c252b9bc85cbdd01c5f9abab0e648e56d0c7251"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/ConstraintConflict$1.class": {
+      "bytes": 1098,
+      "sha256": "5e10e01d21c3f25b2300facaf45b03e2a51a4ccd4ab8f809732f54b4d00d28fc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/ConstraintConflict.class": {
+      "bytes": 4670,
+      "sha256": "121cf1dcf41d3765eda5165ecf7cc0a4b5a3c021c6ad8392866142248043edb1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/ConstraintDeriver$1.class": {
+      "bytes": 1008,
+      "sha256": "8ea68a9416df017c3f1902d2361a74dd6eaac868bb219b1f32a962d677585cbc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/ConstraintDeriver.class": {
+      "bytes": 11794,
+      "sha256": "883433ef8dd05b2ab68edb1a03ce514d82982140dc28539a4cfb5b05c813d88c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/ConstraintText.class": {
+      "bytes": 3644,
+      "sha256": "f35468bb1f2a6e25643b07522fb6eeb4392c45e747ec474d5cc474acf22ca4b4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/LiveTrajectory.class": {
+      "bytes": 693,
+      "sha256": "538c19057a0e52894f10da6d3fc5a4a1e39eee9f96c825f34d7a64ba28b7762b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/Medium.class": {
+      "bytes": 3016,
+      "sha256": "35434e12fd4f00e58f869575aee0c3dd48bce3e86202aa24b4819deae5e82e63"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/Potion.class": {
+      "bytes": 1426,
+      "sha256": "77f64725deeb420fda1a14b3a89c47b0b84a5d3cfec7d92486f64c1833b9634e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/PotionDose.class": {
+      "bytes": 622,
+      "sha256": "7c1b24776b6cdec3ed195db70e6ba4abc56ae4fe3e5ee9236a6298e97c50d2f9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/Slipperiness.class": {
+      "bytes": 2616,
+      "sha256": "9bd65af55664a3f687b0b5353d82b26f5693af649b52da863991f35b66fd0abb"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/SolveResult$Detail.class": {
+      "bytes": 606,
+      "sha256": "bbd8bb2fe394640665e2ea23a172b28e1f9ae698984b05e3587c8b3b5fc39af9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/SolveResult$Outcome.class": {
+      "bytes": 1081,
+      "sha256": "2c183b6a886b89c4bf024d1dffa56a3b7dcd4bb816d49a8a4b80af04417b0cef"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/SolveResult$Verdict.class": {
+      "bytes": 2064,
+      "sha256": "e8b0af6afa67d8fec8a9541b222e0206a0068845692974d5fbc4a8b779250207"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/SolveResult$YawEntry.class": {
+      "bytes": 562,
+      "sha256": "3d64507715e839a940574a271c4e9b1d717078f1003bfd2dd21931f967187892"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/SolveResult.class": {
+      "bytes": 6017,
+      "sha256": "40a60d0890a917a027be61ca2d4e698991be317a1656760bf7c9ef51496983ea"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/StateOverride.class": {
+      "bytes": 7249,
+      "sha256": "462fc43fb7cb36278b14d1a4227ec1c9474c551636573701fb8925288f6ecfb7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/TickConstraints.class": {
+      "bytes": 1768,
+      "sha256": "1ac50b3370cf9ef6500a78cd5de2aa99f80a56bfc1836cc23fb81acdf26fda15"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/Branch$Feas.class": {
+      "bytes": 1417,
+      "sha256": "e21cb0ec326b0d44fd9f2f833fe9e650a55f6e04d413f8d99263fce776d3d632"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/Branch.class": {
+      "bytes": 1199,
+      "sha256": "baa174febe63f6065e560d58b4da3720be51451daa49ff54f4a89b4c37b4e788"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/BudgetWatchdog.class": {
+      "bytes": 1729,
+      "sha256": "2f6468e7f55509a325f421eaaf589b361d3c3f603db6cbc028fbcdb7a702e08f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/BuiltinGraphs.class": {
+      "bytes": 8977,
+      "sha256": "a67585d6698c9f78152bc3a21ff2c214f21487e47c021acfeb2bd851949eed79"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/Candidate.class": {
+      "bytes": 1441,
+      "sha256": "b3cecd305d58b4397d4340f46ba5b20ae89b520fd281784da53dbc40fc8b8781"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphBuilder.class": {
+      "bytes": 4278,
+      "sha256": "ad1ff974d07df669d9e634dac7161ef7c142d7e565ac8078615e3bc7b8e80283"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphContext.class": {
+      "bytes": 10999,
+      "sha256": "889d8297119603584cec1fa517db04b1709b2cde143c4dcb7db2b770a12df07f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphEdge.class": {
+      "bytes": 668,
+      "sha256": "3d097e959ee128d3aff57eba5bcad44e3ab2164c72edf356f091087f81fe46fc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphFactory$1.class": {
+      "bytes": 979,
+      "sha256": "612114c8ad3903558ce1a8c25325222f5101a9207bdf90bff53f7d2f3e7767aa"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphFactory.class": {
+      "bytes": 2319,
+      "sha256": "2d9dce7e6de495478f03f92656446808bfcc07c7e4048a507d692ddee480aa41"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphNode.class": {
+      "bytes": 789,
+      "sha256": "e44936ffb5d1a5924e66c61e304d1609969a74a0d92eb28b85710ba161a278ab"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphPresetFile$Edge.class": {
+      "bytes": 543,
+      "sha256": "13f9361daf5da83cc96d22beda2d9f0f325134b13f71030bf9d9c109c1d40415"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphPresetFile$Node.class": {
+      "bytes": 860,
+      "sha256": "2240c385658824e904a3becf0d45bc16ecbf70d33fb5bee39a2aeb3450891a35"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphPresetFile$Param.class": {
+      "bytes": 601,
+      "sha256": "fc50c5ce2b6dbe24e3714c94a5ee1d8f601a465d8d014eb88ee771ea425793b1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphPresetFile.class": {
+      "bytes": 1160,
+      "sha256": "dbf19d62bcabee6896136e81ba37bc2e5eb1f7cc7637041984de35ad7c4b2518"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphPresetIO$1.class": {
+      "bytes": 1091,
+      "sha256": "e9b3baeb2b212c4e75278fc45471727e4c6c37b531f5c025256a314e89c4c440"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphPresetIO$2.class": {
+      "bytes": 1099,
+      "sha256": "997c03c249551b05595d0a9fd9234530f2020913dad209fa8d5ade2908af5d2c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphPresetIO.class": {
+      "bytes": 11402,
+      "sha256": "c840a32b13211af57c7b4555fb781cd2d0cb7b7c40dc4b457787fd4d12452b1d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphRunState$Step.class": {
+      "bytes": 905,
+      "sha256": "9a59f00878be1461c823decebe1205778a253b4c9f41057aa130713de424eca6"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphRunState.class": {
+      "bytes": 4211,
+      "sha256": "87d50d22046ddd5e783adf9a52d7b2c145e9c655f0bf67c70bfc016ba4ba1d5e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphRunner.class": {
+      "bytes": 12237,
+      "sha256": "d1848d671a2809a3551fe600d70bcd8fec0d3e2c74e976ee693174957985e071"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphValidator$1.class": {
+      "bytes": 956,
+      "sha256": "fd3949dd4c6c12029b8e67ee3ae93348100f16fcec7fdd130e0af086d82b264a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/GraphValidator.class": {
+      "bytes": 12394,
+      "sha256": "66ff73c9f2848fac5393546f9372e9e2db5a2d68f3ee95b19174f7a10e111033"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/Guarantee.class": {
+      "bytes": 1686,
+      "sha256": "037982409529348cbecec225d9a276c3589f6f1b5c4c4b95cf92414d5362b81d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/InputRequirement.class": {
+      "bytes": 1352,
+      "sha256": "50dab3d3576e66548225fcb8b9f8b7e098232150391cdb969802d7a5cde769a0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/NodeCatalog.class": {
+      "bytes": 16403,
+      "sha256": "501d629d59bf37f9999d4f286fc9e2514ac4e7189bf8ab6c357869b4cf716117"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/NodeCategory.class": {
+      "bytes": 1491,
+      "sha256": "c4d732f5b1583105be4b949f6d59ef8e69d616300973ab575f3c2697e6ef8da0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/NodeHelp.class": {
+      "bytes": 16697,
+      "sha256": "68c544c8baf1b73383b7624f4681bec9d391f7992512387b938aae17039c4b97"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/NodeOutcome.class": {
+      "bytes": 958,
+      "sha256": "7d121149a62f3156ba929f63b72e1eb95f9b04ee998e29824251e542b64daa53"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/NodeRuntime.class": {
+      "bytes": 392,
+      "sha256": "5ba76ff8b33ed81e4554c9c3a4ba4fc05df73df8a99c72434e321f465af52df3"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/NodeStatus$Phase.class": {
+      "bytes": 1450,
+      "sha256": "b9b453e9caf89ff8631139882ace9045b3b10d8e8d0e3bdd43622f8fe5bd056c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/NodeStatus.class": {
+      "bytes": 1235,
+      "sha256": "11ae456bc1029ea2bd6d782aad35a3801c7f3f6b1190212d53ca05cb1c326106"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/NodeType$1.class": {
+      "bytes": 264,
+      "sha256": "54c346d01f0843d092fbed3020b7bacc5631ef31c3362e007f2213909b144e20"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/NodeType$Builder.class": {
+      "bytes": 5592,
+      "sha256": "78546fe3dfac47f4a9d683e5e8d12c7e83485ffcb32f86669a35bb9db424b5f3"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/NodeType$Factory.class": {
+      "bytes": 392,
+      "sha256": "10d1cc81a0b258c9631272a484537ccf164ba7b11f4a0870499044c4c41cb27a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/NodeType.class": {
+      "bytes": 5035,
+      "sha256": "a4fe4f773a6f713edd177a739f223b7ddb16f2d84a34f86c926e251a0463fc16"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/ParamParse.class": {
+      "bytes": 1877,
+      "sha256": "62316fd824ac11ba36a7a7eeab7e571d849465ce418031e95bf8fdeb283368d2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/ParamSpec$Kind.class": {
+      "bytes": 1534,
+      "sha256": "391320265b7f92ae33f2164d28e98baaf5dd2fc2895ca21bc8dcd4d49d64a5a3"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/ParamSpec.class": {
+      "bytes": 2837,
+      "sha256": "e4f41f2960ff553115edf842e1cbb88e2a60a2bcd5ee8a10bb46183844189389"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/ParamValues$1.class": {
+      "bytes": 1093,
+      "sha256": "c4fc75c44ab44fe3ed0097476d39ec9b438da6588492ba10cca22ee6914c9d70"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/ParamValues.class": {
+      "bytes": 4884,
+      "sha256": "1ebed8a2dc43c6fa0b85a5614eb95d99693731ec425227850c247c33f820c0b1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/RouterPredicate.class": {
+      "bytes": 4103,
+      "sha256": "2841fdc4142458a06b2f27907bfd5614475d042019517966d5d375f46ebe55c9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/Scoring.class": {
+      "bytes": 13254,
+      "sha256": "ee5252836b6d0089da6d67f82e6c47952f6126e50731627bedd3dace036118ed"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SmoothOutcome.class": {
+      "bytes": 1066,
+      "sha256": "b1f2db741114debb9b4d9c6db4aab68dd69b01036bec8966c209de98b4b8e69a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunLog.class": {
+      "bytes": 2472,
+      "sha256": "f2c578b59f1f3f8f22f680afc309e30fc6be3db3ff8d2ab088b689c4ca83561e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunRecord$1.class": {
+      "bytes": 1102,
+      "sha256": "a56e24e02a6858421485bc7d917d801613611af43e3c46c85352794b1a24d81c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunRecord$Config.class": {
+      "bytes": 1035,
+      "sha256": "e3ca5b5c28388f50acc3e1fa54aca089fe863faa0d5e5a5ab47f9947d8e78dad"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunRecord$Counters.class": {
+      "bytes": 514,
+      "sha256": "fc1b844aa5efcaea9eefb7613fcf2eb6dfa784820fd5ba08dca537a6f21a9e9c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunRecord$Metric.class": {
+      "bytes": 576,
+      "sha256": "ff29ad167bd8faaeba20cb8b57be660918c2f1558ba40ab2cc0a1d4021e21147"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunRecord$NodeConfig.class": {
+      "bytes": 828,
+      "sha256": "73366eefe457c0e5631f7de14440dbf4e7d1e7639ad12a4540945041507d05f3"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunRecord$NodeRun.class": {
+      "bytes": 612,
+      "sha256": "ba63c0c769d50eef749fa293a45c2dccad9e355dd03d2104a5b510a0b8ab740a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunRecord$Outcome.class": {
+      "bytes": 758,
+      "sha256": "9aad71f04c9e97ec9fd97c330011728eb3e56b424e6ba80368b09f7e65d0ecdd"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunRecord$Param.class": {
+      "bytes": 597,
+      "sha256": "aefe0039f19f123acf501054a940df293412472d0d80e66049b8ffaf5e0e116f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunRecord$Problem.class": {
+      "bytes": 738,
+      "sha256": "8626ef26ed2d48824c3a88e6f480d806c3feac2d63070db8e60dc2f25e4cfa7c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunRecord$Race.class": {
+      "bytes": 915,
+      "sha256": "62bca673aa69269aace6134c98e69aa1fc015b5e19be6134b05242139d0f33ef"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunRecord$Sample.class": {
+      "bytes": 614,
+      "sha256": "ea723a7ecdafb7ce92292ca39532104449601f96cb48a9d6ac325c1651a66496"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolveRunRecord.class": {
+      "bytes": 18268,
+      "sha256": "5d8ff4f33e300a0f429c33191a442a0c920d12cf911aadfa7d4d5e775f54a351"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/SolverGraph.class": {
+      "bytes": 3818,
+      "sha256": "fadfc98d61677b3e153484f226aaa2df5a22ea25fc8279713b3905deee1f9a55"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/ValidationIssue$Severity.class": {
+      "bytes": 1455,
+      "sha256": "ff4b3584760d007967ac9ee9e16add1dc043db07d6a45e62eada82b0c5cf4921"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/ValidationIssue.class": {
+      "bytes": 1378,
+      "sha256": "f6de7d7e759402b5fd5f59f3692c1efecc2c126b190d371b24a47f3fb00bf200"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/BnbNode.class": {
+      "bytes": 5998,
+      "sha256": "9b88533510c09a53e94b5a32c4f68b605c5ba1da4e8af470b5add1928494a284"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/CapCertifyNode.class": {
+      "bytes": 3006,
+      "sha256": "ea86f5570ef6c5eb6ecc067d8cf7768d13b8c483b7a006b30e346f2a8b3af122"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/CertifiedBnbNode.class": {
+      "bytes": 11678,
+      "sha256": "d4c5494c5a9946bcee6555cfd9385fb14181d8dce569f95f201a2d3c94e06560"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/DualChainNode.class": {
+      "bytes": 5455,
+      "sha256": "0b5dcce0a5f24f6bfd6a7b545b9fbd7f52a74ed523a9f56f9091fe587c91e0b3"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/FacingStepNode$1.class": {
+      "bytes": 294,
+      "sha256": "c90003c10262717cfc3a0bd53b5bcc58a146838abfbdef2dfe78473fceec01c1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/FacingStepNode$Best.class": {
+      "bytes": 1268,
+      "sha256": "32201b3fb1aae59d6f6ae6edf6093ea74188416ef20b9f210f24b1c2e67ccd21"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/FacingStepNode$Bucket.class": {
+      "bytes": 1196,
+      "sha256": "494fb8f7659a03688163220fde376c1d52c780b3a3e1be5b9262ff96f292e440"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/FacingStepNode$Seed.class": {
+      "bytes": 697,
+      "sha256": "30ec0d31118152cc4f7eb27dc6d8e72ce630a76ea25ab4b47705e4a8ba790c83"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/FacingStepNode$State.class": {
+      "bytes": 1651,
+      "sha256": "b7054228a22191984d07e4bdac0f36c2cb87c799f274a3573178222470495ee5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/FacingStepNode$Work.class": {
+      "bytes": 651,
+      "sha256": "7d4502893ed1efb45c366d0e119caa8094d6cce480c130f3e9b631d2bf0d6161"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/FacingStepNode.class": {
+      "bytes": 20392,
+      "sha256": "892964d6ff4f32af57fc6636b56a5755c75fb083bfb0d7a1c99694d88298e56c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/FoldDriverNode.class": {
+      "bytes": 12842,
+      "sha256": "6c4f83fe041ec7d8427dc8f924ebca87e98cdb9fff89623f2981112b874de449"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/FreeStartImproveNode.class": {
+      "bytes": 10676,
+      "sha256": "7cc96ccfcf3b39c39178d2d8b9efa31c449fd0d0e5987a79b76caf2a9e922a01"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/HomotopyLadderNode.class": {
+      "bytes": 6639,
+      "sha256": "172cb35c625a8e28df12870f0f17641ef008e687a90491429b345fd36c440dff"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/IlsPolishNode.class": {
+      "bytes": 5346,
+      "sha256": "83892eef4236fd156dbebc4f3ca816bb0629e2fa0b9b2e7edabf8ef3f8c676be"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/LabelNode.class": {
+      "bytes": 2017,
+      "sha256": "aa99271de4e40ccf091b74daa9a0804bcd4cb3e80993e04c00e4b79725380698"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/LeafSnapNode.class": {
+      "bytes": 4049,
+      "sha256": "d891569a6ea1690a23f234bd8da5b1828d8ddbb21f057d4c44507baa67a8da87"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/MarkSettledNode.class": {
+      "bytes": 1637,
+      "sha256": "1e12412953c22f64d62f11f92e4fbee66972a59f98925ba50ffde2e2bbfaad9d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/RecedingHorizonNode.class": {
+      "bytes": 5971,
+      "sha256": "06c7d69d057277969ccff79126759fbf5a4f13130ae53c0a24570f2ee46a2abd"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/ReportNode.class": {
+      "bytes": 2258,
+      "sha256": "ce7745405214faaac745595a8a271e7f92d23a5d9ef128a78384bed48a7f5fed"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/RouterNode.class": {
+      "bytes": 2365,
+      "sha256": "ffaed3b3d6a73f81922fda18e34a2563da8001a83eac8ce62497a883dac00316"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/SeedSweepNode$SeedResult.class": {
+      "bytes": 708,
+      "sha256": "a735ed6fa85521026b7921509e7edeb52cff1283b8e6fd807026f6e686532a96"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/SeedSweepNode.class": {
+      "bytes": 15025,
+      "sha256": "7ba835044cab5bb8f24a0a49748a389ebfbbd6c278e4e322b9c8cdb8f5e40837"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/SetupPeelNode$PeelWatchdog.class": {
+      "bytes": 1473,
+      "sha256": "02e5cff7ef881d19dc033be79556cf631b2547563ec10aa200eb84b2dec6874a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/SetupPeelNode.class": {
+      "bytes": 9958,
+      "sha256": "35c08f1e2766af6529bc60d910f67bb60f82e88321dbb48d78cc4fa97d7dbd5e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/SmoothNode.class": {
+      "bytes": 7476,
+      "sha256": "b32af1d86d5bb88a970f535ec1884c0dbe378c41097b10de84674c415763c373"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/TranslatedStartNode.class": {
+      "bytes": 2629,
+      "sha256": "e809bf12a494a4c77ef2c06b8926a27e1dbf91b4bdcca87e39fbed580e88e05e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/WrapIlsNode.class": {
+      "bytes": 7360,
+      "sha256": "e56135c816bcc30b27f019c61f5bd8aaf7f34df873c5dd6496459e63b9c65ea7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/graph/nodes/WrapYawsNode.class": {
+      "bytes": 1889,
+      "sha256": "8a2faeca4461acdcff9f56db6b1bf8f0f4667c50c3f40ec11cdae1f37ba1eb36"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/BendersMaster$1.class": {
+      "bytes": 281,
+      "sha256": "1051882f1a52dbca88821869c041f8f2c8d12499f83e447d0f1d7206dce1133e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/BendersMaster$Config.class": {
+      "bytes": 2591,
+      "sha256": "5ba41db66cee4cb1db0d84f853364218cfad468aad548fc5958c95e0ae2173bc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/BendersMaster$ContOutcome.class": {
+      "bytes": 788,
+      "sha256": "593391fe1a9fe462161b0bb932e5810925c7d1b7aa13f322b9c238436e70b576"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/BendersMaster$FatFeasible.class": {
+      "bytes": 1108,
+      "sha256": "3a2a32a971cdab51aa38d6bd83d2abcba82748b7ac5ed8267067f60a7c37e307"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/BendersMaster$Progress.class": {
+      "bytes": 313,
+      "sha256": "4bd457b4f0da36037c99b85eb165d903559c0abe35c5c125c9e53b19a7c3535a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/BendersMaster$Screen.class": {
+      "bytes": 958,
+      "sha256": "e51352f3bac632502d8ae3fbd7480e701a958df5c018e7a89e407186b1e6fdc7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/BendersMaster$SlaveMode.class": {
+      "bytes": 1463,
+      "sha256": "a75ebfa3288ff36683dad439ea18524beac40fab1f33b16e1a8bc654052a993f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/BendersMaster$Trace.class": {
+      "bytes": 1382,
+      "sha256": "5419994590f5898fca232bc63cef353ca465823753cc579ad9684e9d86292033"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/BendersMaster.class": {
+      "bytes": 49500,
+      "sha256": "f4ca6c7858ed531eeaf4fff93c87a850ebcf126f72d2e54b81a4947af64ed3dd"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/ByteForward.class": {
+      "bytes": 3979,
+      "sha256": "9bd7f35a082a7b64e1fb00ed43eee2819132f3f2bfa28782aba02f3dbeeb817e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/FastCheck.class": {
+      "bytes": 982,
+      "sha256": "dfd707bf4d413afb84c7f2461d8324be5b51b7e5ab3c5b0171d9d8971ccc2406"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/FastCheckVerdict$Kind.class": {
+      "bytes": 1505,
+      "sha256": "5303f92c9e8e1e2a980451031e9f28a9cce56b5a9cfbba392a18835ddfe3f3e5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/FastCheckVerdict.class": {
+      "bytes": 1473,
+      "sha256": "f412fac1a94a95b60ae66401d50a0446d97327c07db5966eeee30c52af188f18"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/IisExtractor$Config.class": {
+      "bytes": 802,
+      "sha256": "33e9a6d19294e280c3a1f6855b700fc67ffcf0a3bcc69d05efba45929a7b1e62"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/IisExtractor.class": {
+      "bytes": 7117,
+      "sha256": "ccd02a38686e0d1ad948d96ecffd46d8423f2bd878f72f5525ede1ea62c6ce72"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/MinTvMaster.class": {
+      "bytes": 4305,
+      "sha256": "041ac2f849b5cb57ac7b66f9b63a38b19c10ac4594122fbb5c61ce87ff331b78"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoGoodCut.class": {
+      "bytes": 2183,
+      "sha256": "902eb0d59c8fe787262538253ace33d9e1bc60ed0465c1b8472b0c2dbca37aa4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnCertifier$Result.class": {
+      "bytes": 802,
+      "sha256": "66cf1f36b1ddb36f7dd0adbb8e1443eaa5d31c3f810506c60fee6d759da17060"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnCertifier.class": {
+      "bytes": 18020,
+      "sha256": "851758bb50001852ea655c361afafd3481b3df64999d11e9807436d0324dece0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnFinder$1.class": {
+      "bytes": 278,
+      "sha256": "e71274312b94c06f7d454b58b38dc83c0170ecf70d3e4a6a514f935b8f6a78e1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnFinder$Config.class": {
+      "bytes": 1292,
+      "sha256": "a9e060d8f5fe88d419433862256e375f9840ee1b34e082bac14ba91ed661c2ef"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnFinder$Progress.class": {
+      "bytes": 651,
+      "sha256": "e5b3cbf1d70571a59c0e9112724e774f487d8502ff91aac4e77a1587bd594290"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnFinder$Scored.class": {
+      "bytes": 802,
+      "sha256": "d67a1bae6689898120ef6aa7ce227cc6b862e687624cdfc189b22ac6d54b7167"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnFinder$State.class": {
+      "bytes": 986,
+      "sha256": "e90f277407161855c9afa41c504811fbf73085e53176f729c80bc38e96a0af80"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnFinder.class": {
+      "bytes": 25449,
+      "sha256": "bd25c08bbb604e43aeb13316c579ab7dfbc119879311da1e9b36de118ae73f5f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnKeys.class": {
+      "bytes": 5299,
+      "sha256": "e1abca71666ebbfa3872fe137a8e003641864987e5d6d6635af03e125dd2d977"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnModel$WallLite.class": {
+      "bytes": 629,
+      "sha256": "37f60d2564d19e425cf19d720dd16e3d3b7fb9896fa467cb251730d34617dc15"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnModel.class": {
+      "bytes": 5499,
+      "sha256": "42d3973a3d89aab61717bc96503b089d318ff5a5379f9e6ac8e7d60e5086779f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnOptimizePass$Progress.class": {
+      "bytes": 476,
+      "sha256": "34f5358c206f5da7cc7c07ba9693a5a94bda55d0211842ed8da1131f978209a8"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnOptimizePass.class": {
+      "bytes": 7310,
+      "sha256": "8812fc473620c1a76e4b22d92882cde38725587adbb077cde76a994b74dead25"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnParallel$IndexedTask.class": {
+      "bytes": 484,
+      "sha256": "f49d9e409477c0a71fba96216e87fb41d356f5cbf0d7b1bca7fdbc45f1d06138"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnParallel.class": {
+      "bytes": 6890,
+      "sha256": "a3b1a69ca095025d59be4e37fff04b80e0fcd51fa1b1448fb99e09da1eed7cd7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnProblem.class": {
+      "bytes": 16017,
+      "sha256": "e902933e16fb367e1985855fa626d1b4517ea7311ef8e71cca72287017159951"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnRanking$Mode.class": {
+      "bytes": 1735,
+      "sha256": "12bfe55ffa7768f4bf78d1a214e6811ffc008ffb60873ac06e443681c496c6d9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnRanking.class": {
+      "bytes": 7966,
+      "sha256": "630fac831843492be804f1e6228737f134c2f35c7d9e493f812f4dbd54b0c615"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnResult.class": {
+      "bytes": 3305,
+      "sha256": "1bcd3156c8c04b29326329ac01c00f78a2cf9e9dd44c82b98cd18757634abd0f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/NoTurnScreen.class": {
+      "bytes": 7671,
+      "sha256": "aef352fdc35b57f1570f7c9f8a948cbc1d0236bdf6e78b99115504dd97fb5186"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/OptimizeGraphCheck.class": {
+      "bytes": 2497,
+      "sha256": "def103d2cafb7725f32431eeb44666e0e5a08b89b9fbfb8dc0eebc445a96c790"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/PoolCertifier$WarmItem.class": {
+      "bytes": 751,
+      "sha256": "61d26d56610327f5829a6265ad0703c7afbb6d5a9fa050286317e23427280d62"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/PoolCertifier.class": {
+      "bytes": 21124,
+      "sha256": "9b01d2afdb373ecb4efc1f4ddd58064d1f20e0a9d444ada826c71ed8ac16c66a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/PoolScreenAccelerator$Factory.class": {
+      "bytes": 753,
+      "sha256": "791a9a5d565e04e6afe935ed0b23412251e1e7e7d3dcb079a365819d7ea9e33a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/PoolScreenAccelerator.class": {
+      "bytes": 2504,
+      "sha256": "1236a7687caf1e9f0987bc4ef2d05bba411435fd553d31bf5c39a30a723c53a7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/PoolScreenTables.class": {
+      "bytes": 2839,
+      "sha256": "9b9eac245e2156f5b1f7dbe6e96de477ae59aedf6be3aa6daf71357c72609afc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/SchedulePoolScreen.class": {
+      "bytes": 1180,
+      "sha256": "1884134fd431815115a3a02c5b46ece7933f3cb6e2544fea8ce92714c25da875"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/SearchGraphCheck.class": {
+      "bytes": 2504,
+      "sha256": "94d0a9f0a1c5e160271477fe9deb4d9b5ab5bb845b7278f411a0509aeffc332f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/SenseFinder$Anchor.class": {
+      "bytes": 634,
+      "sha256": "32bcefd52c9326e98ec6760ce086b87e33d4eff02877ce234cd69304bae6a125"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/SenseFinder$Bracket.class": {
+      "bytes": 670,
+      "sha256": "fd4cb9317f74ea979fe78064659b6361a9eef9f0d037b67ace11ac5df517138e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/SenseFinder$Candidate.class": {
+      "bytes": 3537,
+      "sha256": "8b03d826f18d36fb5487cdea5b4a0636da6f980305abed3098acc0b7cb5864e4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/SenseFinder$Config.class": {
+      "bytes": 1726,
+      "sha256": "de49c73b661563dd2a71405f4cb7b1eece044142cf0667e7d9c0e6036768d8a4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/SenseFinder$Mode.class": {
+      "bytes": 1919,
+      "sha256": "faee6768de945164cd57626b71bae143f429c50d78bb9456eea17ba93f4f8419"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/SenseFinder$Progress.class": {
+      "bytes": 307,
+      "sha256": "f922d8f1f6541f77e1576e71339d37b12c5437203ae51d22f7cfff561418926e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/SenseFinder$Turn.class": {
+      "bytes": 3280,
+      "sha256": "2d4c44f4c3a4d6e158ce94d6046525771f63774f058bcadbf0921c9ae83de465"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/SenseFinder$Window.class": {
+      "bytes": 1005,
+      "sha256": "c66cb93474bbf370e33e59bf2ebbb68dd8f27733a1d9e1eb2bbb8af6a4993379"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/SenseFinder.class": {
+      "bytes": 47730,
+      "sha256": "fa89062f1b817e9cc9fa004c8a835976909c17365eddd0320665f6c05dfd84c1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/StructurePoolDriver$1.class": {
+      "bytes": 1887,
+      "sha256": "2637b898bb8e77318bf6ade2731a5f969439c1b721a22d67d0fb163a4181e223"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/StructurePoolDriver$BeamHeap.class": {
+      "bytes": 2378,
+      "sha256": "36e1ccf23b4c0f3014830f1f20a2aff91718b998a764aea40c9f2a6fc2ff70ec"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/StructurePoolDriver$Candidate.class": {
+      "bytes": 1143,
+      "sha256": "fe798086f83a44d07b74b3676a4305aa6c5500647f1167572260f9cf2b442326"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/StructurePoolDriver$Config.class": {
+      "bytes": 2284,
+      "sha256": "3c4c6d5cf09f4aa6b1578fec0fb1e22f356dd92b3af8471974149c1679ba8073"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/StructurePoolDriver$Group.class": {
+      "bytes": 1013,
+      "sha256": "9029aaed058be73dfb9d4547d1e4c197ecedf9e7f9bf7896bc7913b351d514cd"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/StructurePoolDriver$LevelResult.class": {
+      "bytes": 1311,
+      "sha256": "23c7710c5f4f128f75fac3605754201c0ec2e3e934bec22ff0b0a5db73f6e980"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/StructurePoolDriver$LongHashSet.class": {
+      "bytes": 1125,
+      "sha256": "a3b186185bf24fd37f94f28a3a7fe3e4bf6e338a4a197c16c13125da7f7a5226"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/StructurePoolDriver$Progress.class": {
+      "bytes": 679,
+      "sha256": "8aff7fc0919f920d0786a0bb193dc20d45718d717e1afecf0712020202f028b6"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/StructurePoolDriver.class": {
+      "bytes": 73388,
+      "sha256": "3010a9608079afd1599c20fd07d3ce25613f24f1080728eb7d4bd6b716d9f591"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/UnitScreen.class": {
+      "bytes": 24115,
+      "sha256": "fc23d9928cd8a0ee77697fb427b3c45ad43c8040a178e0764fc171762c7b88ff"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/WallHomotopyDriver$Config.class": {
+      "bytes": 2702,
+      "sha256": "f41698a1caebb3e32373a390a3ad500629bfa6bfcb0a2e1538b85679c53bc7ad"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/WallHomotopyDriver$Incumbent.class": {
+      "bytes": 997,
+      "sha256": "e350371987285578f9c9c311143171fd951abfd59d807fdc58a9195c11c35600"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/WallHomotopyDriver$Progress.class": {
+      "bytes": 328,
+      "sha256": "df3594d99280f0dbe3bd64df8cef6822c1498432be23f1093fa1293b290d99b2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/WallHomotopyDriver$ScreenCtx.class": {
+      "bytes": 7804,
+      "sha256": "a8c58d9809f93c3b97c24937a21c6b4f7e01b9534e7d3ea5e8bb7402ef844c45"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/WallHomotopyDriver$Trace.class": {
+      "bytes": 888,
+      "sha256": "3214f59fcb2aba9e167dd7a1ace74819cb7a1be6b9b9fd2b129bbf23282eea4b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/WallHomotopyDriver.class": {
+      "bytes": 39125,
+      "sha256": "85a893aece65a94208302f518931748bb099ffcf5a9f4d2df43baea17732ccb2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/fastcheck/CascadeCheck.class": {
+      "bytes": 3859,
+      "sha256": "c2d22e8f9ab6dda0340e7ba6003f33df969a99336a946b458d416dcd253566cb"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/fastcheck/LpFeas.class": {
+      "bytes": 3611,
+      "sha256": "4893bc4a2e64696ed3e4a551ba700a390e78a78ab00125788ba6475a7aa75206"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/fastcheck/NoTurnJointFastCheck$1.class": {
+      "bytes": 322,
+      "sha256": "dea7693fef3e1a5d249e2a9184824fffd383bc5c2fea4ab00ba8f7dcf5f95a5b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/fastcheck/NoTurnJointFastCheck$Model.class": {
+      "bytes": 1773,
+      "sha256": "d79d0fb0888a7a00452cbec4805111610c21082c9b7ae6d9d53d629b3b6810a9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/fastcheck/NoTurnJointFastCheck$WallLin.class": {
+      "bytes": 1079,
+      "sha256": "e95c43799c2872a8f98b05c6353b5f41c2abef33897a00374ae5175b96395b1f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/fastcheck/NoTurnJointFastCheck.class": {
+      "bytes": 25671,
+      "sha256": "9b8fbeeecbfd264a8e0cb2f85a1bdf74728702979da4e7c9c4945d8fac1661f7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/fastcheck/ScreenWitnessWarmStart.class": {
+      "bytes": 5014,
+      "sha256": "32f9742f2e11fccfcc6a2c288ad5a5af575d11cea753677ae3401147d2ac8050"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/noturn/fastcheck/ThetaSweepAirSlp.class": {
+      "bytes": 8621,
+      "sha256": "7df96013249c53dded4cc2dbc42afd5c992f37ed324d9b0754dd4d294be58435"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/profile/AttemptSampler$Stats.class": {
+      "bytes": 925,
+      "sha256": "6a632a9010f47ca03e0d6951394a6552adcf4c21197892599d39b044c280ffd1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/profile/AttemptSampler.class": {
+      "bytes": 6351,
+      "sha256": "0def1a38a9393b9c7a96b9719f91318db5ab6c6d16a82e3396dc62c10a7ca773"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/profile/TurnProfile$TickClass.class": {
+      "bytes": 1536,
+      "sha256": "456f5cbff50f3cbebc7b2c9ad6d8643a1dea8dd1133cfec09ff40b7b2968e358"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/profile/TurnProfile.class": {
+      "bytes": 6663,
+      "sha256": "7beb082715436470e893896d9fdfb014e35f59e2acc12ea2fadb035d9201a255"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksControls$1.class": {
+      "bytes": 867,
+      "sha256": "a6cb939c6c965ba6e318b37f69ee276e359eb5eb0d6d23cbaa813f9362e6f42e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksControls.class": {
+      "bytes": 560,
+      "sha256": "ab2a2bfaef4919aeede755e80c849ca37847441abd4546631091a222c4616818"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksFilter$1.class": {
+      "bytes": 1060,
+      "sha256": "0fca1fdac1e558897e6658beb9dbe51a0dd8fbd84bf51b85aba4846cbad926f5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksFilter.class": {
+      "bytes": 3119,
+      "sha256": "7f5d1c732637e252dd0c0aae3f580355960ac50a81ede7870ee00f228e2d7b80"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksRows.class": {
+      "bytes": 1604,
+      "sha256": "0202a28b2c5264f82f3dca4c19c802d3cf79fdb1b1879d3b0e9d1327f5b80019"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksSearch$1.class": {
+      "bytes": 288,
+      "sha256": "bd0a0ad7eaeee483ed5eeb045e0a449e8460549f1f23ba9e3c092cac730faabb"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksSearch$JumpOptions.class": {
+      "bytes": 575,
+      "sha256": "ae0b0c463f2a8fb07a987f394e2b260c173ce27688ba61da2c2c11aadc203008"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksSearch$Node.class": {
+      "bytes": 2331,
+      "sha256": "4970e6a24e820e492bafd393373223800a0fceb795ad3ce47137827025433327"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksSearch.class": {
+      "bytes": 6550,
+      "sha256": "c4bae3d7168c0bda9100a19f10bfe318021a668120929c9888d6bdb40cf60d43"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksSettings.class": {
+      "bytes": 2626,
+      "sha256": "5761ce72c1ff94d93a78f1ee08752e379b64f3e9a3418ac07322f8a3d2bc622d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/runticks/StepTimeouts.class": {
+      "bytes": 1826,
+      "sha256": "6b3b634e5a33a05b81e175bfd50e78749e5b9f6aff6eec453b49c991893233c6"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/AnchorSlp$Outcome.class": {
+      "bytes": 1227,
+      "sha256": "be62c3af66804318c66b4bd65baa673bae9cbce7fb037fe19ebb6553fdca2a72"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/AnchorSlp$RowSet.class": {
+      "bytes": 1181,
+      "sha256": "6dc24e0bc7965b2f16e028017d778ef1d6e5af74d70f76c0121238da4f4e4d88"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/AnchorSlp$Step.class": {
+      "bytes": 661,
+      "sha256": "bbf33870172adbe3500742f041df27622a1355d822418cd8f511beb1debea3aa"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/AnchorSlp.class": {
+      "bytes": 19194,
+      "sha256": "d4d06783d690e3a12fea9b19af106d78a2ee99c059e06691770e9f37c7cf0640"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/Angles.class": {
+      "bytes": 2867,
+      "sha256": "d5c320b38c25fde28b1ae1d975e5ac7dd93514a84533506c3b95ec25e8ef4b6d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/BoundPrunedRecovery$Config.class": {
+      "bytes": 1159,
+      "sha256": "d64a937f65e2459b7558ac913deef4c448fd50628e067a98da77cd4556101b6c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/BoundPrunedRecovery$Node.class": {
+      "bytes": 947,
+      "sha256": "f1341130fb22a897f0ec49beda687a95c7dc4fd27f5c3cd9ee662f696881d36b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/BoundPrunedRecovery$Pattern.class": {
+      "bytes": 1671,
+      "sha256": "8b135b747edda42167ec78fd823f2f16933e7b6b856e78e110edcf5821e44d69"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/BoundPrunedRecovery$Restored.class": {
+      "bytes": 787,
+      "sha256": "f6303bf893ffba039fdba853cc0e3c5885d4b39d4d443713e88073c79831c788"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/BoundPrunedRecovery$Search.class": {
+      "bytes": 34717,
+      "sha256": "a98f6d85e72c07cce4394c26ca666328d85a7a6f0c344fe10480d874c2fc13f5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/BoundPrunedRecovery.class": {
+      "bytes": 33531,
+      "sha256": "e84e0ff83a6c510179747e407f2a6eeabd1bc59a45cbbf87adeeafbc0b8732fe"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/BucketAscentPolish$Config.class": {
+      "bytes": 758,
+      "sha256": "7a5ba991c77f8e05a8ef0b0da80eded1be121e261749b7d65666934925b708e9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/BucketAscentPolish$TailScorer.class": {
+      "bytes": 3206,
+      "sha256": "9296a290d5226402fa0461bce8abb0428da6af01155935d2808c3741f42a0c0d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/BucketAscentPolish.class": {
+      "bytes": 11760,
+      "sha256": "cc3cf603e81080acbf64290c73b7945e79b8805a0f54199424e3f619f57cb57e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/BucketWalk$IntStep.class": {
+      "bytes": 769,
+      "sha256": "c8bda2c1fc3aed1bd7b09af9c53e10f55824cf8fce8d460215b8a5e3cc62a0ca"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/BucketWalk.class": {
+      "bytes": 31735,
+      "sha256": "18c8c3f3b47a8bb05b4b5f5482f7d1359addad7752e2a4081d4934b71cb48014"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CertifiedBnb$1.class": {
+      "bytes": 278,
+      "sha256": "afac9e4070af72bc7388441a3127d833097785231bd8b953e90bfe08c60fac0e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CertifiedBnb$Config.class": {
+      "bytes": 1146,
+      "sha256": "304122595a33603c8550775c7bf654cfe9da922ea4589faa34da30e8774fc0cf"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CertifiedBnb$GapSink.class": {
+      "bytes": 292,
+      "sha256": "8505a6fb8725245620772f6d6acb79e2acfdeab5118b1980342cea5fcbd9f767"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CertifiedBnb$Intervals.class": {
+      "bytes": 960,
+      "sha256": "5a9c196bc5fecb365e57078da056aa6d6574107ce63a0fddf39281e3ed6f0d50"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CertifiedBnb$LeafState.class": {
+      "bytes": 1390,
+      "sha256": "1db617b96fadb38df75ea0420634563bfece949f9bc9b76c8b1ea1e9a7939011"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CertifiedBnb$Mode.class": {
+      "bytes": 1415,
+      "sha256": "8c062242b4b39da12b7d27592050bb7e0bf88f6cf407e56e5ee5eea5faaa3e85"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CertifiedBnb$Node.class": {
+      "bytes": 1093,
+      "sha256": "9a564d98fcb19e243df5ecbe6da2ddc0ec87ee862c9de0ea27acc9c9e660343b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CertifiedBnb$Result.class": {
+      "bytes": 1323,
+      "sha256": "854a86686ed780de509540e42a1e1afee271a514d01bba030f2812d775d51a6b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CertifiedBnb$Search.class": {
+      "bytes": 5867,
+      "sha256": "ef8a10db4bf84c3e0668086ab7a9d8ef32d6a84287422300b124253a6965309a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CertifiedBnb.class": {
+      "bytes": 62118,
+      "sha256": "c5e6b1704c557996ce0e6cf60d74d80d338428e1307326a2fe68c4ffa52fb7c5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/ClosedFormSolve$Config.class": {
+      "bytes": 841,
+      "sha256": "d165ffd74cfffd02484e0d586fad1031e1f7129b2e0e8f1952eec5a087a3e806"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/ClosedFormSolve$Result.class": {
+      "bytes": 870,
+      "sha256": "e470bbf1d2ec7c82483a528277b5b8fbe868e4564928fbbe7cad7694b40178e0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/ClosedFormSolve.class": {
+      "bytes": 35939,
+      "sha256": "38cb892900674347001e4268627bf850170883100c7e8529ebe656798303c4ec"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/ClosestMiss.class": {
+      "bytes": 974,
+      "sha256": "a63a8e99cf54920d1e3d041bbe86918648906605710c520eb6c47a086decaebf"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/Constants.class": {
+      "bytes": 999,
+      "sha256": "5b3b2d14f2d2ca638f63545e13f61902608ef45c2dbee2115f8182086a3d14eb"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CostateDualSolver$FreeP0.class": {
+      "bytes": 1614,
+      "sha256": "e762ebccf9aa72fd570f1769f2a5fde58e4a84272813f7afa2e48ec33a4841d2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CostateDualSolver$Result.class": {
+      "bytes": 786,
+      "sha256": "17e855c1bf25c6fb7647e9f979b17d8370f35c55a867e42a1650cf20f387df5d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/CostateDualSolver.class": {
+      "bytes": 14026,
+      "sha256": "41880aa3ee7253e6d917bd98cebabe484f59a91b452269593c39e8f24638c313"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/DeWiggle.class": {
+      "bytes": 20081,
+      "sha256": "a623edd07056812de75cb692aff70e2b15e6e2129def55298841e3be9e6bf834"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/DegenerateTickAscent$Cand.class": {
+      "bytes": 761,
+      "sha256": "3498e01fff3a3ca37839a48091bb650bdecc47b1597b108135973a7fe9f9bef2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/DegenerateTickAscent.class": {
+      "bytes": 14291,
+      "sha256": "52143c611b119b4e155a3271021c30e4bebc702fc465a1eb9bf38e2b36ed1ea0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/DiskSocpKernel$ChordRow.class": {
+      "bytes": 767,
+      "sha256": "9a8da1762a95d0a7d732c9ed03fa328b68887ad49574c2dc6c324070c51789e6"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/DiskSocpKernel$Outcome.class": {
+      "bytes": 1045,
+      "sha256": "e6ff2c808b346ddf95808be38c3e902bfbf0f47a5abb1ed7133ffbeabd55f583"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/DiskSocpKernel$Result.class": {
+      "bytes": 1047,
+      "sha256": "2200f0f23173dcf1368ddb81baa08452e6f371575e6a9d644fb3a1512dedd216"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/DiskSocpKernel.class": {
+      "bytes": 23833,
+      "sha256": "5af1ad7b693e952ece9b8fb61166d51c707b59e33e03ad6a6bb125c7292d066f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/ExactJumpModel$Movement.class": {
+      "bytes": 726,
+      "sha256": "e2e0511812fe95f8d48440cf0420364f33e95f46e6c4830a7202b05c8d87d11f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/ExactJumpModel$MovementResolver.class": {
+      "bytes": 567,
+      "sha256": "1a0fb9d56c3957c66f1ec967263e52dbc0b93f58222a33ca403debe6939facf5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/ExactJumpModel.class": {
+      "bytes": 16220,
+      "sha256": "af6ddb4c1c2f27fcb22b59ef10cedec0e9bcc3f8571dd688cd9f3e6ea5b6e475"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FacingLattice.class": {
+      "bytes": 5986,
+      "sha256": "78c795ca7c0917792770e6421761ee3e00bc82ebc72a566757c9d2b86778aa69"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FacingPrefold$ChainScan.class": {
+      "bytes": 2389,
+      "sha256": "048c8dd6ef0b681b7f8e71fe39c1b6d8e0d5d6b86ad797b0ae8794882d394728"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FacingPrefold$Parsed.class": {
+      "bytes": 886,
+      "sha256": "6b8239e5d5f36e31f97395ed905de58da45614c785522562164836e07af7de1b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FacingPrefold$Reduced.class": {
+      "bytes": 1175,
+      "sha256": "fcc9b7c6abb0025ec43adc3c83bb9db7f3d9b4447f85ee18d4343e3bcf2c78e5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FacingPrefold.class": {
+      "bytes": 16820,
+      "sha256": "8c3d8caec888aa6e177505c38128d7dd44b4ef20adc96fdc5c6e06c8e3e5d819"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FlickMerge$Seed.class": {
+      "bytes": 653,
+      "sha256": "a351b4f1bba4ab1c90933e5374ea2ec45ad0e62b33ad39a0b958af9b38fd0b69"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FlickMerge.class": {
+      "bytes": 13104,
+      "sha256": "dad857f9e06a73573e58f6b0015443a90da4544f6a2d7d2bc3a00464c12b5e98"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FoldReplayDriver$ContinuousSolution.class": {
+      "bytes": 859,
+      "sha256": "f8e48ffb4b18718d441d5e43ccdfa089cbc7444ef1d9ec9076a96e65e10a2b95"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FoldReplayDriver$KeepAlivePin.class": {
+      "bytes": 665,
+      "sha256": "a70344004c2cc8789f10d499d97a50abf43335b11050707a3bfa74235c904149"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FoldReplayDriver$KernelStats.class": {
+      "bytes": 572,
+      "sha256": "47d137ff458c575f2c32399a13e1a55343b2c2749cb1f30b4e7e2654d5007dcf"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FoldReplayDriver$Params.class": {
+      "bytes": 1227,
+      "sha256": "88b40fd4798893b98f5dfe91090924e7ed97c395367b36fd6e6cff99fb0da42b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FoldReplayDriver$Result.class": {
+      "bytes": 1402,
+      "sha256": "49810f3e598596625bb13342d83fea30c9839fdf692e2c65caad0f6d6986a0d9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FoldReplayDriver$Round.class": {
+      "bytes": 1176,
+      "sha256": "081e0eeae8541a2d4ea1047bd53d591d1267526c1983e6a622474f9aa60e7d80"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FoldReplayDriver.class": {
+      "bytes": 44032,
+      "sha256": "685617995ae8d07d23a5b6cf9adc14fede30fd859e34f7dc5e7f2c866ccf4aa8"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/ForwardModel.class": {
+      "bytes": 1341,
+      "sha256": "f83453dacf77eeb892c4cc715e3bb36fc688bc6684ad97c394070e454fe4d82f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/ForwardPath$1.class": {
+      "bytes": 1038,
+      "sha256": "1fb0e84ad5bb1274fcf5895bedd36d5223e19062fe66925b7af312d8483f8123"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/ForwardPath.class": {
+      "bytes": 1821,
+      "sha256": "e21ffa063aa5afc0ad93c5a9ae7a154653cebe4ce14b4df92c057b41bfdd7320"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FreeStartSolve$1.class": {
+      "bytes": 284,
+      "sha256": "fc340386c3c55faa3ae8a09df606eb22807542e409f3fc2606711e46b8a771d7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FreeStartSolve$Config.class": {
+      "bytes": 1132,
+      "sha256": "7241c9007a9190b430f8723dc64409a34ed9bd8782fd18e5cac7f84d7d97eaab"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FreeStartSolve$JointBest.class": {
+      "bytes": 925,
+      "sha256": "cdda9c42d8c4e4d20a044a0cf3232536872b536d31427de6e3efa45baa4a01ed"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FreeStartSolve$Result.class": {
+      "bytes": 696,
+      "sha256": "b031da0293741699674e55220a3cc8b86ffbc904b3097441303823d995281882"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/FreeStartSolve.class": {
+      "bytes": 48059,
+      "sha256": "b3112c2e1fe062b723d622d9676f9eb96931b70ad31c4ef04b1b16ddb6aafc8c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/GateFoldFinder$Result.class": {
+      "bytes": 849,
+      "sha256": "df923426c2258007e45c01c482ffcc20fcec0a7b1d9b4b81c56fea3017bcee0f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/GateFoldFinder.class": {
+      "bytes": 51461,
+      "sha256": "fffe10595adc07ad859a344aeece894ea81832b4d5bbb755e3ba0e8d22d2fb40"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/IlsPolish$Config.class": {
+      "bytes": 715,
+      "sha256": "deb849c74e659d60617d16ff8ed58024c7c63a97977a0230780049d4da1b83b4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/IlsPolish.class": {
+      "bytes": 10423,
+      "sha256": "207611785d75ecfaaa695feb9d90d10c040c69ad1ef93c795e8abeaa81a5fbfa"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/JumpConstraint$Cmp.class": {
+      "bytes": 1463,
+      "sha256": "96c78805b290ee8ef15038d2426b7e2ee856b2b2f43ce316fa61377e0e929a21"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/JumpConstraint$Mode.class": {
+      "bytes": 1567,
+      "sha256": "791e96ae16cd07a84d387c00808c98074d7828c853437c7fecad36b388682281"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/JumpConstraint$Op.class": {
+      "bytes": 1412,
+      "sha256": "451553336f4e5d919208b76a438bee98389f8b04c0202d97f4b799479e066309"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/JumpConstraint.class": {
+      "bytes": 1940,
+      "sha256": "94ab9a820f9a101c7464a7ab96cf0c5740af476c54549494afbb3e765ab6799a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/JumpConstraintCompiler$1.class": {
+      "bytes": 1626,
+      "sha256": "edeb5361a8211eb3914923388f725284ba42b6123298c56cae3b91da8ae2ad41"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/JumpConstraintCompiler$Compiled.class": {
+      "bytes": 2081,
+      "sha256": "b739c097472beae502591e1b9fbd8a5de3a4729e5464cbd88cf632ccba5c5533"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/JumpConstraintCompiler.class": {
+      "bytes": 5894,
+      "sha256": "ca203731d0e2180e37a153846e585eb8919d55bdf12018fd2e6f9f2f360846c2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/JumpLinearModel$Wall.class": {
+      "bytes": 1561,
+      "sha256": "dcf839fda68991f724bcb14af7fee773f74729f04179c4eb4bb585217fbb6987"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/JumpLinearModel.class": {
+      "bytes": 21683,
+      "sha256": "2351be1f44f22e8d4a59246a478076d4cab5ad339c55c85ef6020aa294c998eb"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/JumpPhysicsInputs$Axis.class": {
+      "bytes": 1479,
+      "sha256": "09749daf96889df7f9c45dd13ced7b36ffe4e53f0c99661043d1f0f9ceddd483"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/JumpPhysicsInputs.class": {
+      "bytes": 10156,
+      "sha256": "958efbeeff9913ddf847868f516e2337dda38190b184f432f65d66c0a57144e7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/JumpSpec.class": {
+      "bytes": 1406,
+      "sha256": "a88448869c54936968282cdef5920dc0d04f10e1356ed3395b4068f9d1a9ea44"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/LeafSnap$Scorer.class": {
+      "bytes": 2863,
+      "sha256": "93c046237abff2876473afbe01ad5369162e9b4fcc770c79f352d249a9da6556"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/LeafSnap.class": {
+      "bytes": 8610,
+      "sha256": "7cde216924ceeb3358ce41c3b156f51388ec0e8c4dec101ac06acf9fea948582"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/LevelSetAscent$Config.class": {
+      "bytes": 611,
+      "sha256": "a6d52f5565899e568c427557ff9ecf6fc6420842fca3cc020f974071bc5874f0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/LevelSetAscent.class": {
+      "bytes": 6070,
+      "sha256": "153a7e41cc4904429e516679966728d7013128459ea51826ccc43ad0c9cfea05"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/LongRunSolver$FreeRun.class": {
+      "bytes": 639,
+      "sha256": "dd744aa81fc6e23804d546fa20ff28b96567653f270b1cec9b39c84d65c11f29"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/LongRunSolver$LongRunConfig.class": {
+      "bytes": 2028,
+      "sha256": "ddb2a36c6a5b279a4c41b96abef059e5d3cfe74c9fbdd7aea85a0d65a273feb3"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/LongRunSolver$WindowCache.class": {
+      "bytes": 811,
+      "sha256": "f5666a18c9cd313dc2191d96d9fe9e657d85e18966292212ac360394f677abb1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/LongRunSolver.class": {
+      "bytes": 30341,
+      "sha256": "13e97f9d148353c15ced8744d6c632452fc34087dd8777e1a42459ae68f2bd88"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/McSineTable.class": {
+      "bytes": 1330,
+      "sha256": "401d780cede1ed6159b92496d61adc89c6035b336dfea07daa47211dd947d4fb"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/Objective$Sense.class": {
+      "bytes": 1382,
+      "sha256": "df1914e7ed4644590aaff8f5a1efccb2a7db19444f7680a82b49a9c04d66fade"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/Objective$Type.class": {
+      "bytes": 1383,
+      "sha256": "be01bda8df6bbf737d73f97521f9e775910d7dcbede3a9800ae79a6cf43dac66"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/Objective.class": {
+      "bytes": 5642,
+      "sha256": "e1cf3d510553675ea7dde4682fd3ca86d9c760142533e5231aafbe85ec325d21"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/PathTranslation$Trans.class": {
+      "bytes": 629,
+      "sha256": "98cb9d612b5bbe32b7276ff9bd2395cdb46c299a75a3abbdb54fef20480481dc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/PathTranslation.class": {
+      "bytes": 6484,
+      "sha256": "6533187ba4cdccd34e5de133a26250243e12aac3e714542d1d7895582b32c95f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/RecoveryLadder.class": {
+      "bytes": 7602,
+      "sha256": "6837b64f820881ed88577ff9a7065b2b0643706a68b0b7408f27a2ffb33b02cb"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/RelaxationRecovery$1.class": {
+      "bytes": 296,
+      "sha256": "3c136a66ffa66b82299150bfabf2100b4dee6968d290ec3eff50258583a573b0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/RelaxationRecovery$Config.class": {
+      "bytes": 1010,
+      "sha256": "992e5021539db4504cfb86989b482172de99f598248feb7c4e76608992cf5394"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/RelaxationRecovery$Seed.class": {
+      "bytes": 856,
+      "sha256": "79be7b94e6fc8873d58b2849ce38ec511c02db661efc53dab388ad105861de67"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/RelaxationRecovery.class": {
+      "bytes": 19706,
+      "sha256": "6e0e3be647a8f31c5a180ac0592cbbdcfc6b4417c0e1c1264e06bc066dc60da9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SineTableGeometry$RangeInfo.class": {
+      "bytes": 901,
+      "sha256": "05e7f942a8a1a56ada19a8cc66b0a67bfd50a72758cfe0d2168a51ae93ba77e1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SineTableGeometry$TickPart.class": {
+      "bytes": 840,
+      "sha256": "71972738218da704861000249b556c0865aa580f048ed3580f81b5a82a499d7d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SineTableGeometry.class": {
+      "bytes": 12363,
+      "sha256": "749450f2381bdcae62d77cd8ad4c769cf5247f9dd2b5c24708ca0692e24052cc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SlpSolve$Config.class": {
+      "bytes": 795,
+      "sha256": "acedaff40a3907c52e533625fc2ff0f1c9fd9d57230676b50cb35a813b117415"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SlpSolve.class": {
+      "bytes": 24972,
+      "sha256": "bc024fd09bf74b65f6d61edbd3a7f01286a3798f16a223a2c3bad8149f13dd0a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SmoothFaceRecovery$1.class": {
+      "bytes": 296,
+      "sha256": "b31c5f82a53f6a1e08463774aa109b2cfece8d0cca0d7d1155ef0c11e947e56f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SmoothFaceRecovery$Config.class": {
+      "bytes": 1338,
+      "sha256": "19dc2f196fd66a49013bf89bf597603ce4a7f60643158c05c39718809b717f62"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SmoothFaceRecovery$Row.class": {
+      "bytes": 1354,
+      "sha256": "2e9088a18b8fdcfc0b3cf8ccbfa38f34c53e3b4f4f7b25df80b494feea887287"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SmoothFaceRecovery$Rows.class": {
+      "bytes": 1133,
+      "sha256": "40bd9d19b6555dc8f6a9339989c0dfeb34bf5a09af015e7c19e7f2b83d6d1009"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SmoothFaceRecovery$Step.class": {
+      "bytes": 602,
+      "sha256": "1114b4832174a5ee12ac62c46704fd9e825319b98cdefdd6939010a4650b38f0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SmoothFaceRecovery.class": {
+      "bytes": 23603,
+      "sha256": "08d74774f00e2fc8e201a0e8fc57d0ca9ab3067b711d8f675b4de5e08e16ae75"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SmoothProfile.class": {
+      "bytes": 4060,
+      "sha256": "2c61c049afb9981c8770b208cf70d9274b6e972a06f00088e82e43fa42d7c11b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SolveCancelledException.class": {
+      "bytes": 398,
+      "sha256": "046f8561ee40a0e6028b42c2bb8329d3c28bb481ca5b08eed3334fde549147bd"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SolveProgress$Sample.class": {
+      "bytes": 852,
+      "sha256": "11ee1758fbfc37e454b5930291fb31e6b012c89860b98019e6f7fc3d40427552"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SolveProgress.class": {
+      "bytes": 5467,
+      "sha256": "7c9d9253f28d46b6fefd94a965c289a374f591bbff3ee6da9d7162eb4569b138"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SolverTrace.class": {
+      "bytes": 4871,
+      "sha256": "a66ea63547eda3b3c53619910f186e67503f049f3dd4b08142ba184959a20adf"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SpdCholesky.class": {
+      "bytes": 1235,
+      "sha256": "e33bfb64ca61df49143ee8f3bc98906addf4ffc80a44bb210995cbefe44fa307"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/StartBox.class": {
+      "bytes": 2323,
+      "sha256": "bcf6a4a5646a85aa1864dc2079548ce37dc6b681132ac89baf5b189f32fb335b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/StrafeSideRealization.class": {
+      "bytes": 9958,
+      "sha256": "e4da8f8f50c7cb3c5099ad32b5d84441b3bbd394ec31c4c88a2ee48a393580fc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SupportOverlap.class": {
+      "bytes": 1296,
+      "sha256": "f2d2290542d5ed7e954a624d81f7742e0dda96b3c618efb31c68d5bdead5ccb0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/SurfaceKind.class": {
+      "bytes": 1485,
+      "sha256": "552fbd407875369423fab1688d1c195971c8f517c49f62da1643f2499f2ec798"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/TrendFilterSmooth$RateFilter.class": {
+      "bytes": 313,
+      "sha256": "58cc4c4ea5658eaebc9ceb9ee96139a1fa2fb8c1ca2a757c8b6296382156b1b9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/TrendFilterSmooth$Report.class": {
+      "bytes": 884,
+      "sha256": "a761cf85b18f0686429831a2973557b6decd8b06b42d052cd13f3a50cd04dd32"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/TrendFilterSmooth$Stop.class": {
+      "bytes": 1760,
+      "sha256": "ab46e36ea39718b659c4b7c13aebd49b64ed9a35e3d700bd5faeaf911aac1539"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/TrendFilterSmooth.class": {
+      "bytes": 23978,
+      "sha256": "69d0b7777624faa68f9da6df8f3921e638b3e5b1cc06cc75dbc4dcc0ef207fc7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/TrustRegionLp$Result.class": {
+      "bytes": 582,
+      "sha256": "d85b4fd57099fb0f1c8da124f0a85f827bced09061c110d0a6e53fe5ce875f50"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/TrustRegionLp.class": {
+      "bytes": 9119,
+      "sha256": "13f9f3566bafec9db62aa086908725755d40c70979e93c01d6d0e6d599ddcaa3"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/TurnShape.class": {
+      "bytes": 3050,
+      "sha256": "1f318827255c9c43dddfe3778fe2cb476d74071d892f6b8719f2da520c94eaca"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/VelocityPacketCodec$1.class": {
+      "bytes": 906,
+      "sha256": "b527ac1205ed4ad0f7f86d5c63de928d6737d78ad65408adfec82aa511c4a5ec"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/VelocityPacketCodec$2.class": {
+      "bytes": 1240,
+      "sha256": "bae1e0ece531edace7aba57bd1cfc1a1e4ba98b5c70255a9482991daea114b78"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/VelocityPacketCodec.class": {
+      "bytes": 1914,
+      "sha256": "fbcdc05850a33a774f035813cedaf6954c92a537030d6c6427d18bd757ecf3ce"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/WallHomotopyLadder$Result.class": {
+      "bytes": 1455,
+      "sha256": "a0a64bde42bf6185afaed81e3580595543febc56e20e20ad1ce4d4d24ffd51c7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/WallHomotopyLadder$Rung.class": {
+      "bytes": 907,
+      "sha256": "5d6a5bd6896c724a21e3c7842634ea7faff8acbf2a4d8a2f1ee32c117b606e39"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/WallHomotopyLadder.class": {
+      "bytes": 5909,
+      "sha256": "37148aaa0259c1be2353d83903652c78e6e218c618ec4e4d0f1c1a7fb043cd0b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/WindowReshape$Seed.class": {
+      "bytes": 623,
+      "sha256": "2811cf2acfe1e6ef1df82241fcddecb5f12166b500f2a5a6d8a998e1e960c924"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/WindowReshape.class": {
+      "bytes": 10369,
+      "sha256": "98d861ccbcf2f766c003f48fb76f930ff301292417e8aaf89117e89bf534acb2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/WorkDeadline$Clock.class": {
+      "bytes": 1414,
+      "sha256": "fadf55bb15470cbbc1d8a077bb7708000a9f78489174edf5599132dac6778e7b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/WorkDeadline.class": {
+      "bytes": 2953,
+      "sha256": "09fb531a97981f4b7cb82237b0f6b32e9fc4d973a828ca96d528a7fde21c13f3"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/WrapWindowIls$1.class": {
+      "bytes": 281,
+      "sha256": "c8af8aa23ad62d8ba1d26687487a45aadff66a9cd654494eb6711b54c020fa1e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/WrapWindowIls$Config.class": {
+      "bytes": 975,
+      "sha256": "4abed3246cbafa13398aa94bc3eef2cfcca749ce9af4f135acf52ec9538c3fce"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/WrapWindowIls$Result.class": {
+      "bytes": 790,
+      "sha256": "c9552b584c32a1138f8518c6c57c467949a6824acc9b2c3903f5af2506a49dec"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/WrapWindowIls$State.class": {
+      "bytes": 847,
+      "sha256": "8d265540509a81f87da0a03b87cfc2674e7b92fcdf1a1a8186c62288a4b5acac"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/WrapWindowIls.class": {
+      "bytes": 22622,
+      "sha256": "ae8717ccc2ff9fed98f67ac1dd460d1cd2a17d1b6fc4dfa405b8aa21e44f1f94"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/YawOrder$Bound.class": {
+      "bytes": 787,
+      "sha256": "69b08d7c4e0207fdef0475607f8036f9c599ee559a330316c2d02f6118f8e6f2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/YawOrder$Link.class": {
+      "bytes": 921,
+      "sha256": "4f9bca8565afab3ea2fe2b0009a66d94d24dfd72ac175b211a535ea33a68be1d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/YawOrder.class": {
+      "bytes": 10582,
+      "sha256": "f8fff673bcd228e2cc15c2bbc2ed3b9b370d07b335b62c16160b0a0d14d3a35a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/YawOrderDp.class": {
+      "bytes": 6201,
+      "sha256": "226e706c31c6e96db56a80a06871805c4e298cb16529796aa41d54c4b4c742d5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/solver/YawTies.class": {
+      "bytes": 6442,
+      "sha256": "0e3e281e25ea7c7502225ce3497d472d2cb45cd296e45230828d8a10c213bbd5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/velocity/VelocityFinder$Accuracy.class": {
+      "bytes": 1511,
+      "sha256": "247a82fc48884e8e86f6a7b6794d0ffd46813c106012bd13be4c0aa9fe524dca"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/velocity/VelocityFinder$Anchor.class": {
+      "bytes": 829,
+      "sha256": "f531fd2d0af1e4f9e13e4915528b770432e72264090c95248251ae3f6547f886"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/velocity/VelocityFinder$Candidate.class": {
+      "bytes": 1127,
+      "sha256": "fab34503a06aa40b3e9ceeda2db431ac1da1d6d0a01312d09092529a28c81889"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/velocity/VelocityFinder$CellListener.class": {
+      "bytes": 485,
+      "sha256": "8a392929deb5df04ed01cfef7d316f13cbc5de38efcf142ccb9e084992817354"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/velocity/VelocityFinder$CellResult.class": {
+      "bytes": 856,
+      "sha256": "286e053a247b99b52a97b798b1096c596edcbdca26973e37cf5e1f4773c0795e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/velocity/VelocityFinder$FastSolve.class": {
+      "bytes": 909,
+      "sha256": "8b1e2c0f6c975b9d2955b8b610100976ac2ffa3f4e3721fcec1b068c5db92f88"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/velocity/VelocityFinder$FieldListener.class": {
+      "bytes": 488,
+      "sha256": "900688eb1e3980726cb26601b265cfcb5298b480b7214e2488188c5cfb36878a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/velocity/VelocityFinder$Grid.class": {
+      "bytes": 758,
+      "sha256": "641a64e27223891ee53501e27544ad40ec0a4061602bec3f2c500da5aa4164fb"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/velocity/VelocityFinder$ProblemFactory.class": {
+      "bytes": 439,
+      "sha256": "5f7061c496262b898a954d051b75c4d8c959f201e2433f5547761666c6279801"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/anglesolver/velocity/VelocityFinder.class": {
+      "bytes": 28927,
+      "sha256": "5a408f2ee3dc406846d2b2786b930cb0014462e1801bc3e2286b8584ec1dce46"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/imgui/RenderInterface.class": {
+      "bytes": 471,
+      "sha256": "879fd719761d7cd6e29568a71af2da07cf5a1b2d4134646edb58160bdf81a3e4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/io/OsSystemBridge.class": {
+      "bytes": 4255,
+      "sha256": "c68400430bec4429b9f990b4c05417ce55f03e9b3e7c0a44fa0d55f5ad204ede"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/perf/Perf$Sample.class": {
+      "bytes": 600,
+      "sha256": "43d2f0cf2c92a6c911c6895f9187ea4dc06d4aeafe7c3ebd67d826bf120d8677"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/perf/Perf.class": {
+      "bytes": 3780,
+      "sha256": "864edc5b1a4b0287eb879f46907d3cecb418be0bfc75c943bd583858568cd897"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ports/BlockPicker.class": {
+      "bytes": 212,
+      "sha256": "58aba2bc8c7a2cf26772022464934620b58a4f1ef735b7ff0789616a98988dcc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ports/BoxRenderer$Mode.class": {
+      "bytes": 1304,
+      "sha256": "5f2a34fbab5a35c0e0764c40bcc08d455fdf6a8f7c8e1831685487ee693351a8"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ports/BoxRenderer.class": {
+      "bytes": 365,
+      "sha256": "e4cdb018bcd9c829612001bf0dc342a3b8d4570328140bfb358f72bc15a7e687"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ports/FilePickerPort.class": {
+      "bytes": 191,
+      "sha256": "89a49e05ffc913fd25cd684c15d6cbf7eaeb7b4d8b2ef8fba4e6e4062e1a0c64"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ports/MinecraftAccess$1.class": {
+      "bytes": 1913,
+      "sha256": "ba7701aa7ca7c2a08ab449050fc4a9644b55ca455725b1fe7dc09f3859f30324"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ports/MinecraftAccess.class": {
+      "bytes": 5558,
+      "sha256": "7f5dc074e3e5bf0e71e05237fcdc59504597cfdceb3a0164077a8e7aa42bd6c8"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ports/PickedBlock.class": {
+      "bytes": 1236,
+      "sha256": "329492e0822de76819a8de4f2f677b1fe61472c9cacfff2b4205b87166a6da03"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ports/PlaybackBridge.class": {
+      "bytes": 2614,
+      "sha256": "1753e61c1193cf4e7d1db06ed2e6f25d021e07613768bf6ead4664b71f8e1d07"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ports/Simulator.class": {
+      "bytes": 3422,
+      "sha256": "9c82582ace473016179db3d800fd0e132aa1014940065c82365f380336dd120b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/record/HumanRecorder.class": {
+      "bytes": 9771,
+      "sha256": "871ebc4af8b58d41d330a05247272511d697dfe13590da014b03440fd461fe6b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/ArgbColor.class": {
+      "bytes": 647,
+      "sha256": "016157cc8c03c6976f608521568dbd1375fb637e0e078ff7634db330019aa6a4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/BoxGeometry$VertexEmitter.class": {
+      "bytes": 276,
+      "sha256": "960b8f948bdd0f2985a9a37085c8eaaec335cdf306f09cac2cca44e0e95e5ec7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/BoxGeometry.class": {
+      "bytes": 2741,
+      "sha256": "69dbc7a131a3f9152f5b74758de1605df7fb4df4427b5bd336ea3494589560f8"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/ConstraintBoxSource$1.class": {
+      "bytes": 837,
+      "sha256": "dd8e9a87db32cb60bd2a974e336bee4b27597408da2616c3eec881afed07c31c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/ConstraintBoxSource.class": {
+      "bytes": 701,
+      "sha256": "178c5b6d47603efc0e22044275367b388a2116a273471cee797774100bbaea4b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/ConstraintPalette.class": {
+      "bytes": 998,
+      "sha256": "6ed4615b10195c9c401cd0a564e043603fab64803189ce1eb06f61722dabbd4b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/ConstraintPlate.class": {
+      "bytes": 1850,
+      "sha256": "e5e5c2d5c78fba0ff9e706554f851814f11554904a16ee93dce437a8435cd815"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/ConstraintShapes$1.class": {
+      "bytes": 1441,
+      "sha256": "453338b9d768ad95b7a2ef8fe1fa6a05ed90bbab98c260fd95be1fa5368bb894"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/ConstraintShapes$Sense.class": {
+      "bytes": 1370,
+      "sha256": "5e527fb63f5417bc49508183c302d741fce4ef08b778d95fa65344a9f8aa1d71"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/ConstraintShapes.class": {
+      "bytes": 8498,
+      "sha256": "71b42cad7e3089f2f2b68b2d1a31753560db7c088892e161da3647a6516e1f57"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/ConstraintStyle.class": {
+      "bytes": 725,
+      "sha256": "0fb32618e68cca18912b5afe5c300b0b231b1f1dbf955e9c4de376bc48c70da4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/CountingBoxRenderer.class": {
+      "bytes": 1675,
+      "sha256": "17fe44e8a85f02d3c1c9ddfcec91f73813b6aa397154237b6e7918fa2a020edb"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/PathRenderPlan.class": {
+      "bytes": 18408,
+      "sha256": "ce943006903163fbca632d38c39976779435aa3ce933d8a3c440da3a511554b9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/PathVertexLayout.class": {
+      "bytes": 1803,
+      "sha256": "c0dc2988d73d444101cbebade819bb6b0dcddb8a33f8deca523105e68e463406"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/ReachProbe$1.class": {
+      "bytes": 789,
+      "sha256": "67c63321e97aa1af589d5c729dba4aac31562b61a0af3d1168df09408444412f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/ReachProbe.class": {
+      "bytes": 916,
+      "sha256": "dd006995f284536892db92340d239aaf592881aca96bc50a0ba05e1fb6891dd7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/SelectionPatchSpec.class": {
+      "bytes": 1316,
+      "sha256": "8a088e95c5a744d39667397d530696900361f8161a8099a32f8e80261fe1e066"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/render/TailPatchGate.class": {
+      "bytes": 1128,
+      "sha256": "15f5296b502ef2083829d3f8be67f17d2a8f495f41a33da2c3ff07737acfe8bf"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/replay/DeclaredContacts.class": {
+      "bytes": 4958,
+      "sha256": "a23811228155771d9c5190d58ed9e4a7d53cd9e9fcf9a26b2431e489db8d5bb9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/replay/IpoptReplay$Evaluation.class": {
+      "bytes": 1615,
+      "sha256": "328390343f1f8f8dc095571b9886c0c9f82adc4b371401b02e71568b7bd78816"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/replay/IpoptReplay$Oracle.class": {
+      "bytes": 884,
+      "sha256": "32c863c30fab409670ebc39cbb7e0a20b7cb1b7a1f5d05941e62946fec8acb07"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/replay/IpoptReplay.class": {
+      "bytes": 22075,
+      "sha256": "455d881b7c1a9c6c8751b365373199eb1417d0256402716c84fe804579c5722e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/replay/ReplayRows.class": {
+      "bytes": 4716,
+      "sha256": "ebee5e455a96b99a6cf5f98d505e1de05a3905c1cb20e26bc88bb033f47f658b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/replay/StaticScene$1.class": {
+      "bytes": 251,
+      "sha256": "c167b4106b907512df8b438789daa0d79147edbebfea719807ecd6c345b54c76"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/replay/StaticScene$Clip.class": {
+      "bytes": 1081,
+      "sha256": "dac6089b84df67f3adee21e6480c7291005ee12abec6c4e85b4ad1904568b9e8"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/replay/StaticScene$Contact.class": {
+      "bytes": 2714,
+      "sha256": "dc4fa82f755cee45a3c598dcdd65b0d42f5c2362478927535853bae8caf64d8a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/replay/StaticScene.class": {
+      "bytes": 14109,
+      "sha256": "e9c2c7b8f7e21330670b53e47da4688ea0cf3087adf51d920f20ad5d61059fc0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/FileSystemSaveStore$1.class": {
+      "bytes": 1657,
+      "sha256": "e2c8893d438cf383468a972b899e87d5af7da596d93eb133d988f71db23eab4b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/FileSystemSaveStore$InfoParser.class": {
+      "bytes": 366,
+      "sha256": "20fb587c8738f1a48af0fdf9bfafdf0c3519baa73066742160d86afb9c5264ac"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/FileSystemSaveStore.class": {
+      "bytes": 10309,
+      "sha256": "251c5ee6a552858050e06dd5fb561e4d3d56e33e3c3e65bf2767e76a74d0376e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/Result.class": {
+      "bytes": 1242,
+      "sha256": "f187123382d9841f743cc23429e2edd1cc48956e962320b6216e9f06dd719e2d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveBrowseResult.class": {
+      "bytes": 983,
+      "sha256": "b08aef75644a3f053dce4dbe2b0c504a475796023f286adcaa3fc6ec7d82f377"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$AngleSolver.class": {
+      "bytes": 2108,
+      "sha256": "069ab23b1e2a5ec12c32ee7ff8abe185a1d708c462853efd8306d6d90c6afcf4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$BlockSel.class": {
+      "bytes": 539,
+      "sha256": "17a48894500ee5b835d37903004af6e8a67a13cc102281dfce458e990f834182"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$Constraint.class": {
+      "bytes": 662,
+      "sha256": "217c804a961cefaad8b45d38802cfa66d34f18651c074a0766877237ed0c425f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$DebugTick.class": {
+      "bytes": 781,
+      "sha256": "a5d403d54b5903efc28febb32fb82edce0b0ce0405c1b0a33afbdb1ac16555a0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$Detail.class": {
+      "bytes": 469,
+      "sha256": "6754c66a8ae1087aac870d776342a264eb6a96051363b1aee529adeee214d0ea"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$Dose.class": {
+      "bytes": 468,
+      "sha256": "bdc657414e922c0f1e07e662f50c97c6641d6ed3c8551288cdf7253151c90466"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$Outcome.class": {
+      "bytes": 559,
+      "sha256": "668529b1a33a37520464d0a87926a6f0a59e4714b7da0d42eeeb7816f6878283"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$Override.class": {
+      "bytes": 938,
+      "sha256": "0a244aababa41663a7226d5f1ec877b176c6271c4140f3f10bd945dbf6569e42"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$Result.class": {
+      "bytes": 1500,
+      "sha256": "f4dbf58a065724a5535cd960da56b8920a0ef3f96af55457a4e358053f01fd7d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$Resume.class": {
+      "bytes": 737,
+      "sha256": "01748920f339a45a548e391180b509c0d10d203c99947cb86ba73fe87f7d82d0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$Row.class": {
+      "bytes": 1042,
+      "sha256": "e5e58420b963e7d85b03fd6b98ed93ae50a5963eed94782286aa5707eabc86c8"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$SolveBudget.class": {
+      "bytes": 569,
+      "sha256": "c8b93a690d9966fd8bc2841d5547970023c14fa03bcfabac0f91b99734771420"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$Start.class": {
+      "bytes": 641,
+      "sha256": "01997f2fd257ddbffddefc10351ca9c38c42808cac9e52a61b9ffe9569b1d1d5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$Tick.class": {
+      "bytes": 848,
+      "sha256": "e3ebaa69c4b29ddafab8c89f712a75abc4c3af2d53171ae072eaa418c923d25b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$World.class": {
+      "bytes": 498,
+      "sha256": "733b8febb070c75c684e3f17102bcd46560193cb6d8edcfd0fbf5581421c53cb"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile$Yaw.class": {
+      "bytes": 444,
+      "sha256": "719e75992ba4ca6144d8704c96439d41bb1e71852cd5a5a23f11cc273e04a242"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveFile.class": {
+      "bytes": 2143,
+      "sha256": "32d0ea025374e0d860d7903a7096057ff45b4a638148f2af108b46178f578f92"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveIO.class": {
+      "bytes": 55421,
+      "sha256": "e947d8995e668f9b83762c70d25d3e7c3667dddeac61495c399b1bcd771b64ef"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/SaveInfo.class": {
+      "bytes": 604,
+      "sha256": "470377c238eff1c5290a72c64f4732c694c6e7bc3e14e65568c160f9dac166a9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/save/WorldDescriptor.class": {
+      "bytes": 2364,
+      "sha256": "107be12ff4089214767a13de4c7cd817f883936a7eadcad01088ccf11e30a37d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/AABB.class": {
+      "bytes": 1094,
+      "sha256": "d9d601df8038cad2c71f2af65d139891c1ffcad5339e6a5ea0ab070edd305375"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/BlockHit.class": {
+      "bytes": 713,
+      "sha256": "103772fa5bc9f1b0600f297f559e7ad512a53aeef82074207f59f075d53a09fa"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/Checkpoint.class": {
+      "bytes": 133,
+      "sha256": "2105659d097c4bafe8d76717454ba12864bbf0db66c52fa2bdc599fc2cd78329"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/ChunkRange.class": {
+      "bytes": 532,
+      "sha256": "85c1b7d75a41faa2a4cea3f01d9f206d3865eaee17278f1f6ab4f6b831977f2a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/CollisionRayTrace$World.class": {
+      "bytes": 420,
+      "sha256": "e2ff533fca9195e11911d847834519ebc62d873eaf4731df2bc37e8250655580"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/CollisionRayTrace.class": {
+      "bytes": 5525,
+      "sha256": "93a80b486315b718923785d7a0f4543468693fa9c33d8fa21a7fe4c686760de4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/Face.class": {
+      "bytes": 1341,
+      "sha256": "83f81545be8828c788e4e3f0627638f7cd5af8bf42e6ab5d8dffb75113d26528"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/LazyEntitySimulator.class": {
+      "bytes": 10418,
+      "sha256": "78eb73cbb8ceefeda9411b5907f18e9625eb972b80374f33575fa9a1693b0e29"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/ServerSimEvent$Kind.class": {
+      "bytes": 1770,
+      "sha256": "646f88bd7ea54370ba9b55ece8b0661d25defcc6852f8d97a10e8b1b49c01399"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/ServerSimEvent.class": {
+      "bytes": 827,
+      "sha256": "f13f8e5d2da9acb6b600c5ff198b1848b36a65d47bfafcbb0a54b7a307d145cd"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/ServerTickSample.class": {
+      "bytes": 1078,
+      "sha256": "6bfba96905cfe9be0599cff868b02ea019d852f4478878c06dd0a5e7a45a6573"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/SimulationRunner.class": {
+      "bytes": 8449,
+      "sha256": "88e54f909f1d0b6e99e9ad8e5643915e85797a471ab6b1cca83ac7cf9d20ba1b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/StartResumeState.class": {
+      "bytes": 2138,
+      "sha256": "ac17c49352207e2ea4ef9044d9d6632f06b570e18341eda92e7ff63542e6c97c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/SubtickPath.class": {
+      "bytes": 1133,
+      "sha256": "26519a5f12db8cd20fb8abba3fc5160f56ffbeae9fbfc5148515889d98e8815d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/TickState.class": {
+      "bytes": 4325,
+      "sha256": "9dc4b56674555ff67c03435757d82b07a948508082452cc1bd4f749a6a984d56"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/UnloadedChunks.class": {
+      "bytes": 1680,
+      "sha256": "4db892841db1d2b3c79c15555a3f468e91bfad7546a011510fc9409be70f9537"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/sim/Vec3dCore.class": {
+      "bytes": 1993,
+      "sha256": "34980a93d821a9c347fde414043d867a52e4ae37cbaf98e7c114e81662ec548c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/BoxColorPicker.class": {
+      "bytes": 208,
+      "sha256": "739d2716c8ee612cddfc848c5d89fa0c10a76f3da3ec9f1b89b9f0499a31be6c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/BoxController.class": {
+      "bytes": 27853,
+      "sha256": "b1536ccb42a1d33de16db6af8a12b687ae384d815517081188e9d165e17a6556"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/BoxDragController$DragState.class": {
+      "bytes": 936,
+      "sha256": "23d520a58d15e3269da78a5509a27d65157c990866ac79ed3507930aded71e6d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/BoxDragController$StartDragHandler.class": {
+      "bytes": 375,
+      "sha256": "b91877aa5c2918ed80ba9d25a5566733c08cd6289891532d6f4436c62eb9e44d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/BoxDragController.class": {
+      "bytes": 6144,
+      "sha256": "55113df6e3fe8171b4e5fa60662cf0ab4e0805c0d2b37b173dfa029e4863517a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/BoxSelectController$Picker.class": {
+      "bytes": 401,
+      "sha256": "1d971dd8105e0dc3caaaced82a6c40ad458077501b47f641ccc91332250273c2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/BoxSelectController.class": {
+      "bytes": 2271,
+      "sha256": "2da931d7fa4ad2ba4d6df0bb16a4a50f17a94e4444c293b2991618fe7f1304ab"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/BoxStyle.class": {
+      "bytes": 6897,
+      "sha256": "d0fed6bfd1ac52ae15120a04788193f3d94f31af24c4d4da33092afd7b5369e3"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/ConstraintKeyController.class": {
+      "bytes": 11324,
+      "sha256": "2f883d902f6d4b8058fdf7d4ffd96f32d31c0c8e41b13bada08f79cf6ca5a930"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/ConstraintSelection.class": {
+      "bytes": 2844,
+      "sha256": "59825c281ac39867b38ca199bc3c448bc87b78c30cf0738006678b2a8a9f946c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/FileMenu.class": {
+      "bytes": 29864,
+      "sha256": "aad19c9fc9aeea5b0992bc3a533f9dc9007e137dfff13df0f8f2d01b9debab0b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/HudMessages$Entry.class": {
+      "bytes": 1219,
+      "sha256": "bfb02eb8abca9c4a28c1c78c84bfc734cf8df0096ec0dff9f1811abd4b22ac52"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/HudMessages.class": {
+      "bytes": 2579,
+      "sha256": "f2a497ed4329cdfc131d586b0947036e85de79be686439b5cbb7d0cd39851172"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/HudMessagesPanel.class": {
+      "bytes": 4020,
+      "sha256": "b7a03c4b245bfeba60c2173b6e18d851f58c8eb2850726a44da4fa70b2ab24f7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/InputData.class": {
+      "bytes": 2917,
+      "sha256": "e0bd0c178b971b4a039e3b31df1266ec5844dd282218881583f78a90450bdd78"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/InputOverlay$1.class": {
+      "bytes": 1807,
+      "sha256": "331b0874333e1611e4afa8b32283618d4a656cb6e1fe8e7c6374511efec80352"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/InputOverlay$2.class": {
+      "bytes": 1289,
+      "sha256": "683a03e639080042d9856cfd6e5eccc3a23e0801119b9bc58b9c9fd5d4736116"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/InputOverlay$3.class": {
+      "bytes": 1223,
+      "sha256": "80d5b1e91ec694d4a89aba4d3ba68fc4d84ad4b66bacfc686bac007e80ca974e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/InputOverlay$DragDropState.class": {
+      "bytes": 853,
+      "sha256": "2fdc6d0bcf88e8ad09f493837095519a1a5df62262c73ea37bfd0913a1feef4b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/InputOverlay$RowFlag.class": {
+      "bytes": 3484,
+      "sha256": "c38a0ae62e1738152e38cdfb79ee120c207701bab473f120040f802434151608"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/InputOverlay.class": {
+      "bytes": 81321,
+      "sha256": "13d7b6cc86851b75d5676cbf657a9d09656e8e4601ef852cbfe213750e14fef1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/InputRow$Key.class": {
+      "bytes": 1654,
+      "sha256": "18764402097d9607cfa38f57802d90ac82f234282e8d926173319c1f3d42abf7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/InputRow.class": {
+      "bytes": 8303,
+      "sha256": "4b1c50265d2811940fc0124ddd8cd7ec456a51c9bd5550241fce94c64fd4a0fd"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/KeyDragSelect.class": {
+      "bytes": 5768,
+      "sha256": "077a4f08166535ab9357ecf9a479c42e995d8047b20c9f0f40d70a5c3c12ee60"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/MainWindowOverlay$SaveStoreSupplier.class": {
+      "bytes": 342,
+      "sha256": "a1338776cdf13f02c9271987587bf5d1a86e87dadc97600854276836f26b5c64"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/MainWindowOverlay.class": {
+      "bytes": 16653,
+      "sha256": "60820076554fe1e160911d6da823aad8dd343540be16edf92de50d6b7925cdfc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/MovementEffect.class": {
+      "bytes": 4877,
+      "sha256": "34bbb8613ca0d49469e397827bebcfc5ef3ee6741e2c9d74b30c36a88bbb8d8b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/OverlayManager.class": {
+      "bytes": 1835,
+      "sha256": "b7f16a2248bc583aba5d47a485e95f0be8a9cfe5512fccb499bfa6afbc5e107f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/PerfOverlay.class": {
+      "bytes": 4754,
+      "sha256": "cceb444a32b6a7640cb96320eb1774366b5b377d1ac4904c325665ceadb252da"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/RecorderWindow.class": {
+      "bytes": 4207,
+      "sha256": "54809c65276ed8868365815dbc279b9256138c3cc9200c141f2fa27e1353d50a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/RowDragSelect.class": {
+      "bytes": 4227,
+      "sha256": "b8a4598ec6f52359776ce401cafc305ef5f91676fce9b70ea51dbfa79eb6f151"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/SelectionManager$ModifierState.class": {
+      "bytes": 568,
+      "sha256": "f47dce139a799e4bba50b75c71fa0f58fa1f854519ab052eb0bb2afe99f29d24"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/SelectionManager.class": {
+      "bytes": 6554,
+      "sha256": "d3673d840a8f92e48e848d4f8c7f8c5b89378a0aa1dc7309224d26cc6b63d09b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/ServerEventLogPanel.class": {
+      "bytes": 4870,
+      "sha256": "d4e0be2be890876c9593bb70a98c1887d0da5d5fa3ef811347dc1518ab1bd065"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/Settings.class": {
+      "bytes": 13607,
+      "sha256": "352d7e01b19de3dc248c41215812f1d1f842b438cb7732c1c78217e43df53547"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/SettingsIO.class": {
+      "bytes": 6157,
+      "sha256": "b4396a6f810998e539df4ca3ae06da901a3a9e732b5f9e40d7889adf3b1e73a9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/SettingsModal.class": {
+      "bytes": 42645,
+      "sha256": "76da7c04ceb6f5ec51d41ef02fd8442c51193f4e7d0ec6eab661b1638d1c38b4"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/StartDragController$1.class": {
+      "bytes": 1983,
+      "sha256": "f0202b10b61528b5179adc352fd2ecb840d190cd445004d9d6714a97e47ef23f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/StartDragController.class": {
+      "bytes": 3953,
+      "sha256": "2b9b73aa6704e14981a4df351423273800d0132db16356104dd2a6e217b2d67b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/StartDragGate$SimProbe.class": {
+      "bytes": 381,
+      "sha256": "b81a7b35c760ffd7e07944252369ffa5fc872fcbdd8c34f89a712ec98b8cdebf"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/StartDragGate.class": {
+      "bytes": 4171,
+      "sha256": "cca2f3abd1533d0ced7f9717cd02baaf0f9ef36e1969a1ce3421f892b820c47f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/StartStateTable$BoolApply.class": {
+      "bytes": 270,
+      "sha256": "eb88cb31344bd5606e1c1645092a33c833ac876845cf13df1f1fe3e9b057c231"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/StartStateTable$IntApply.class": {
+      "bytes": 268,
+      "sha256": "f6ad2894e4a7fcd02e4e30bc35ed9750b58c7ebf81463b948d1c58f2c5d79bca"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/StartStateTable$Vec3Apply.class": {
+      "bytes": 272,
+      "sha256": "75473a5eb7e5020dab4b900dbd1273e937c0b73d2915e9d0ed4f779789c033c1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/StartStateTable.class": {
+      "bytes": 15906,
+      "sha256": "5858d216f05c4b148208a6c4fd148cbcf29f34648aecc120b2dbc8c202189f02"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/TapThreshold.class": {
+      "bytes": 666,
+      "sha256": "b82bef6883dedf68d21cdccc7ce53e509be17e31bceafcdefacce45d9e35b98c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/TickInfoConfig.class": {
+      "bytes": 3717,
+      "sha256": "090020822a00e2acdb17019def400353a22275f7db71108b033fb57722c6e02b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/TickInfoPanel$1.class": {
+      "bytes": 1612,
+      "sha256": "c03f762d7f799edcaf1a6bde5af754e6ab38d2bdef4bfbe682404098cf10a381"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/TickInfoPanel.class": {
+      "bytes": 15173,
+      "sha256": "a9ae5a6a6c1728857a8d260b704d464b5bf3b544604e923e3308d88d892c17c2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/TickInfoStat$Kind.class": {
+      "bytes": 1448,
+      "sha256": "d355851d711271042872981259a1eeb8cfb1155d0542df27c2d14a802236bdd1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/TickInfoStat.class": {
+      "bytes": 6828,
+      "sha256": "2d8b4bc78bd503b72cec7be05ab55057f02b8eedb6635935a8970f35058cd6f8"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/TickInfoStatSetting.class": {
+      "bytes": 755,
+      "sha256": "2dc5490156c0ee6da09d783ba1e1f8c75cd70b6262fa4dd7f990dc03d4e80b2e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/TickInfoStatsEditor.class": {
+      "bytes": 8773,
+      "sha256": "3b13e896bbfaf4dbdae7882ed353212c16d89f9c1b2d49e016e920836894ab5a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/WorldPick$Kind.class": {
+      "bytes": 1278,
+      "sha256": "93f3eb4efc429062564473dd80c8ddd9a588f030659dd4f4770353ffd479af78"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/WorldPick.class": {
+      "bytes": 1000,
+      "sha256": "3aa3037f54341aad9ebdd2e97b9a14af1844619aadc38a712cd123a43df67aec"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/YawGizmoController$State.class": {
+      "bytes": 1052,
+      "sha256": "9112ea6fb4753abdf2770cb678c900943ad57491370fa1e54392bc948b0634f5"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/YawGizmoController$TickAngleSink.class": {
+      "bytes": 289,
+      "sha256": "22e7544045d2a06b8e13121d31f7141002a551e11b22e26182bf404354284423"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/YawGizmoController.class": {
+      "bytes": 6855,
+      "sha256": "fe9020f5eb455f510e1fd2b6578e2005d302935243ded3ba9ba65fe0921a88bc"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/AngleSolverConstraintSource$ActiveGate.class": {
+      "bytes": 334,
+      "sha256": "dc2b474f4f2a82fcc7112e8ee76afb5b6e059e2fd659fcbcfa245a0a05e39da2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/AngleSolverConstraintSource.class": {
+      "bytes": 9917,
+      "sha256": "a775c61a8074ef6f6798b0fba8856c68c7c1fba09b87c0987b6b4443c6f42516"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/AngleSolverTable$ChipRenderer.class": {
+      "bytes": 304,
+      "sha256": "d7612e0ce57604fe4ab5931cd904508aef57a0c111485f51c55e17fc99999ef0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/AngleSolverTable$DragKind.class": {
+      "bytes": 1777,
+      "sha256": "ca8f0c4fff05e5d5e744646dc94b57d1ca6f088c88a83f3c2f75ccfc67fa4ac2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/AngleSolverTable$StateChipSpec.class": {
+      "bytes": 1132,
+      "sha256": "38f27cd3f92e2ee1c9f1f0ae9f693ce748926533bfe209d3cb0a23e6e6c2545d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/AngleSolverTable.class": {
+      "bytes": 55276,
+      "sha256": "1a560c88d101b5774f228917394fd4416b9ac55acf7241c90f2bbfb6768fb1d1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/AngleSolverWindow$RunView.class": {
+      "bytes": 755,
+      "sha256": "c1da37ea3f3a17be13c4d6a032ae488afe14db31032aeb6d7b0a76c062ae761e"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/AngleSolverWindow.class": {
+      "bytes": 63648,
+      "sha256": "364dff9095ae7af8fbbafb6a3478a6d62a05e00fe4b2f2352c0e200fa62cfda2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/GraphEditorWindow$1.class": {
+      "bytes": 2131,
+      "sha256": "a3dfeddd16055fb1a4a763179d66ae81eb6452001eff7364c4f49e0107f039d0"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/GraphEditorWindow$SaveHandler.class": {
+      "bytes": 379,
+      "sha256": "bea451ee4f8eb836413fbd5946237e00f9f8beb288ef6efdf49be53d1e120d7c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/GraphEditorWindow.class": {
+      "bytes": 48786,
+      "sha256": "a74d85c04565af1a89fa138035f5be30860ca8d3baef411fb07018412c506a19"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/LiveBestPathSource.class": {
+      "bytes": 3676,
+      "sha256": "b3265419093c5fb746c0aa5894846c533c7fbccfa828111739629d1c59ca6934"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/OnejumpKeysWindow.class": {
+      "bytes": 11886,
+      "sha256": "92cd44287bc19c89733cd32f25a3ffa149a29751f128ce036670454b663bb1ae"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/OnejumpSetupWindow.class": {
+      "bytes": 29080,
+      "sha256": "5e117e40605a9f332fbd58c3206003127e51cd5f2dbcce8b66a49e32c1a6e9e1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/SenseFinderWindow$1.class": {
+      "bytes": 1836,
+      "sha256": "62d67ff6a7b31c49c357edc9aab23d12efecd05c9931fd0d1c162032c2aead40"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/SenseFinderWindow$Host.class": {
+      "bytes": 1864,
+      "sha256": "8f49b0e850353d1edc22a339ee16755edad828027db8e8ce2b3f9981d6d2085b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/SenseFinderWindow.class": {
+      "bytes": 17919,
+      "sha256": "341bd3840b11d9aec62621e6781d468fe8c7799d00d71ba3515237490c8ff32f"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/SolverWidgets.class": {
+      "bytes": 8135,
+      "sha256": "de105b5fa299a07e8319ec92a3e326355f1b8c755b4bbe889d61df17326b1aee"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/StratfinderWindow$Ending.class": {
+      "bytes": 1528,
+      "sha256": "ee9e9e4dc1a5bc9158e5d360c66ec4eec1f60a1551738131810b558730a2c6f1"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/StratfinderWindow$Host.class": {
+      "bytes": 1873,
+      "sha256": "97a75966dfa71cb8e2b56545a767bdf7c9b46cffc65424447ef35e578faee274"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/StratfinderWindow$Phase.class": {
+      "bytes": 1473,
+      "sha256": "e59887a3ee0bb02996d06950038260d993fabe8b930dcedad998e3463cc9b509"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/StratfinderWindow.class": {
+      "bytes": 19896,
+      "sha256": "bda8ded1efe9ac8021f2e60fafe7538fdd6a1938c960e81c21b2aad546d60120"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/TurnProfileWindow.class": {
+      "bytes": 19994,
+      "sha256": "aecd38d5f2d00c824e65b8f2c09f29b815b4c7a2526f1a644b55bc835560a7e7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/VelocityMapWidget$FieldSnap.class": {
+      "bytes": 1482,
+      "sha256": "cb970e78e6366054ebd9a4ed54280f8a84351a0a97e5305eee29683ce49b9568"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/VelocityMapWidget$View.class": {
+      "bytes": 1417,
+      "sha256": "6d473dbfe9d2a525f9f20c246a6c9432023477a6a693b0c98c7388ab48619b3c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/anglesolver/VelocityMapWidget.class": {
+      "bytes": 54982,
+      "sha256": "278814a77beb069b3e689c4de2299b08c3b35173729d7e6f48dea84a8a808906"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/theme/ChipFlow$Layout.class": {
+      "bytes": 511,
+      "sha256": "5eafa80039d02c6c20151d3447f4c2ba37dcd8541a134462c3bb5932091f2c39"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/theme/ChipFlow.class": {
+      "bytes": 3105,
+      "sha256": "0224a0db18135ae429813d1afb721005f3238a63291718f83e737abc529e6fe2"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/theme/Controls.class": {
+      "bytes": 8361,
+      "sha256": "ad1e07a596d4fd215e4aa3385f1cf959f6b46af7f8f719252a548897cbbdc33d"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/theme/Fonts.class": {
+      "bytes": 842,
+      "sha256": "956d52e9db034136864e3737c67e2c0f064df67748dbedcc5eb53536c1675fb9"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/theme/HudMessageStyle.class": {
+      "bytes": 470,
+      "sha256": "5dd34a28fc2c366a3a8c474e723e30eae9e3cc837d9f3e765b785d14870bb6b7"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/theme/MacroBadgeStyle.class": {
+      "bytes": 786,
+      "sha256": "385d5cd5df1368e56a83adfc62e0c15c56afcf3f1f083ea72e91f8e52a4ebdec"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/theme/Modal.class": {
+      "bytes": 3036,
+      "sha256": "ecce6ca4feadeafff46908662ace03aa01fbc66dc2ea06687e3fb2b23bd0afae"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/theme/ThemeManager$HAlign.class": {
+      "bytes": 1395,
+      "sha256": "4587286e2227dce5ffb912e917558f1da9614de13017bddf728ba0529f96026c"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/theme/ThemeManager.class": {
+      "bytes": 21558,
+      "sha256": "7cda16766d6ec8b5c441845bdd4bce26eaefda37ced332cf4c0a10dbdb9ca9da"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/util/TeleportCommand.class": {
+      "bytes": 1183,
+      "sha256": "5eaf2c36ae398f6a38ba1b07eaa60bb4dc383f9265c0cbd46a4792dd3a2d6665"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/ui/util/TooltipUtil.class": {
+      "bytes": 833,
+      "sha256": "7584dcd93bf4497637315b605ad57e28f3c04d8c5fc98f6a3a1a14709810b82b"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/undo/UndoController$CaptureResult.class": {
+      "bytes": 607,
+      "sha256": "92a234697b025ad9b6742d511b504cd5ec37669c5b4339f13c84deb48271938a"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/undo/UndoController.class": {
+      "bytes": 13172,
+      "sha256": "dfe7c17f4048be866621ae00104427b979c7ba123b52ffeaee6605f96e8a7444"
+    },
+    "core/build/classes/java/main/de/legoshi/parkourcalc/core/undo/UndoJournal.class": {
+      "bytes": 5743,
+      "sha256": "abad8649fd9758445a76e753c603606d990a38b3ebaefcdacfb65a95b38543d2"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/SlowSolverTests.class": {
+      "bytes": 134,
+      "sha256": "bf24bb154138b10de3a1c18f5824e36760ed01e3acd958f3285e1045aa85663c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/VerySlowSolverTests.class": {
+      "bytes": 142,
+      "sha256": "b7493171aa35efc6b7a109e30398112002ce73d7e4b77bd677af14d2a3d0c2c2"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/AirborneStartJumpTest$JumpGatedSimulator.class": {
+      "bytes": 4188,
+      "sha256": "840897934af505dd4592cefa5657e1a2b5ac92d795335e02062dc01666c6a0f1"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/AirborneStartJumpTest$OnGroundCheckpoint.class": {
+      "bytes": 615,
+      "sha256": "1f20e31b2e23d63fdfce4c530379316f1d04e1003d7599d0aead75c361aa41c3"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/AirborneStartJumpTest.class": {
+      "bytes": 4481,
+      "sha256": "f0f50f4cc76e75c6afdce4f79c5b8b774e1684f6b0410aa3d0c75e857473f3a4"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ApplyDeviationTest.class": {
+      "bytes": 9761,
+      "sha256": "81acc65eede20859caf6af3ea6246b4f0f2ca3a56a96dbc4c3c1bf25c2fffd9f"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ApplyForce45InputsTest.class": {
+      "bytes": 7090,
+      "sha256": "0e18feab70411985e5154a40042689df7de1cc38b72a7fafc9fd8e8f602b1e56"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ApplyYawRowsTest.class": {
+      "bytes": 3750,
+      "sha256": "de5385e482ea40e6db864a6a07700f28d4dd75791d08b7dbab31a7b90c5de827"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/AttemptSamplerTest$Loaded.class": {
+      "bytes": 914,
+      "sha256": "ec4f08a48e215d20e581de37115d9f37703bad5812da6919aeebe8c672be5588"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/AttemptSamplerTest.class": {
+      "bytes": 7647,
+      "sha256": "70121cdfc44828e6da5129d2bb347500dc45d47e789908772bb3f2efb87c99a4"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/AttemptTrackerTest$Rig.class": {
+      "bytes": 11906,
+      "sha256": "eeee254a023d185754928db55e74ed42929c7d1e06025275c810a254d6a5ad1d"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/AttemptTrackerTest.class": {
+      "bytes": 30621,
+      "sha256": "14e597e20bd494c2b43fc425e5067a26f6fdf1a19007856a06a6b203f13963df"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/BuildHessianCapEquivalenceTest.class": {
+      "bytes": 8806,
+      "sha256": "1806e252ea2aa59c687b3a30da7df3b534f088a3a49598dbad162abc0254fc2b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/CertBnbDfFoldTest.class": {
+      "bytes": 5903,
+      "sha256": "79003bcd73e283559717307c4bc01738831939ff5ac25857eb6441420842e613"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/CertifiedBnbEngineTest.class": {
+      "bytes": 8907,
+      "sha256": "836b45516c7ae0b42d4aad03f463930dc205ab7cebe0205aa1df9d84267da9aa"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/CertifiedBnbTest.class": {
+      "bytes": 19664,
+      "sha256": "641962bb80514436428d6f20ff9b9cf2699925444f207b37bad1a55ba6977d81"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ClosedFormGradedTest.class": {
+      "bytes": 4762,
+      "sha256": "82104364a1664d8dc936177d95b1f5176d4a5749ddbd47b3440e603864f9595b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ConstraintDeriverTest.class": {
+      "bytes": 12168,
+      "sha256": "31ff2afbdc8d5ed815e9d2843c1ba8ffeda463bd745f74b2a4b283aad6dbe64e"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ConstraintRangeOrderTest.class": {
+      "bytes": 6771,
+      "sha256": "75380a160f77941fe7c47fbad2af00f93babb8f87182bd11f415719d1a491d63"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ConstraintShapesTest.class": {
+      "bytes": 10329,
+      "sha256": "c62fc39df3bec42547e8a04f6d2ff4ee62084d43110372ccbfd7d545199c362f"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ConstraintToggleTest.class": {
+      "bytes": 9673,
+      "sha256": "0c45a18e11c47c9037d6c0e19e2448d47a191ddc9a9f4c5784384523a6627929"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ConstraintVisualizationTest$VertCounter.class": {
+      "bytes": 1683,
+      "sha256": "323081aa73707572c0f82f408b4294a1472d7853faad64a4a1116c95d081c9ba"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ConstraintVisualizationTest.class": {
+      "bytes": 27070,
+      "sha256": "0bb46ab1da8ae9c995812e9cb44a728466fa16530350187ff7cd9ac29f4cb16c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/CrossAxisSignTest$Loaded.class": {
+      "bytes": 998,
+      "sha256": "d53539fd2e68204b3130baf0aca806d16ba3f72e6bbfab8508f0eae384a76d7f"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/CrossAxisSignTest.class": {
+      "bytes": 10236,
+      "sha256": "1b3be3ff80818eb2e50398349d4dc0883e21320903f6f6820794515474ef3923"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/CrossJvmDeterminismTest.class": {
+      "bytes": 5826,
+      "sha256": "a9aabc154e95d6a3983fbd7357d9b5cab0183f284595443431a8932d05558edc"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/CustomBudgetTest.class": {
+      "bytes": 8722,
+      "sha256": "5444235e98accac9af78d2e65ec94f91774f68101d5bf350b16c9b45194ff4c4"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/DamageTickTest.class": {
+      "bytes": 20517,
+      "sha256": "9750e095285d5f02c0307067281701bdc134620ae2561db3593683bec0f92e3c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/DeWiggleTest.class": {
+      "bytes": 8272,
+      "sha256": "36931e62b94c8629e272b185fc0d03ffac00791bc337503a511fb4f5e5e6bd53"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/DeepCheckTest$Rig.class": {
+      "bytes": 8059,
+      "sha256": "cf5992fcb7f3982479c5dcfb484beec8d640c48b1e29a26a00281f824e50986e"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/DeepCheckTest.class": {
+      "bytes": 4380,
+      "sha256": "9f3ab62843f97803a028482a674677fb41e1b281144bc2a4c5fcde93a44cb454"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/DeltaFacingConstraintTest$Ctx.class": {
+      "bytes": 822,
+      "sha256": "be85a55cc15401b3477f717eb756c5a53f870bd51150d8bcb962f3a2dc5553a4"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/DeltaFacingConstraintTest.class": {
+      "bytes": 18259,
+      "sha256": "0d727dd0dde80cdc62b5fec7111539044d18ced2a7cf01f9a9f5f8a7ab6f3ac4"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/DiskSocpKernelChordTest.class": {
+      "bytes": 3802,
+      "sha256": "1dbe610a36ded2db81c580b7d40c4475bd29dd2fdc4924abf1226a03ae2b01e1"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/DuplicateTickStateTest.class": {
+      "bytes": 5687,
+      "sha256": "0014dafb77a2d0fbe82550a5043dadaa454012c670e113ebcd7c91009b13ca2c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/FacingCellCompileTest.class": {
+      "bytes": 10605,
+      "sha256": "38cbaea3c9d5c5c5bdd4b451aa622078fde212f913d00e3879a367665dfa39a1"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/FacingFoldTest$Ctx.class": {
+      "bytes": 941,
+      "sha256": "09617771f3d383cca971ec9c0e1d5ec9cea01e6b5bf4f64e7ab1ce424477b239"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/FacingFoldTest$Fx.class": {
+      "bytes": 1685,
+      "sha256": "d95e9855e81bbd8a292737a4100ce74bba4ad4d1871043cc7fac87ed6d764b75"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/FacingFoldTest.class": {
+      "bytes": 23352,
+      "sha256": "a89eea4d46e6769df975d65f8c0465b3af08f5bd322c6254108105103798175d"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/FacingLatticeTest.class": {
+      "bytes": 5896,
+      "sha256": "06b376819fb2a7f1810b8b05867e85816e8d580324b33f80f2378840bbd499a0"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/FacingStepNodeTest.class": {
+      "bytes": 17337,
+      "sha256": "670a5f0d1e201730ff4ddc0bd50fd8c401dc04add8431b7231f6fc25339189a3"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/FirstTickDeltaFacingTest.class": {
+      "bytes": 12073,
+      "sha256": "96c359e0caf785333d7f84577ebcc08c27d14b8c2e3efdc8080d7513a75056d0"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/FoldDriverEngineTest.class": {
+      "bytes": 6821,
+      "sha256": "7d9a4d2c9b656e066d37f5e6b7ea37ad808a3090ecb03e94e3ecda3d2c663478"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/FoldReplayDriverTest$Loaded.class": {
+      "bytes": 1113,
+      "sha256": "1e84dec97f521b8c87370d44dbfafcaabbffcbb9d0a39f7bfd232b293a5954d5"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/FoldReplayDriverTest.class": {
+      "bytes": 11700,
+      "sha256": "80d59eefe9e573fa61799239465954fccf7e1ae9c221ed146095a834474d941b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ForMcVersionModelTest.class": {
+      "bytes": 3271,
+      "sha256": "d9445862915fab81d09c4ff9bf23d91824f7be55dd654394adbacbd069596fe9"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/FreeStartRescueTest.class": {
+      "bytes": 3642,
+      "sha256": "368fd02b08ddf54065f1f8001f446156fd46811e29012799d60598b623dc567c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/FreeStartSolveTest.class": {
+      "bytes": 15986,
+      "sha256": "8037bffcc795bd6b3990fd187952abc6f09b8ba84f05ac43789a71a25ca1167a"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/GateMicrobenchTest.class": {
+      "bytes": 6212,
+      "sha256": "325b06b111b44d40b7458363d8aef3957470cdf9b4548d4c3c2d94f4645a4b0f"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/IlsPolishFreeTicksTest.class": {
+      "bytes": 8876,
+      "sha256": "d9ff77c17c9652d4c32e41a9f30cc56fb2456c115b43779dcdc7ef8d7c64c2f7"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/InertiaFoldingTest.class": {
+      "bytes": 10553,
+      "sha256": "4daf3454f2d5859fb96f316718b94533c5958614c964a569d230532f7ed24e5a"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/LandingConstraintsTest.class": {
+      "bytes": 6865,
+      "sha256": "f7bce21dd2c37c97177a1ea2773a8098f0b4999a30a3161995180eecd48aa03d"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/LandingForecastTest$Rig.class": {
+      "bytes": 7694,
+      "sha256": "e9f1a267aa7865a41cb5937ac3fe46922712564b3a8471d494ed312d793d315b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/LandingForecastTest.class": {
+      "bytes": 10413,
+      "sha256": "cb23acdd493ca894ce00a79ca5db8b5c165963427083d290d57930a560294af8"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/LegalModeTest.class": {
+      "bytes": 4790,
+      "sha256": "1b0ee70eba014c6b4cb1f4b77acf5eef5663ce4ef80b2ddd0560430cb9089e4e"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/LivePathVisualizationTest$1.class": {
+      "bytes": 1476,
+      "sha256": "7fdd462f224d0332e7983ae7885ae75aee68e226217097d5a9b82dd466ff1f9e"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/LivePathVisualizationTest$VertCounter.class": {
+      "bytes": 1675,
+      "sha256": "7124428814f410642ae10a7068ef250350c5bd688328b346876ec97149bce1f0"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/LivePathVisualizationTest.class": {
+      "bytes": 9018,
+      "sha256": "250c70e5af4db54aaa9a57adb654a961313e04b7c7fe3a9dd08b2045dc1203e7"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/MergedFootprintClipTest.class": {
+      "bytes": 4061,
+      "sha256": "a0da14342ea6bbbbf13ea894ca061d18f504ef566113d5abb742a2971d8bb906"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/MotionObjectiveTest$Loaded.class": {
+      "bytes": 975,
+      "sha256": "383c9c227161a1f72f6ac6dc1e2924b205fd1b51c7bd63500719115e878372c0"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/MotionObjectiveTest.class": {
+      "bytes": 12496,
+      "sha256": "0631d4326016a2db3ff0f839a79f89b3927ebc7c51acb70f09d0949cf542a4cd"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/MovementMultiplierTest.class": {
+      "bytes": 8191,
+      "sha256": "2c810870ec4975391bf28127b7fa8b416fd5698dcb6da1f260dccaa7b8475113"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/NoTurnBendersTest.class": {
+      "bytes": 9663,
+      "sha256": "ac028ce381dadc754da503b3dbb339f2d703ff2a0a90cce3be72ea1317473b0a"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/NoTurnBendersUnitTest.class": {
+      "bytes": 6937,
+      "sha256": "fb3ed7c248dd62d983a9cf960ce1153921ca7f378f3ac8267f12508afc978f03"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/NoTurnDriversTest.class": {
+      "bytes": 13700,
+      "sha256": "3526b95885b7081f6a7fca1ea1ebcd6c2296ca0247269070bd668b05f2080140"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/NoTurnGpuFallbackTest$1$1.class": {
+      "bytes": 1469,
+      "sha256": "3c451d7cc6d37dbc87fc3ebaea8e62db991516b502b3b4c56992d2ba704c26d2"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/NoTurnGpuFallbackTest$1.class": {
+      "bytes": 1498,
+      "sha256": "d6091d7b9e4345ec81c73284065a5bfac7cb144e63512fb928f5aa06f6dfcb62"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/NoTurnGpuFallbackTest.class": {
+      "bytes": 4543,
+      "sha256": "3ee4b3abff207882eb15a3eb5e6ce75d032a5cf191a4b86c5b190008bc138958"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/NoTurnPlayableUnitTest.class": {
+      "bytes": 5011,
+      "sha256": "881d4d22a54f2fbd72ff1bc3fe1efbcf10c4df39c2ebd303927a7cd5351368b3"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/NoTurnRankingTest.class": {
+      "bytes": 8384,
+      "sha256": "47596c564304975cf2dbf8a21edefbc117bc2edabf84502cf59b4cb937a97697"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/OnejumpCheckTest$Rig.class": {
+      "bytes": 7650,
+      "sha256": "49c0c1064ea2504009ddb3021047bf0225808e95a1b3b8fcfe2600b138e9f7b4"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/OnejumpCheckTest.class": {
+      "bytes": 10537,
+      "sha256": "af855af0981e4e0d8a50630d67dd9dcdf3ae957200f361cde4bf46aa73d82058"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/OnejumpRigs.class": {
+      "bytes": 4857,
+      "sha256": "666e100d64d5b4476b0c63bce7f06f6c14e0611cf0b33eec5e963b8832875a64"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/PipelineShapeTest.class": {
+      "bytes": 11600,
+      "sha256": "13215f51904cd0d59fc0d299a20832cc62a7249cc93b41706a5a4639036bb861"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/PlaybackPauseTest.class": {
+      "bytes": 4146,
+      "sha256": "8720ee004358903e8d0b3d00d5744fbdccef5a36700aa1bb6902bf29a6f0ecad"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/PracticeMacroTest$Rig.class": {
+      "bytes": 9568,
+      "sha256": "afeb6624c06bc5c2652ec9c89168360139730c003c37701ad427d28d2c313c2e"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/PracticeMacroTest.class": {
+      "bytes": 8287,
+      "sha256": "1fbd7b43416708c8f3bc23c2bb93e5f70f0c637caa2a2a8db8285d3ebd2ded24"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ProblemsTest.class": {
+      "bytes": 3908,
+      "sha256": "a8ec48faa1d0ad38277b9ec889799e2695c4e4a281b1e3a2dac0317782ed22d6"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/RangeMetTest.class": {
+      "bytes": 2825,
+      "sha256": "869b1bce3460bba9f19def256f1dc0deb891373413ed8c2cfc3b84cfdf1dd1b0"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/RelativeConstraintTest$Ctx.class": {
+      "bytes": 973,
+      "sha256": "06ed286023844051423a7ed50ac7427eee81bf4a5a1df0778fe76d107c62577b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/RelativeConstraintTest.class": {
+      "bytes": 30667,
+      "sha256": "14d0a35ce8dbe0d4200f6389dd5f41f5561cc12384bdbfdb4d37bdadf1b3d991"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/RowEditShiftTest.class": {
+      "bytes": 5616,
+      "sha256": "21301a9eecfda5306b9aa2756c7c98469be947f426f5ac3f1e6ff233ee549138"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/SenseFinderSolvedWindowTest.class": {
+      "bytes": 9511,
+      "sha256": "94f10911a912976a7115a3a8bd916470298c5d060a9fef634a82274c7839d258"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/SenseFinderTest.class": {
+      "bytes": 11966,
+      "sha256": "7af7e7c911a942690e72086fdb4a75efa99478792b178a8fececf6292bdeeec9"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/SlipperinessFallbackTest.class": {
+      "bytes": 6393,
+      "sha256": "8ef18913d21471f80a7e943a8673f742653c36f2a198e96a7da2ad8b3b5ad200"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/SolveFailureDiagnosticsTest$Ctx.class": {
+      "bytes": 830,
+      "sha256": "7d903328e43d52da0095ab2d938f37617839c4840c074a841e63b6c37ac2e4c9"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/SolveFailureDiagnosticsTest.class": {
+      "bytes": 15683,
+      "sha256": "bf37877f92340e58baefb11c15c73fd29b61c54394d6dc2961c6da92b5a970dd"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/SpeedAmplifierRangeTest.class": {
+      "bytes": 2432,
+      "sha256": "55fbc72f7f6c90c140777e703caf4d1c94402eaa0448a213ecb7230bcd57f7eb"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/SprintJumpBoostEraTest.class": {
+      "bytes": 3306,
+      "sha256": "68dfaea259db270abdb6c924dbbb38b7e3b2a4425f955e81a9fe3a165a18c81f"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/SprintSneakTest.class": {
+      "bytes": 19209,
+      "sha256": "044e40675a8ab4fd1df3bec67c2ee0a3287bbad3aab0665606398ae1f16d9eca"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/StrafeSideRealizationTest.class": {
+      "bytes": 16620,
+      "sha256": "32cf1504f609abe4fb59131c0ed942156f235b5686dbe17c3bd9b74394a2a74b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/SupportOverlapTest.class": {
+      "bytes": 2105,
+      "sha256": "89d0c3919c2396fcf7dabda67fed22536aef3117de1861a0f77f380d234c3f4c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/SurfaceRegimeTest.class": {
+      "bytes": 16776,
+      "sha256": "dfb1ac36dee6989273b04f1d312793ebfc41783f0743aab4828f48c8aa1df1e8"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/TailScoreEquivalenceTest.class": {
+      "bytes": 6744,
+      "sha256": "be60abc34346f7f3ec4bb6e08bd0d162b76d1008160707b9dd8b50251cef3b8c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/ThoroughAdoptFeasibilityTest.class": {
+      "bytes": 11970,
+      "sha256": "29b8d58bff2b52117005a1d20cb1384c1dc2915951989ae013bea77b40991887"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/TrendFilterSmoothTest.class": {
+      "bytes": 12835,
+      "sha256": "3f01b635273a1e7ada18b4f378f3bec086417a844601fb30dcd8d2c5d0390f84"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/TurnProfileTest$Loaded.class": {
+      "bytes": 850,
+      "sha256": "518247b2aff11cc5a3819f930615fb8d93ce61f525d47d658b9e1cdf89362a5d"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/TurnProfileTest.class": {
+      "bytes": 7755,
+      "sha256": "557045f1404126d31e08a36b069429f612e90c7de9492dacabce25616b015568"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/TurnShapeTest.class": {
+      "bytes": 1930,
+      "sha256": "cc3ceffd42ec74e040c6e4f7bf0a4df3080696fbfa597f686db536035a7b64e5"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/VelocityFinderConstraintTest$1.class": {
+      "bytes": 1985,
+      "sha256": "7894552a684a815eab4eac54de554eaae3a6de7d87bec02e0f713001e0fa50b4"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/VelocityFinderConstraintTest.class": {
+      "bytes": 6611,
+      "sha256": "20f41db39d3cbbef313dcdd934b6f701c59010c66b17c276125ec7ca17286cca"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/VelocityFinderMultiJumpTest$1.class": {
+      "bytes": 1931,
+      "sha256": "b04e314dbb18a9b730cf03c6477513709fa79449b81d20f7c9253dcac09922b1"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/VelocityFinderMultiJumpTest.class": {
+      "bytes": 5369,
+      "sha256": "28d312cd1748194b768514b906fae4c83b2b25e10e7372c3cdd9bc9b55b9fe5f"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/WallHitSprintHealTest.class": {
+      "bytes": 6005,
+      "sha256": "c27203904ee623a841ead979de566a18b4cacf9fb86c0e03cbf3638fb14a8f42"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/WallHomotopyLadderTest$Loaded.class": {
+      "bytes": 1155,
+      "sha256": "efffe85bc6d197b0f8bd945efdd0561437001a91bae666c5bdbdf4f83e4914de"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/WallHomotopyLadderTest$Witness.class": {
+      "bytes": 633,
+      "sha256": "ac827fbf0a71a4547578c90c9c9b7893fdfc9ac4eba5e51f86d562fdf562a38c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/WallHomotopyLadderTest.class": {
+      "bytes": 22772,
+      "sha256": "a7025e3c91b24ed3cf08a3b90ba74e230700e0e1ac5e97257c5d503eb60716b2"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/WindowSeedTest.class": {
+      "bytes": 3337,
+      "sha256": "708a29bd24bb98b02dd774f3b27f220c6f9bcbe164828fff07a7620f7ae112ab"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/WrapWindowIlsTest$Rung.class": {
+      "bytes": 3243,
+      "sha256": "82f689eb00f3b80e17999811cf140ec5a2da7b9556dd99c49b07393c9f99a5eb"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/WrapWindowIlsTest.class": {
+      "bytes": 18159,
+      "sha256": "0d9ae7c41a1382b5ba3d0a768f5550a15876e7b90376a049c0a7e8c5bf6f536c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/YawDirectionCrossCheckTest$Row.class": {
+      "bytes": 1437,
+      "sha256": "669c8d01e98f0d0012af7ca1ba7405548362b0cdf10cd3ad06d09bac2ab87355"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/YawDirectionCrossCheckTest$Run.class": {
+      "bytes": 893,
+      "sha256": "03f2c54962fd2561fc431e850c3132856a4f70ff1fe9c52e1625ecf39e0d5431"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/YawDirectionCrossCheckTest$Turn.class": {
+      "bytes": 1204,
+      "sha256": "129fc5ae0444ca9ca2d5053ab5db9c1b56512964b3a38f16716d035d823ba10a"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/YawDirectionCrossCheckTest.class": {
+      "bytes": 16966,
+      "sha256": "c78581bc08d85c70e8c745cf8b6e19ca788f1b2b1813c8020d0f0ecdfbc3bd08"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/YawOrderTest$Run.class": {
+      "bytes": 1025,
+      "sha256": "81f95ee9eeeb17b646fe0cbab1c1c282f470abdb190b3aac8880ae2e951dcf01"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/YawOrderTest.class": {
+      "bytes": 19669,
+      "sha256": "434dcb44b4d2aa87bbdd5b85c7dec7a1cba8d2b39768f255f65b09d6ff1ebd65"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/Checks.class": {
+      "bytes": 2894,
+      "sha256": "7d091904a400060af8b9d00b8c03f7faf6adaf6a274bd83539120040c54418a5"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/ClosedFormCheck.class": {
+      "bytes": 6667,
+      "sha256": "8dfc0324dad73d3028fd42c0589b3ba9cbf43fc52660bcf71926bf64f7fe4aa8"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/DualRecoveryCheck.class": {
+      "bytes": 7551,
+      "sha256": "4ed299de6a71284a734d6a9babbb718b80ccc5d071957154a002855022a09371"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/FreeStartCheck.class": {
+      "bytes": 7830,
+      "sha256": "c0301bc4ad36e0d6021ebbbd9653882ab3b4c3752abf188b9622bc8900250f2e"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/GapAttributionCheck.class": {
+      "bytes": 7107,
+      "sha256": "da6a7391573ac3fe1d0dece24f6aacb766515bdad8550f78cc6db60ff48a8766"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/IlsCheck.class": {
+      "bytes": 5634,
+      "sha256": "f57a4cbae86f65c390bf745d2f839782a92d5c6f2bd21e3186904d67f6d9b0e4"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/LegalCheck.class": {
+      "bytes": 11365,
+      "sha256": "d00d8185f686f628175182f5d31be6c94aceaaac0057a2cb4c3bb2573d7697af"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/LevelSetCheck.class": {
+      "bytes": 7472,
+      "sha256": "e506cfc76f568368a666140396d4bd3ef406bbaca1c9b55ca8598d42db611fc5"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/MultiStartCheck.class": {
+      "bytes": 7086,
+      "sha256": "4eebfa86f23568437b878437d207a526120308cfd244dacb9c180b8884c2c056"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/OptimizeCheck.class": {
+      "bytes": 6965,
+      "sha256": "f6624f8306080c43a3c39f13f361058c773b053e18ca7936fa9e93d48b0c0ab1"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/Paths.class": {
+      "bytes": 4838,
+      "sha256": "863ed9b9ea8ca375a75e822223639e8e1b395721e605eb797e3041dc27fd0459"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/PlanPathCheck.class": {
+      "bytes": 5817,
+      "sha256": "34ae2c5aa868a102c382999dbf929edd31478ce0467e26701555ca937b08fb39"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/ProblemCheck.class": {
+      "bytes": 226,
+      "sha256": "bfa2401ced7a86cf3f30eb20b915284893239647f93f74df2ce9654ba45fa93d"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/ReplayCheck.class": {
+      "bytes": 11212,
+      "sha256": "2dbd0abb495cd2505c2144e15af4f9eb2acf2c61d9849941a3a6b1a07599b9cd"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/SmoothCheck.class": {
+      "bytes": 10110,
+      "sha256": "2c35ff9d2317e8b4cc9eff951e1ff47b05af39384801c40ba3b7d2823a8ea9d7"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/SolveCheck.class": {
+      "bytes": 13814,
+      "sha256": "d6836c0b0d01bbae98e5009d6fe4594e59663ad1703b1372ad7a348fb3f04ab7"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/StrafeSideCheck.class": {
+      "bytes": 12489,
+      "sha256": "988635ff98bc1e695a601680d7230925dfd5cae929bc7786eae2ef9e46efdd17"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/TransitionsCheck.class": {
+      "bytes": 7265,
+      "sha256": "6cd1889ad0f9bb0f11ee29fcc5023233807e2d8452a7a73bb3c130fe392d6bf4"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/checks/TranslationCheck.class": {
+      "bytes": 8844,
+      "sha256": "842b74ebb8afeed1f7424ac5f2b47f939ec9490704ae2e4ea83a5aec0158e211"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/BuiltinGraphsTest.class": {
+      "bytes": 10192,
+      "sha256": "5e2cc61725be5fce3ff3727424ca41e3907a94fc7a65e3cd20a9a603f26420bf"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/BuiltinPresetSelectionTest.class": {
+      "bytes": 3405,
+      "sha256": "8d5c986a5295e844d774ad631a700651a027dcb4a0c71947dceea13c59114c64"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/GraphPresetIOTest.class": {
+      "bytes": 9875,
+      "sha256": "5b7258f4687c9abaa73b0793c1612bca7006de3ac52f3209b59b662da58c2f20"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/GraphPresetSolveTest.class": {
+      "bytes": 6745,
+      "sha256": "009ce9277eabb47ae702df353c0f25b12195d67cb18748a5925fc5c6c97d927b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/GraphRunnerDeadlineTest.class": {
+      "bytes": 2667,
+      "sha256": "6d26e11a23126556b29c47dd29a8a1f4e43e09c342e76d59aad8e5fbbd85361c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/GraphRunnerTest.class": {
+      "bytes": 20009,
+      "sha256": "b32fd2fb5706384d09a67a47f3f3184913f499d38e9a303cab2c539d465d8083"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/GraphValidatorTest.class": {
+      "bytes": 6457,
+      "sha256": "5f884a5348dc01d868ba765051d01ce0c7c689f27e93f9dba50117bb9a048edb"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/NodeCatalogParamsTest.class": {
+      "bytes": 4043,
+      "sha256": "e5ada2a673fc30a81bc7d53507cd1adb403d06e7881af0a6aacf0d9f41e00d44"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/NodeHelpTest.class": {
+      "bytes": 2756,
+      "sha256": "8b4ed0436a1a9c47cf999b177bf121596885de31c7580377314f0436b103a31b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/RouterPredicateTest.class": {
+      "bytes": 2790,
+      "sha256": "1ce6f7fc1ddb1b295fb9755bf0f10c24ca941af1d38b3bc70c0331512b8807f8"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/SmoothLambdaScoringTest.class": {
+      "bytes": 8041,
+      "sha256": "ef53c141327ac8f968c50e75a83cf4edc4baa30f56e0d257bc7460751e900df7"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/SolveRunRecordTest.class": {
+      "bytes": 14395,
+      "sha256": "478907cba0bea6f5d528d613ee75f78b26361843d191439232c12fcbfc38fffc"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/graph/TestScenarios.class": {
+      "bytes": 4776,
+      "sha256": "11813172711b2b6b1fec39ef152693256c0adcd13a8ea5c6051c5616794af083"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/CaptureMutations$Mutation.class": {
+      "bytes": 1501,
+      "sha256": "c3bfc2749dfeef19ad7ce1f6913044c2e901d1854e4841249b78a8d1c93d76e7"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/CaptureMutations.class": {
+      "bytes": 4612,
+      "sha256": "d745088e2f386019a87234c2a56ee851132bb84f2bbdbb80a93f0da6416bdddb"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/CaptureMutationsTest.class": {
+      "bytes": 5552,
+      "sha256": "de59753a9831972b82c3d5ed7bd1113736360d864c8e12775af5f18b2be199be"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/Expect.class": {
+      "bytes": 6103,
+      "sha256": "dc25616dc9f72426226f06d17e908dec27f2602dcae686ece038ad58d056b0e6"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/Fixtures.class": {
+      "bytes": 7491,
+      "sha256": "742ecebd61235d7ee851bc6eee7dd6a6ed8eb84f75d964c55c3e8179a7a26c8c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/NoTurnCapture.class": {
+      "bytes": 6879,
+      "sha256": "82f9deb441c25b5452f90be790bc1a0d4d18bf108b8d15d9411e0bdff71524cc"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/ProblemCatalog.class": {
+      "bytes": 3598,
+      "sha256": "b82f1b93ddf46a5ac862930fd3b6639f4a2772b1e7f41b881acf442987dd1c13"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/ProblemFixture$Rig.class": {
+      "bytes": 5402,
+      "sha256": "dc7e156fe2409528f0ded6ebcb0a44169275993ed9dcd9b0fa83549a7754d14f"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/ProblemFixture$Run.class": {
+      "bytes": 848,
+      "sha256": "b09f0ac7e64722bc1a9dfdec574f85c78c109db16cce58ce3382515fa4647d0b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/ProblemFixture.class": {
+      "bytes": 7197,
+      "sha256": "a0956e7baa460312ed2475bc6163c397b5e02f5b60603dd425e79e74881a40c5"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/RazorFixtures$Loaded.class": {
+      "bytes": 1411,
+      "sha256": "16c99b622f0609cf892926ca6a672ee501c06295db3cc7942cb1705fd17fde16"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/RazorFixtures$RaisedWall.class": {
+      "bytes": 719,
+      "sha256": "0d71c2ff74265d96adc7c4ccda0f300eb7d8fecc90a92f9d9eb8426237e82246"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/RazorFixtures$RungPatch.class": {
+      "bytes": 1132,
+      "sha256": "cd2544bfd01dd5e7bca286df5df048f06648b5239bc5edda7cc48a9c8a460484"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/RazorFixtures.class": {
+      "bytes": 8775,
+      "sha256": "d8f38e41ad5b4411b66ecfd31a60b2f77f7442cdebcd7f2271bda630cf3c51b0"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/anglesolver/harness/ShardParts.class": {
+      "bytes": 2132,
+      "sha256": "fd4728551ee83e6683f3a3ba0db0f00a2d960bcf3da100b38306118aa29f5b42"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/AutoSaveTest$Rig.class": {
+      "bytes": 3169,
+      "sha256": "17f939d193a1a98a82260124a2fba497b64af4288cb64b6b558f4ce76ce65538"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/AutoSaveTest.class": {
+      "bytes": 6002,
+      "sha256": "0ca39c4ad8a9f8fdd37d68b501f3d8738591603d7fe29a3fea0d2601fb0f2881"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/BlockCaptureSaveRoundTripTest.class": {
+      "bytes": 14225,
+      "sha256": "ddbe302e33a3c14ca061f62429047f31b03748ccfb31cc8bcb57f93b266c2e4b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/ColumnVisibilitySettingsTest.class": {
+      "bytes": 2917,
+      "sha256": "a84afd880b5c4ea036d497f6fa115815bdb20f9aa6d6a2dd53def2083160f71f"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/DeclaredContactsTest.class": {
+      "bytes": 5313,
+      "sha256": "1efc6c8458cfc30400b9b1eb246eeff4ff5ce72d691830365d14747f07a04be2"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/FakeMinecraftAccess.class": {
+      "bytes": 5598,
+      "sha256": "82f1ddf1f3f01ec6213d074560f7a6fb6812d007b70450144a86b5793d74c43f"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/FakePlaybackBridge.class": {
+      "bytes": 4795,
+      "sha256": "fcb59af3dfdd08d6ab6d886f0f191776b294dd48c4caa8e807ebfb060c1c9d53"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/FakeSimulator.class": {
+      "bytes": 3134,
+      "sha256": "17ff8f3e9773c982570c4b9f0f160240a9a620027e1308a1fc0639ba67a31b36"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/InputRowAmplifierTest.class": {
+      "bytes": 1612,
+      "sha256": "6bf5560dfb4c528fecb9674c619c0f5f34a5db54e0b8cd786b854856938a4bba"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/InputRowSaveRoundTripTest.class": {
+      "bytes": 11234,
+      "sha256": "7911a779771ec3e998b32915c672ae9801ade6be2ead7be93e51ef743ca54e58"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/IpoptReplayTest.class": {
+      "bytes": 15355,
+      "sha256": "a90c73c4be8b62b59d5f1daec69822aeca0fbdaf99b1a8d12f3f831031a5a726"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/LastOpenReopenTest$Rig.class": {
+      "bytes": 2700,
+      "sha256": "ec9e3c9525c3b7cb9b6b73a19b68321ec4d7e1040e4e5536d50c3e1aa4012f78"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/LastOpenReopenTest.class": {
+      "bytes": 4651,
+      "sha256": "901a6d383669ba07c182554ccf1f3be424b4b6d41b33a17796c160c79534016c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/MediumWorldFakeSimulator$Cell.class": {
+      "bytes": 1459,
+      "sha256": "3eac8872ba654cbbf046872089d35b10847131948b1c8bdbd0f18ba06fade7af"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/MediumWorldFakeSimulator$FakeCheckpoint.class": {
+      "bytes": 1702,
+      "sha256": "26a3e62a17b7888118e61a8e0096b4b217058882fc66446faebf4fff1395465a"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/MediumWorldFakeSimulator$FakeEntity.class": {
+      "bytes": 5739,
+      "sha256": "c9c2d5c0bfce860d4e5129230fc6b64fd7db57ed661f9feeed40356a91bf7db0"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/MediumWorldFakeSimulator$World$Box.class": {
+      "bytes": 1656,
+      "sha256": "29e5e5f663df9a5b875fdaffa93ef7b2b639c739decb511e61f6ef3dd782e1db"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/MediumWorldFakeSimulator$World.class": {
+      "bytes": 4297,
+      "sha256": "4661a2649b716c1c41ef8da462b874289c178ac4aeba355a7c9b198526c4b8d0"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/MediumWorldFakeSimulator.class": {
+      "bytes": 12793,
+      "sha256": "8110dbd98cddad519d713861b371dd4754765b1930a861d52f42f8916eb9488c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/MovementEffectTest.class": {
+      "bytes": 2843,
+      "sha256": "66d7d0b87c716ff86d0d0316467eaaf40fdb587d290ce7f66bf6b712613ae51b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/PairedSimulationSettingTest.class": {
+      "bytes": 1887,
+      "sha256": "602998db06bd525fb8c3577e3eaf9b60cbcd386cbfcea670fb632fe9103300cb"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/PlaybackFlightSuppressionTest.class": {
+      "bytes": 3305,
+      "sha256": "a96ebe07209cc4ac91e963846566a988afd9a2dca147a9c2d93a9348d5834fce"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/PlaybackRangeTest.class": {
+      "bytes": 9052,
+      "sha256": "2fc0f1ac8d15f9e90a6cb9e6d44acb356e10171fd8631249d4a8c4d00173f3c1"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/ReplayStartDelayTest$1.class": {
+      "bytes": 745,
+      "sha256": "aa38c81f5dd0d6b73ade042dc9944713a825d11068e74698533ab0564af8fba9"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/ReplayStartDelayTest.class": {
+      "bytes": 4668,
+      "sha256": "a6c20b1c5364417acedb797e7139cc231318fb769f8ef1e06ac452ffd8e278ad"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/RunTicksRollbackTest.class": {
+      "bytes": 10436,
+      "sha256": "1a80016e20d861a8a818c7d5f29bb7a16234c033dc7021fc2f9008c83cdd807a"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/SaveFieldRoundTripTest.class": {
+      "bytes": 12550,
+      "sha256": "5de2fbfbfccce070eccda59ba0f8fae39716a6fd75adf873ea2313d00055622e"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/SaveSelectionAsTasTest$Rig.class": {
+      "bytes": 2425,
+      "sha256": "20f9c9bd24e00fcd773280ea59eee1294ef6ae5a8c35110e5553219f640d41b3"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/SaveSelectionAsTasTest.class": {
+      "bytes": 6529,
+      "sha256": "c438a0969c60a4c034cac881b859deea9432e9bab2987577aba45b50d903c5dd"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/ServerEventLogTest$1.class": {
+      "bytes": 258,
+      "sha256": "20d075ab830ced6083e92989d394cab5398a8c558d9cfe19077e07542639f9bc"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/ServerEventLogTest$EventEmittingSimulator$1.class": {
+      "bytes": 948,
+      "sha256": "e50eae861d3854dbe1a438ba3bf53bed9c0bcfdd8a035e4aa9102c9bbef1734d"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/ServerEventLogTest$EventEmittingSimulator.class": {
+      "bytes": 2774,
+      "sha256": "79a0faa66770e994ff197c8d4c0c78de499d478a63ef56e79cf292554e7a7de6"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/ServerEventLogTest.class": {
+      "bytes": 3138,
+      "sha256": "a00516cc2c93e45897910b9b12fbe100e9ee239ae42ae89095d303baa8206078"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/SessionActivationTest$Rig.class": {
+      "bytes": 2524,
+      "sha256": "43288de033f13ad971be7e91187faf0b67890bd848d9f74c2093e12c56020f99"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/SessionActivationTest.class": {
+      "bytes": 2878,
+      "sha256": "1e262dfa5e27d9645b91c76718cdf182e6e2fd2365b9543f2dbc7a646b615726"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/SimulatorPitchTest$PitchRecordingSimulator.class": {
+      "bytes": 1470,
+      "sha256": "a92515ebfb603c6b97b0dd30e487de7a9095e94908b97dbf40798938c56435c7"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/SimulatorPitchTest.class": {
+      "bytes": 3484,
+      "sha256": "f198326df73fc5cc2261a24011e981d588054059716208a382762590eebc47a2"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/SliceResimulationByteIdentityTest$Rig.class": {
+      "bytes": 2340,
+      "sha256": "d634c4bd19089caef61e03f9a5362cea90a944392961436956f307992bd75158"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/SliceResimulationByteIdentityTest.class": {
+      "bytes": 16821,
+      "sha256": "3edd7a3a231ff83e9d9b1213c03813a9b5537274ca6de7e2b6ce5ade493a07b5"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/StaticSceneTest.class": {
+      "bytes": 8375,
+      "sha256": "b7d365376c31397bee8ebf3f866b20b8939f67694c32439ed22dacb738843ced"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/SurfaceCaptureTest$SurfaceSimulator.class": {
+      "bytes": 4120,
+      "sha256": "40e8ec54a7212e82d5b2e59e36476a12ee819447645d8e341e296718f3463677"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/SurfaceCaptureTest.class": {
+      "bytes": 2696,
+      "sha256": "d2fcb269b9ac00410bbb0d794a223ca17d7b05c253e52f646f736c0f0122e8b3"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/TeleportTickSimTest.class": {
+      "bytes": 3835,
+      "sha256": "234a58fc4ee4e3d831df0bab5a42c46e7205c22e75c4a35ede773090ca81201b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/TickInfoConfigTest.class": {
+      "bytes": 7370,
+      "sha256": "0ce3c0e7d05c1773cf005852f37b80aec858c5ec4ba21d7897cb8cdae36b1768"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/TickTeleportTest$1.class": {
+      "bytes": 781,
+      "sha256": "16b4979770d34d842548e200257172d5cce2cf2b9bb1751981ca9f6550e1850a"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/TickTeleportTest.class": {
+      "bytes": 4010,
+      "sha256": "c2ddfd8f8a2e237b4b22356d51c3319929eced290c2239741b285483503ed5cf"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/TurnProfileStoreTest.class": {
+      "bytes": 16881,
+      "sha256": "912ec160b2708092504f17e7adea69d48f24a740d4629f7eb028c1164ef95e0c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/TurnTimingTest.class": {
+      "bytes": 5191,
+      "sha256": "a74245a5a6582b6c2831ab1a98b506650318b842df660336ced555f3396305f2"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/UndoIntegrationTest$Rig.class": {
+      "bytes": 6010,
+      "sha256": "d188d9128f4c65814b0b58a9e3d8223584ab807a9ba44bfb1f0a5007986e2f90"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/UndoIntegrationTest.class": {
+      "bytes": 8676,
+      "sha256": "68286193ff49369fd45a241f08ce5901c2497690c5d3f2f2988ff2b92153f1e4"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/UnloadedChunksTest$1.class": {
+      "bytes": 258,
+      "sha256": "77f66a62aabdabf3c02e772b790e9874b0ed69220b9acfeb7cc2b4be94724109"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/UnloadedChunksTest$ChunkAccess.class": {
+      "bytes": 1544,
+      "sha256": "58011c22bf53284977184f574b8eff0e87a30402fad49c4981c208d4f35954f5"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/UnloadedChunksTest.class": {
+      "bytes": 2505,
+      "sha256": "b02d3344980796803a5ea4bef21a3372d746c8ad7e9f42104595ceacd8dd2d93"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/BudgetResolutionTest.class": {
+      "bytes": 4024,
+      "sha256": "6ebf91e2fc3eb7616882bbcc133ae3ac7a446d171db490a256c0715e6c5a5583"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/BudgetTextTest.class": {
+      "bytes": 2425,
+      "sha256": "1b56e996fa40bc547abf6ae6f399c3924ac2172dee7d5945cf5726cae607da5b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/ConstraintConflictTest.class": {
+      "bytes": 4282,
+      "sha256": "ab285c854277e4755b8b39fd4f24916ca3467c532211cf9ed5e8f202414d805e"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/GoalFromYawTest.class": {
+      "bytes": 2698,
+      "sha256": "79480139f8660eefc10efa8b09d176b32d88b2f21293257a396739f0e46dd18f"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/RunTicksConstraintWholeNumberTest.class": {
+      "bytes": 3008,
+      "sha256": "2060bf74eafc636e0636a2fd7f725f6278c26b5a1a2984ba11a456bae480357a"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksFilterTest.class": {
+      "bytes": 3126,
+      "sha256": "021e42cb426bbae067439bcfbfb731a6e0514d89feefefca143da06ddbec1055"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksRowsTest.class": {
+      "bytes": 3330,
+      "sha256": "de220076aff87d4e6b453580e741b908cebbca463ac161cf6d63aa1b5f163b28"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/runticks/RunTicksSearchTest.class": {
+      "bytes": 7246,
+      "sha256": "f4517e2f3dd9f9db5cc79f2d440e9904868cf97322807b41b8c3a225515fd2fc"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/runticks/StepTimeoutsTest.class": {
+      "bytes": 2432,
+      "sha256": "e91329531d11af8f2bc4f413c1870c6bd5714b86188a935d6a3dbbf19f361ab3"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/solver/LongRunConfigTest.class": {
+      "bytes": 2116,
+      "sha256": "c88640f9ab7b999a979a9015d9041930e95c7d6d110d7e8406572407b7490dfe"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/solver/TrustRegionLpTest.class": {
+      "bytes": 8576,
+      "sha256": "1ac385ba61f5f298a96b8bf2cfa39c46f442c7d9bfee3f2f8906afa7ab3faf6b"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/velocity/J008VelocityTest$1.class": {
+      "bytes": 3043,
+      "sha256": "2153137a8fe2c093674181c04ea6699bce0a856d04db44aadb824726f69f5132"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/velocity/J008VelocityTest$2.class": {
+      "bytes": 1023,
+      "sha256": "bb3eab4899c4cd26deb8d28323f09afa0caee2c953ede675829066ef95795b17"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/anglesolver/velocity/J008VelocityTest.class": {
+      "bytes": 25306,
+      "sha256": "5ff3b76d02a49a5156029058b7be316fde6d59e7149099b40a34cc885ae94c8f"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/save/SaveSubfolderTest.class": {
+      "bytes": 5851,
+      "sha256": "9cef57c74167e77b74d2314fcf08485b816ccb2fc8c69d387b67bc02ccefcdc7"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/ui/AppliedFacingTest.class": {
+      "bytes": 1998,
+      "sha256": "d6bcb6ccb52f9071952e041362625e16338000315a8c69b6cd000c524d578fc0"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/ui/CopyPasteTicksTest.class": {
+      "bytes": 6937,
+      "sha256": "273e47f7af46489a0cccbd1018134718c1b16b70ef02322799d59833c7a5ad3a"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/ui/HudMessagesTest.class": {
+      "bytes": 3433,
+      "sha256": "98f8e3b9bf4751872069634c3c20c992b2ab95e6f8672cfa51577b5c10664ae4"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/ui/TeleportCommandTest.class": {
+      "bytes": 1449,
+      "sha256": "317f377a34d6561ee3f8d60c2f2a535495563a07cd9c0dcf4be9db0d3f051513"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/undo/UndoControllerTest$Doc.class": {
+      "bytes": 541,
+      "sha256": "a0d3ae38d5dfd8549c02665f6b9520f50345584063d5dc2a6280799f7e136fff"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/core/undo/UndoControllerTest.class": {
+      "bytes": 9099,
+      "sha256": "7df23d7d070f58f736d1a9022db83dd7539a780b083b28ce3e4a20ec55626b78"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/record/HumanRecorderTest.class": {
+      "bytes": 7550,
+      "sha256": "6e6d3a0286fa1365ea551352bb1d2693df27a759b4380d9717f4d7a484a127ce"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/render/ByteSinkRenderer.class": {
+      "bytes": 3629,
+      "sha256": "3b4bc469565f130d7403a4a450e35c2bd4a80274715b3d22d4db6d06bab3c01a"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/render/PathRangeEmitTest$1.class": {
+      "bytes": 259,
+      "sha256": "e01c43a0a62a24ab7992568d98659665acd0d225df81039291e97763f62bdaa3"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/render/PathRangeEmitTest$Lines.class": {
+      "bytes": 1854,
+      "sha256": "f1223788350e88c22b123c6a566efe0418f2c2bcefff514b2cb78427abd69015"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/render/PathRangeEmitTest.class": {
+      "bytes": 3904,
+      "sha256": "f43cf2c9c98d072e163d7219703d89d0f5c17e315e86eab3f937121c04221344"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/render/TailPatchEquivalenceTest$Rec.class": {
+      "bytes": 2684,
+      "sha256": "4c59f8c71eff600acceb7800b38a22a2761f7a85af5d034a7c27917ff551f578"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/render/TailPatchEquivalenceTest.class": {
+      "bytes": 17520,
+      "sha256": "ea672e9743cd382c6a4e1019182ba62a956e137aa7ca5055986d4b98ffb65892"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/render/TailPatchGateTest.class": {
+      "bytes": 6600,
+      "sha256": "3024b2f74088d282d987bffb73841f5b3ec10131e7b7ca3cf71aea0d38026e2c"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/sim/CollisionRayTraceFuzzTest$1.class": {
+      "bytes": 1747,
+      "sha256": "25b727485bcffa53b4a6d819349c25b57110ab1f75ebc3e0839a65bf24bd8710"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/sim/CollisionRayTraceFuzzTest.class": {
+      "bytes": 6588,
+      "sha256": "a74179a729492590350a8bec4ba0600c2230b0892e95247c016843891d857f5e"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/sim/CollisionRayTraceTest$1.class": {
+      "bytes": 265,
+      "sha256": "f058c1e742674edd117aecac7c68a3b75abb8d0b244455d70aa894c8326194f4"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/sim/CollisionRayTraceTest$FakeWorld.class": {
+      "bytes": 3011,
+      "sha256": "1fa4660190153062bd4340f0e8a6fcf51700100ba932635bb59479acbd43abaf"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/sim/CollisionRayTraceTest.class": {
+      "bytes": 5522,
+      "sha256": "7195417ea5d206efbe9cc38c76cf2e1fb16f6eb54731de2c4ca9308be7802c93"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/ui/ConstraintKeyControllerTest.class": {
+      "bytes": 15688,
+      "sha256": "912dfbeb6e9810d3ad9ff2f61c53bf00d4338ee099397ff137839f5722997e6e"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/ui/StartDragGateTest$FakeProbe.class": {
+      "bytes": 1403,
+      "sha256": "6f3fdb8d36d804c48a9cdb139e972294e400ab91a22b90470649242892b4b519"
+    },
+    "core/build/classes/java/test/de/legoshi/parkourcalc/ui/StartDragGateTest.class": {
+      "bytes": 4224,
+      "sha256": "3bc465c0d001f3d7ac7a8da6f8abc499917d831b627c1af11ec94fd746b9f63e"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/io/OsFilePicker.class": {
+      "bytes": 3892,
+      "sha256": "d39da37902a617c80351b767a1cd832961139996acbd19e71ae6fc63fccc49db"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/lwjgl2/AwtClipboard.class": {
+      "bytes": 1726,
+      "sha256": "2f332f2bdccc7512e80f0579760ac8ab861dc8fc431d79e21aea1f4bb84fb61c"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/lwjgl2/ImGuiGl3Compat$1.class": {
+      "bytes": 1135,
+      "sha256": "05bd8fcf2210543fc5e68dbbc938eaa09b8f55d759af590c896019cad8fdbcf1"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/lwjgl2/ImGuiGl3Compat.class": {
+      "bytes": 13595,
+      "sha256": "cf2cb323835d9888a5777c63c2e5b1b2413da21d329ae522a6b024b4fd0d7d6b"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/lwjgl2/Lwjgl2ImGuiHost$1.class": {
+      "bytes": 741,
+      "sha256": "06ede862b1508cbcbe9e212f6a46bfdac53907945748e97af40fdbc959188006"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/lwjgl2/Lwjgl2ImGuiHost.class": {
+      "bytes": 8762,
+      "sha256": "358aba527016cbb4f9c810d60b472536d2e6b2205fba793b8e1f02f2a987899d"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/lwjgl2/Lwjgl2InputState.class": {
+      "bytes": 1630,
+      "sha256": "aeeb3cc0d9a5c8fbf74d16ec95faed30abf737b18c8c21ab718fb3e8639eef1a"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/render/CountingBoxRenderer.class": {
+      "bytes": 1633,
+      "sha256": "7fe488e972657679e007807aceda19e88a7737bf4ede9b7b9f929656d3569f68"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/replay/FixedMovementCompiler.class": {
+      "bytes": 11235,
+      "sha256": "27cef1baea014a03c96f9a6755ff32d17865d5d64d8605c33fcad8e4c64ecbfe"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/replay/LocalReplayOracle.class": {
+      "bytes": 13588,
+      "sha256": "e1f6679be7a9f66652c82b1a4ca0ffe6d97f4aac3ca753e3074a4ef0649c87a5"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/replay/ReplayInputState$1.class": {
+      "bytes": 278,
+      "sha256": "bccaed5884654c43dce8e61f1299ffe29aab46f7877337cb8e6a38ac796c5e9a"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/replay/ReplayInputState$Frame.class": {
+      "bytes": 3869,
+      "sha256": "f7ab8409df24527371cb3c330acef83fc389fe25f26c8ef2c1c0a3228f3868aa"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/replay/ReplayInputState.class": {
+      "bytes": 5302,
+      "sha256": "ed73dcfcaeb60e4283d522d3a385a24477adc5d3bc3be691ed3604b7a64993cb"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/sim/PlaybackMoveState.class": {
+      "bytes": 1239,
+      "sha256": "fee6d5502748e954ef3c33fcb7cf277eb7abab52a0c26a246c24a95bfbcd2155"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/sim/PlayerSprintMachine$Inputs.class": {
+      "bytes": 1181,
+      "sha256": "863ef81da3b5013316b5780965a234be00977a6db9c4b80fa30f5cddf926bc90"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/sim/PlayerSprintMachine$Outputs.class": {
+      "bytes": 912,
+      "sha256": "d93891d02f91e9d8ae02bc976c4a9f63530d306c1affb29796c5024ed1a845f5"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/sim/PlayerSprintMachine$State.class": {
+      "bytes": 1109,
+      "sha256": "d641142ee0b1e0a6d87aa54f316f09bb8cf773923dfdb1d81a230c611de37514"
+    },
+    "forge-core/build/classes/java/main/de/legoshi/parkourcalc/forge/core/sim/PlayerSprintMachine.class": {
+      "bytes": 2482,
+      "sha256": "b575a9f9892f5d44a756185aa8734437966718cb31e2309e960b4212d2f6b5f1"
+    }
+  }
+}

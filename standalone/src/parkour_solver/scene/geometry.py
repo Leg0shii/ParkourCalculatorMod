@@ -6,6 +6,14 @@ from parkour_solver.scene.route import HALF_WIDTH
 
 
 BODY_HEIGHT = f32(1.8)
+# Physical gaps are 0, under 0.6 or at least 0.612, so real player-space free pieces
+# are at least 0.012 wide and narrower ones are numerical artifacts.
+MIN_FREE_WIDTH = .012
+
+
+def thin(width):
+    # Half the minimum: a real 0.012 gap can round below it, artifacts are about 0.
+    return width < MIN_FREE_WIDTH/2
 
 
 def box_bounds(values, name):

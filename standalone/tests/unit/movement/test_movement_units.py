@@ -89,7 +89,8 @@ class MovementUnitTests(unittest.TestCase):
                  'entries':[{'family':'front','firstCandidateState':0}], 'exitKinds':['side'],
                  'exitStates':[1],'entryDelay':0,'finishAtExit':True,'maxInputs':1,
                  'contactVariants':[[{'leg':0,'offset':0,'axis':'Y','direction':-1,'plane':0,
-                                      'box':[0,-1,0,1,0,1],'role':'landing'}]]}
+                                      'boxes':[[0,-1,0,1,0,1]],'surface':None,
+                                      'regions':[[-.299999,-.299999,1.299999,1.299999]],'role':'landing'}]]}
         result=generate_ladder_schedules(request)
         self.assertEqual(result['schedules'],[])
         self.assertGreater(result['stats']['rejected'].get('airborne_terminal_required',0),0)

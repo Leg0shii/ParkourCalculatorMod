@@ -81,3 +81,48 @@ Inside a ladder, `ladder_ceiling` is local handling within ladder climbing, with
 See MOVEMENT_TYPE_REFACTOR_PLAN.md for the concrete module extraction, common-program contract, migration commits and validation gates.
 
 Repeated steps, axis directions, multiple boxes and compatible contact combinations are variations/compositions. Exact resolver branches and equality bookkeeping are not extra named movement types. Reuse the common continuous model, event constraints and existing acceptance helpers rather than reproduce the Minecraft step algorithm in orchestration.
+
+## Implementation
+
+The `collision_boxes` support graph calls the registered `stepping` and `ceiling`
+generators alongside normal movement; ordinary jumps are kept beside them.
+
+| Type | Named case | Input producing the named state | Result |
+| --- | --- | --- | --- |
+| stepping | normal_step | Ground/run | One-input rise through 0.6, grounded |
+| stepping | slab_boost | Ground/jump | Rise above jump impulse through 0.6, not grounded; one air input follows |
+| stepping | blip | Air into H | H at higher top, grounded |
+| stepping | blip_up | Air into H | H retains yL, grounded without a fabricated support |
+| stepping | corner_jump_cancel | Ground/jump into J | X-facing approach, next-state Z escape, zero rise, airborne |
+| stepping | corner_blip_up | Air into H | X-facing L/H corner escape, retained yL, grounded |
+| ceiling | ceiling_hit | Normal upward air, or initial jump | Actual underside plane and zero vertical carry before gravity/drag |
+| ceiling | grind | Ground/jump into J | Outside before J, under low ceiling on J, zero rise; ordinary air follows |
+
+Owners: `movement/cases.py` builds named case constraints on `movement/vertical_profiles.py`;
+`movement/stepping.py` proposes support and corner cases; `movement/ceiling_generation.py`
+proposes ceiling and grind cases; `movement/ceiling_profiles.py` holds shared underside,
+profile and sequence helpers. `maxSteppingProfiles` defaults to 128 (`scene/normalize.py`).
+
+Case geometry follows the exposed scene surfaces (`movement/cases.py`): approach,
+outside and wall options exist only on a side face exposed at the feet height (a side
+flush against a neighbour yields none; feet exactly on a flush neighbour's top touch
+the face above it), corner cases only at convex corners whose two side faces are both
+exposed at the corner (a flush seam is not a corner), and target, lower and higher
+regions are the blocks' exposed tops, one choice per disconnected piece, keeping only the
+rectangles the approach can reach at that state. Grind uses each
+low merged underside, with outside rows on its members' exposed sides. Exposure never
+rejects a step trigger: the trigger check uses the event's `boxes`, and uncertain probes
+keep the `InteractionGate` unknown path.
+
+On L a blip's higher block is an ordinary finite obstacle: outside-face and real face-hit
+alternatives on its exposed sides, a hit being a standard `role=contact` event. Blip-up also
+requires being outside the higher block on L, otherwise the Y-first resolver lands on it.
+Corner cases share X-approach and next-state Z-escape constraints.
+
+In the anchor search no stepping case touches a block whose owner the route has already
+left: the target, higher, corner and lower blocks of the six stepping cases all go through
+the context's `feetAllowed` predicate before any reachability query, and the emitted-program
+audit rejects a case event whose `boxes` or `lowerBox` belong to a departed owner. These
+touches never count as visits. Grind and ceiling hits are not at the feet and may touch a
+departed block.
+

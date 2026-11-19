@@ -14,6 +14,7 @@ from parkour_solver.search.feasibility import node_identity, outcome, policy_spe
 from parkour_solver.observability.turns import record, replay, summary
 from parkour_solver.movement.program import empty_program
 from tests.support.checkpoint_guidance import flat_scene
+from tests.support.archived_events import current_events
 
 
 class AnchorPolicyTests(unittest.TestCase):
@@ -121,13 +122,14 @@ class AnchorPolicyTests(unittest.TestCase):
         view=adapter.for_goal(requests[0],cursor)
         p=history(s,['start'])
         node=view.for_node().bind_program(p)
-        self.assertIsNone(node.contact_regions(p,1))
+        self.assertFalse(hasattr(node,'contact_regions'))
         self.assertTrue(node.candidate({},dict(positions=[[.5,.5]]*2),{})['accepted'])
         self.assertFalse(view.bind_program(p).candidate({},dict(positions=[[.5,.5]]*2),{})['accepted'])
         ctx=dict(program=p);view.context(ctx)
-        self.assertTrue(ctx['supportAllowed'](next(b for b in s['blocks'] if b['id']=='optional')))
-        self.assertTrue(ctx['supportAllowed'](next(b for b in s['blocks'] if b['id']=='start')))
-        self.assertFalse(ctx['supportAllowed'](next(b for b in s['blocks'] if b['id']=='goal')))
+        self.assertEqual(set(ctx),{'program','feetAllowed'})
+        self.assertTrue(ctx['feetAllowed'](next(b for b in s['blocks'] if b['id']=='optional')))
+        self.assertTrue(ctx['feetAllowed'](next(b for b in s['blocks'] if b['id']=='start')))
+        self.assertFalse(ctx['feetAllowed'](next(b for b in s['blocks'] if b['id']=='goal')))
 
     def test_exact_failure_has_no_ancestor_side_effect_or_or_parent_shortcut(self):
         policy=policy_spec(dict(purpose='node',oracleRejection=True),first_witness=True)
@@ -174,12 +176,24 @@ class AnchorPolicyTests(unittest.TestCase):
         p['profile']['contactEvents']=[]
         mid=next(b for b in s['blocks'] if b['id']=='mid')
         p['profile']['caseEvents']=[dict(input=0,case='corner_jump_cancel',
-            box=s['collisionScene']['solids'][mid['solidIndex']])]
+            boxes=[s['collisionScene']['solids'][mid['solidIndex']]])]
         p['profile']['grounded'][-1]=False
         state=visit_state(s,p)
         self.assertEqual(state['current'],'start')
         self.assertEqual(state['departed'],[])
         self.assertEqual(local_counts(p)['J'],1)
+
+    def test_feet_cases_cannot_touch_a_departed_owner_but_ceilings_can(self):
+        s=scene();p=history(s,['start','mid']);p['profile']['position'][2]=2.
+        solid=lambda name:s['collisionScene']['solids'][next(b['solidIndex'] for b in s['blocks'] if b['id']==name)]
+        p['profile']['caseEvents']=[dict(input=1,type='stepping',case='blip_up',boxes=[solid('start')])]
+        self.assertEqual(audit(s,p,['mid'])['reason'],'departed_owner_return')
+        p['profile']['caseEvents']=[dict(input=0,type='stepping',case='blip_up',boxes=[solid('start')])]
+        self.assertTrue(audit(s,p,['mid'])['accepted'])
+        p['profile']['caseEvents']=[dict(input=1,type='ceiling',case='ceiling_hit',boxes=[solid('start')])]
+        state=visit_state(s,p)
+        self.assertEqual((state['valid'],state['current'],state['departed']),(True,'mid',['start']))
+        self.assertTrue(audit(s,p,['mid'])['accepted'])
 
     def test_hard_structure_excludes_setup_hop_runoff_and_zero_jump_finish(self):
         s=scene();p=history(s,['mid'])
@@ -239,7 +253,7 @@ class AnchorPolicyTests(unittest.TestCase):
         base=AUTONOMY_DATA/'experiments'
         fixture=json.loads((base/'anchor-feasibility/real11-anchors.json').read_text())
         s=prepare_scene(fixture['request'])
-        saved=json.loads(gzip.decompress((base/'virtual-finish/evidence/initial0-cold.json.gz').read_bytes()))
+        saved=current_events(json.loads(gzip.decompress((base/'virtual-finish/evidence/initial0-cold.json.gz').read_bytes())))
         program=saved['result']['best']['movementProgram']
         setup=truncate_program(program,12)
         self.assertTrue(single_jump_structure(s,setup,0,'b1','b2'))

@@ -18,7 +18,7 @@ from parkour_solver.bridge.counting import CountingCompiler; from parkour_solver
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
 from parkour_solver.search.goals import goal_spec, landing_satisfied
 from parkour_solver.search.identity import solve_scope, solve_identity, validation_prefix
-from parkour_solver.reachability.intervals import reachable_envelopes
+from parkour_solver.reachability.intervals import motion_bound, reachable_envelopes
 from parkour_solver.constraints.variants import ConstraintVariants
 
 
@@ -52,18 +52,24 @@ class ScopedWork:
         self.local.accepted(best)
 
 
-def _motion_bound(scene, compiler, seconds):
-    sample = compiler.compile(dict(scene, sharedMovement=True), dict(grounded=[True, True, False], jump=[False, True, False]), seconds)
-    speed = max(math.hypot(scene['initial']['velocity'][0], scene['initial']['velocity'][2]),
-                max(f*m/(1-f) for m, f in zip(sample['magnitude'], sample['friction'])))
-    return dict(storedSpeedNorm=speed+1e-8, movementAfterSupportCheck=speed+max(sample['magnitude'])+1e-8,
-                groundMagnitude=sample['magnitude'][0])
+def segment_solids(scene, program, profile, through, gate):
+    from parkour_solver.constraints.encounters import landing_segments
+    from parkour_solver.search.anchors.policy import launch
+    result = {}
+    for begin, end in landing_segments(profile, through):
+        found = launch(scene, program, begin, end)
+        if found is None:
+            continue
+        table = gate.reachable_blocks(found[1])
+        if end-found[0] <= table['ticks']:
+            result[begin] = sorted(table['solids'])
+    return result
 
 
 def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, checkpoint=None,
                      seconds=3, candidate_seconds=1, solver_calls=8, python_executable=None, cancel_event=None,
                      partial_corridor=False, required_landing=None, scope=None, on_progress=None, retry_unresolved=True, first_witness=False,
-                     guide_objective=None, solve_policy=None):
+                     guide_objective=None, solve_policy=None, climb_families=False):
     timings={}
     marked=time.monotonic()
     def mark(name):
@@ -155,23 +161,20 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
     saved_repair=program.get('repairState',{})
     saved_policy=(saved_repair.get('context',{}).get('scope') or {}).get('scope',{}).get('solvePolicy')
     variants = ConstraintVariants(route, profiles[0], plan, scene['collisionScene'], envelopes, scope,
-        checks=checks, gates=scoped_adapter.gates, signature=signature,
+        segment_solids=segment_solids(scene, program, profiles[0], scope['through'], service), checks=checks, gates=scoped_adapter.gates, signature=signature,
         state=saved_repair.get('constraintGeneration') if saved_policy==policy else None, deadline=scoped.deadline, reference=reference,
+        owners=owners, budget=scoped.check, cancel_event=cancel_event,
         route_guards=scoped_adapter.constraint_guards(program['profile'],envelopes,scope,scoped.deadline)
-        if hasattr(scoped_adapter,'constraint_guards') else None,
-        required_alternatives=scoped_adapter.contact_regions(program,scope['through'])
-        if hasattr(scoped_adapter,'contact_regions') else None)
+        if hasattr(scoped_adapter,'constraint_guards') else None)
     mark('eligibilityAndVariantConstruction')
     result = solve_contact_branches(route, profiles, checks,
         compiler, seconds=seconds, candidate_seconds=candidate_seconds, retries=0,
-        max_branches=scene['maxContactBranches'], improve=True, rank_equal_cost=policy['rankEqualCost'], optimize_goal=True,
-        stop_on_feasible=policy['stopOnFeasible'], oracle_rejection=policy['oracleRejection'],
+        improve=True, rank_equal_cost=policy['rankEqualCost'], optimize_goal=True,
+        stop_on_feasible=policy['stopOnFeasible'], oracle_rejection=policy['oracleRejection'], climb_families=climb_families,
         python_executable=python_executable, cancel_event=cancel_event, geometry=scene['collisionScene'],
-        motion_bound=motion_bound, max_blockages=scene['maxBlockagesPerObstacle'],
-        max_horizontal=scene['maxHorizontalBlockagesPerObstacle'], max_vertical=scene['maxVerticalBlockagesPerObstacle'],
-        max_passage_candidates=scene['maxPassageCandidates'], solid_blocks=owners, max_wall_hits=0,
+        motion_bound=motion_bound, solid_blocks=owners, max_wall_hits=0,
         candidate_filter=candidate_filter, work=scoped, resume_state=program.get('repairState'),
-        repair_scope=dict(solveIdentity=identity, scope=scope, solvePolicy=policy, assemblyVersion=9),
+        repair_scope=dict(solveIdentity=identity, scope=scope, solvePolicy=policy, assemblyVersion=13),
         validation_scope=scope, initial_variants=variants, on_progress=on_progress, retry_unresolved=retry_unresolved)
     mark('physicalSearchAndValidation')
     diagnostics=[d for a in result.get('attempts',[]) for d in a.get('diagnostics',[])]
@@ -210,7 +213,7 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
                           candidate_seconds=1, score_seconds=3, max_solver_calls=128,
                           max_candidates=24, beam_width=4, unknown_slots=1, score_call_limit=8,
                           final_call_limit=24, order='guided', python_executable=None, cancel_event=None,
-                          opportunities=None, cluster_gap=2, objective_gap=None, fair_parents=False,
+                          opportunities=None, cluster_gap=2, objective_gap=None,
                           initial_programs=None, comparison_policy='time_progress', spatial_goal=None,
                           spatial_seconds=1.5, spatial_calls=4, spatial_candidates=4, spatial_prefixes=64,
                           time_margin=1, progress_margin=None, rescue_passes=1, terminal_checkpoint=None, program_filter=None,
@@ -241,8 +244,6 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
     integer(unknown_slots, 'unknown_slots', 0, beam_width)
     if order not in ('guided', 'generation'):
         raise ValueError('Ordering must be guided or generation')
-    if type(fair_parents) is not bool:
-        raise ValueError('fair_parents must be boolean')
     if objective_gap is not None and number(objective_gap,'objective_gap') < 0:
         raise ValueError('objective_gap must be nonnegative')
     if opportunities is not None and checkpoints is not None:
@@ -319,7 +320,7 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
         adapter = CorridorAdapter(scene, corridor, gates, decomposition=d)
     try:
         work.check()
-        motion = _motion_bound(scene, counted, max(.001,min(score_seconds,deadline-time.monotonic())))
+        motion = motion_bound(scene, counted, max(.001,min(score_seconds,deadline-time.monotonic())))
     except TimeoutError:
         return unfinished('deadline')
     from parkour_solver.search.dfs import search_goals

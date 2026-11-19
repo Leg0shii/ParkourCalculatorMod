@@ -1,13 +1,13 @@
 # Adjacent-face merging: implementation plan
 
 2026-11-15. Status: **both parts implemented** in
-[spatial/faces.py](../../src/parkour_solver/spatial/faces.py) and the optional
+[spatial/surfaces.py](../../src/parkour_solver/spatial/surfaces.py) and the optional
 `tools.geometry_bounds --faces` report. Inspected planning
 baseline `b535224c`. Scope remains exactly two parts: detecting adjacent faces
 across all six orientations, and representing them for later decisions.
 
-Owner: `src/parkour_solver/spatial/faces.py` and focused tests in
-`tests/unit/spatial/test_faces.py`. The representation is geometric:
+Owner: `src/parkour_solver/spatial/surfaces.py` and focused tests in
+`tests/unit/spatial/test_surfaces.py`. The representation is geometric:
 it does not classify blocks by anchor span or assign ceiling/wall/landing roles.
 The two existing contact-dedup findings remain evidence, not additional work in
 this plan. No movement-generator, numerical model or DFS rewrite is included.
@@ -102,8 +102,9 @@ with synthetic Y extent[−1,1], subtract, project back, and keep positive-area
 pieces. These synthetic coordinates are only a 2D algorithm encoding.
 
 Standalone lines/points are not face components. Retain the closures of surviving
-area patches so their edges are represented. This rule does not remove boundary
-strata from the existing cell decomposition or change its contact semantics.
+area patches so their edges are represented. The shared `canonical_cover` drops
+lines, points and slivers narrower than the minimum free width, and the cell
+decomposition keeps only strata whose two largest extents are not that thin.
 
 ### 1.4 Adjacency, exact cover and deterministic groups
 
@@ -151,7 +152,7 @@ Real11 boundary examples from direct geometry inspection:
 records the exploratory boundary calculation. It is not production implementation
 or evidence that a player can execute a route on these faces.
 
-Detection tests belong in `tests/unit/spatial/test_faces.py`:
+Detection tests belong in `tests/unit/spatial/test_surfaces.py`:
 
 | Case | Required result |
 | --- | --- |
@@ -288,7 +289,7 @@ The catalog is independent of player width/height. Current
 [expanded_box](../../src/parkour_solver/scene/geometry.py) and contact builders
 already transform physical boxes into player-feet collision coordinates. Keep
 that transformation with those consumers rather than embedding a second physics
-implementation in `spatial/faces.py`.
+implementation in the physical catalog.
 
 A point-player physical surface and its player-expanded contact domain are not
 interchangeable. Body expansion can bridge a physical gap between two catalog
@@ -297,13 +298,42 @@ patch before union need not equal clearance applied to an entire merged cover.
 Member contributions preserve the information a later consumer needs to apply
 its actual rule. Nearby solids may further clip the player-valid region.
 
-Current movement events and full-scene checks still expect original `box`/`boxes`
-records. A MergedFace must not be passed into those APIs as a fictitious AABB or
-used through an arbitrary first-member box. Later use must account for the cover
-and member geometry; plane-only dedup does not preserve that coverage. These are
-representation contracts, not a restored generator-integration or bug-fix phase.
+Movement events and full-scene checks carry the member `boxes` of a contact; a
+merged face is never passed as a fictitious AABB or through an arbitrary first
+member. Plane-only dedup does not preserve coverage, so combination keys include
+the surface and regions.
 Likewise, geometric merging does not assert equal friction, contact behavior or
 block-specific obligations if later APIs introduce such properties.
+
+### 2.4.1 Player surfaces
+
+`scene_geometry(collision_scene)` returns the memoized `SceneGeometry` of
+`scene['collisionScene']` (solids and optional bounds); it never rides inside the
+scene dict. Besides obstacle clusters and sides, it serves
+`player_surfaces(indices=None)`: for each modeled solid, the six faces of its
+expanded box, clipped to the player-space coverage bounds when present, minus the
+open tangent interior of every other modeled expanded box whose open interior
+contains the plane. The pieces are unioned per plane with `canonical_cover` and
+split into edge-connected `Surface`s (`key`, `axis`, `sign`, `plane`,
+`tangent_axes`, `cover`, per-solid `contributions`, `members`, `cluster`). Thin
+pieces are dropped; a floor and an underside on one exact-height plane both
+survive; holes and concavities are never filled. Over the whole scene the covers
+equal the cell decomposition's contact patches per plane and per solid.
+
+### 2.4.2 Contact options
+
+`contact_options(axis, sign, *, clearance, members)` gives finite contact domains,
+one `ContactOption(surface, plane, members, boxes, regions)` per connected surface.
+`sign` is the expanded face's outward normal, minus the motion direction (a landing
+uses the top, +1; a ceiling hit the bottom, -1). Only `members` contribute, every
+solid of the scene clips (coverage bounds do not), and the union is eroded by the
+clearance along its horizontal tangent axes (the union of the shrunk maximal
+rectangles), so the seam between touching members stays inside one region; a
+clipping neighbour's edge stays exact, because touching it is allowed. Ceiling
+generators pass the offered blocks' solids and merge across them. A landing passes
+its own block, so it stays one choice per block (one per disconnected piece of its
+top) and its region excludes positions a taller neighbour blocks. Unwanted-floor
+checks use clearance 0, one check per exact exposed rectangle.
 
 ### 2.5 Serialization, inspectability and acceptance
 
@@ -351,7 +381,7 @@ that the current solver has started consuming merged faces.
 Implemented usage (normalized collision geometry only):
 
 ```python
-from parkour_solver.spatial.faces import FaceCatalog, merge_faces
+from parkour_solver.spatial.surfaces import FaceCatalog, merge_faces
 
 catalog = merge_faces(scene)
 for face_id in catalog.faces_for_block('b9b'):

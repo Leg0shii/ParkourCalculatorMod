@@ -1,0 +1,22 @@
+test_conditional_bounds_nest_and_compact_circle_is_in_disk (tests.research.test_route_guidance.GuidanceNumericalTests.test_conditional_bounds_nest_and_compact_circle_is_in_disk) ... skipped 'Install route_guidance/requirements.txt'
+test_dual_projection_and_box_residual_correction_cover_known_optimum (tests.research.test_route_guidance.GuidanceNumericalTests.test_dual_projection_and_box_residual_correction_cover_known_optimum) ... skipped 'Install route_guidance/requirements.txt'
+test_fixed_history_disk_matches_analytic_affine_oracle (tests.research.test_route_guidance.GuidanceNumericalTests.test_fixed_history_disk_matches_analytic_affine_oracle) ... skipped 'Install route_guidance/requirements.txt'
+test_real_witness_lifts_cover_thresholds_and_random_free_facings (tests.research.test_route_guidance.GuidanceNumericalTests.test_real_witness_lifts_cover_thresholds_and_random_free_facings) ... skipped 'Install route_guidance/requirements.txt'
+test_edge_coefficients_match_complete_authoritative_schedules (tests.research.test_route_guidance.GuidancePhysicalTests.test_edge_coefficients_match_complete_authoritative_schedules) ... skipped 'Install guidance dependencies and set PKC_RUN_TICKS_COMPILER'
+test_guidance_produces_independently_checked_whole_initial_state_path (tests.research.test_route_guidance.GuidancePhysicalTests.test_guidance_produces_independently_checked_whole_initial_state_path) ... skipped 'Install guidance dependencies and set PKC_RUN_TICKS_COMPILER'
+test_retaining_two_timings_recovers_the_narrow_support_ranking_counterexample (tests.research.test_route_guidance.GuidancePhysicalTests.test_retaining_two_timings_recovers_the_narrow_support_ranking_counterexample) ... skipped 'Install guidance dependencies and set PKC_RUN_TICKS_COMPILER'
+
+FAIL: test_a_later_constraint_can_reoptimize_facings_before_the_previous_checkpoint (tests.unit.spatial.test_checkpoint_guidance.CheckpointNumericalTests.test_a_later_constraint_can_reoptimize_facings_before_the_previous_checkpoint)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/pkc-bookkeeping-performance/standalone/tests/unit/spatial/test_checkpoint_guidance.py", line 263, in test_a_later_constraint_can_reoptimize_facings_before_the_previous_checkpoint
+    self.assertEqual(first['status'],'feasible')
+AssertionError: 'unknown' != 'feasible'
+- unknown
++ feasible
+
+
+----------------------------------------------------------------------
+Ran 610 tests in 240.539s
+
+FAILED (failures=1, skipped=7)

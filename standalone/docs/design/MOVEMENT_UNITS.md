@@ -2,9 +2,9 @@
 
 Latest extension, 2026-10-30: [GENERIC_COMPOSITION.md](GENERIC_COMPOSITION.md) documents the open choice contract and shared queue for normal, stepping, ceiling and ladder phases. Units can hand off at their actual event state, including airborne and unsupported grounded states. The new path removes the one-case support-leg limit; the older support-profile adapter remains for compatibility.
 
-2026-10-30 extension: registered `stepping` and normal-air `ceiling` units now survive profile compilation, air-gap overlays and run retiming. Named case anchors, jump inputs and grounded-input masks are retained and checked against the scalar profile. Ladder-owned intervals keep their existing units and ceiling behavior; the ladder-ceiling refactor is deferred. See [STEPPING_IMPLEMENTATION.md](STEPPING_IMPLEMENTATION.md). Earlier checkpoint statements below saying stepping is absent describe the preceding ladder milestone.
+2026-10-30 extension: registered `stepping` and normal-air `ceiling` units now survive profile compilation, air-gap overlays and run retiming. Named case anchors, jump inputs and grounded-input masks are retained and checked against the scalar profile. Ladder-owned intervals keep their existing units and ceiling behavior; the ladder-ceiling refactor is deferred. See [STEPPING_CASES.md](STEPPING_CASES.md). Earlier checkpoint statements below saying stepping is absent describe the preceding ladder milestone.
 
-2026-10-29. This implements the latest ladder decisions in [LADDER_COMPOSITION_PLAN.md](LADDER_COMPOSITION_PLAN.md). Continuous numerical acceptance remains this layer's responsibility; replay/export belongs to the other integration worktree.
+2026-10-29. This implements the latest ladder decisions in [MOVEMENT_UNITS.md](MOVEMENT_UNITS.md). Continuous numerical acceptance remains this layer's responsibility; replay/export belongs to the other integration worktree.
 
 ## Implemented interface
 
@@ -50,7 +50,7 @@ The bounded search is not an optimality/infeasibility proof. Entry/skeleton/mask
 
 Initial transfer windows sample distinct exit states, rather than allowing multiple carried-VY variants at one state to consume all four default windows. Other VY/Sneak/stop alternatives can still be dropped by those work caps. Automatic appended entries use the configured entry horizon and remaining flight duration, report clipping and unresolved times, and do not claim to have proved their earliest feasible entry. The whole flight remains bounded to 200 inputs.
 
-Same-region re-entry and changing the chosen climb-wall orientation inside a region remain deferred. Rectangle regions are sufficient for the requested scope. Route-specific rarity/pruning rules, globally exhaustive schedule dominance and a global time-optimality proof remain later work. Automatic mixed contacts now expand initial open episodes, every appended approach/ladder and final air interval; see [MIXED_MOVEMENT_CONTACTS.md](MIXED_MOVEMENT_CONTACTS.md). These alternatives remain bounded, rather than exhaustive. `stepping` and `water` have not been added; the existing stair/step profile path remains in place until that follow-up.
+Same-region re-entry and changing the chosen climb-wall orientation inside a region remain deferred. Rectangle regions are sufficient for the requested scope. Route-specific rarity/pruning rules, globally exhaustive schedule dominance and a global time-optimality proof remain later work. Automatic mixed contacts now expand initial open episodes, every appended approach/ladder and final air interval; see [MIXED_MOVEMENT_CONTACTS.md](MIXED_MOVEMENT_CONTACTS.md). These alternatives remain bounded, rather than exhaustive. Stepping is a registered movement type ([stepping cases](STEPPING_CASES.md)); water is deferred.
 
 ## Measured evidence
 
@@ -67,7 +67,7 @@ Earlier checkpoint verification: 27 focused unit/composition/legacy-witness test
 
 `movement_generation.GENERATORS` dispatches candidate generation by movement type. Each choice supplies a typed input interval plus its relative inputs, occupancy/contact requirements and duration. Normal support choices carry the existing jump/run-off vertical profiles and source/target-height conditions. Ladder choices carry occupied-state intervals, contiguous climbing contacts, planned hit windows and omitted endpoint hits. Sneak domains are supplied by the owning type. The composer chooses the five permitted per-region sequences before scalar simulation; it no longer identifies new unit choices after replaying a whole hit mask.
 
-Generated units are retained through schedule materialization, episode retiming and common compilation. Their semantic masks are checked against the selected timeline so stale or altered metadata cannot hide a restart of climbing. Legacy supplied contracts without generated units still use the existing parser. Stair profiles remain on their existing path pending the deferred stepping type; water is deferred.
+Generated units are retained through schedule materialization, episode retiming and common compilation. Their semantic masks are checked against the selected timeline so stale or altered metadata cannot hide a restart of climbing. Legacy supplied contracts without generated units still use the existing parser. Water is deferred.
 
 ## Consistent entry handling, 2026-10-29
 
