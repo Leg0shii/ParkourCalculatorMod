@@ -88,6 +88,9 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/decision-windows/RESULTS.md](../research/decision-windows/RESULTS.md) | Frozen source-era evidence; use research guide for reproduction: Joint windows: what survives later comparison |
 | [research/dfs-interactions/CALLS.md](../research/dfs-interactions/CALLS.md) | Frozen source-era evidence; use research guide for reproduction: DFS cold/resume worker calls |
 | [research/dfs-interactions/README.md](../research/dfs-interactions/README.md) | Frozen source-era evidence; use research guide for reproduction: Goal-aware DFS and early interaction eligibility |
+| [research/disk-relaxation/2026-11-19/real11-disk-report.md](../research/disk-relaxation/2026-11-19/real11-disk-report.md) | Frozen source-era evidence; use research guide for reproduction: Solve report |
+| [research/disk-relaxation/2026-11-19/real11-stock-report.md](../research/disk-relaxation/2026-11-19/real11-stock-report.md) | Frozen source-era evidence; use research guide for reproduction: Solve report |
+| [research/disk-relaxation/README.md](../research/disk-relaxation/README.md) | Frozen source-era evidence; use research guide for reproduction: Disk relaxation in automatic discovery |
 | [research/early-passage-screen/B6_OPTIONS.md](../research/early-passage-screen/B6_OPTIONS.md) | Frozen source-era evidence; use research guide for reproduction: Every generated B6 option: logged replay |
 | [research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md](../research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md) | Frozen source-era evidence; use research guide for reproduction: B6 questions and answers |
 | [research/early-passage-screen/README.md](../research/early-passage-screen/README.md) | Frozen source-era evidence; use research guide for reproduction: Screen accumulated passage constraints before extension |

@@ -59,27 +59,27 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | File | Bytes |
 | --- | ---: |
 | [docs/AGENT_SETUP.md](AGENT_SETUP.md) | 3797 |
-| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 31789 |
+| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 31967 |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 17874 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 7585 |
 | [docs/CODE_MAP.md](CODE_MAP.md) | 26030 |
-| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 11468 |
+| [docs/CURRENT_STATE.md](CURRENT_STATE.md) | 12102 |
 | [docs/DECISIONS_AND_PLANS.md](DECISIONS_AND_PLANS.md) | 13700 |
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 27678 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11608 |
-| [docs/DOC_INDEX.md](DOC_INDEX.md) | 26960 |
+| [docs/DOC_INDEX.md](DOC_INDEX.md) | 27560 |
 | [docs/FILE_INDEX.md](FILE_INDEX.md) | 207291 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 78419 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4956 |
 | [docs/LAYOUT.md](LAYOUT.md) | 6373 |
 | [docs/MOD_REFERENCES.md](MOD_REFERENCES.md) | 5279 |
-| [docs/PERFORMANCE.md](PERFORMANCE.md) | 11772 |
+| [docs/PERFORMANCE.md](PERFORMANCE.md) | 11997 |
 | [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 12332 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 16451 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 13510 |
-| [docs/TESTING.md](TESTING.md) | 18187 |
+| [docs/TESTING.md](TESTING.md) | 18285 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27768 |
 | [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 13935 |
 | [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34072 |
@@ -134,7 +134,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 
 | File | Bytes |
 | --- | ---: |
-| [ipopt/__init__.py](../ipopt/__init__.py) | 150 |
+| [ipopt/__init__.py](../ipopt/__init__.py) | 187 |
 | [ipopt/solve.py](../ipopt/solve.py) | 186 |
 
 ## native
@@ -642,6 +642,20 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/dfs-interactions/measure_generation.py](../research/dfs-interactions/measure_generation.py) | 2344 |
 | [research/dfs-interactions/real11-fixture.json](../research/dfs-interactions/real11-fixture.json) | 5388 |
 | [research/dfs-interactions/summarize.py](../research/dfs-interactions/summarize.py) | 8271 |
+| [research/disk-relaxation/2026-11-19/coverage.py](../research/disk-relaxation/2026-11-19/coverage.py) | 1700 |
+| [research/disk-relaxation/2026-11-19/heldout-probe-summary.json](../research/disk-relaxation/2026-11-19/heldout-probe-summary.json) | 2246 |
+| [research/disk-relaxation/2026-11-19/matrix-runs.jsonl](../research/disk-relaxation/2026-11-19/matrix-runs.jsonl) | 6013 |
+| [research/disk-relaxation/2026-11-19/matrix-summary.txt](../research/disk-relaxation/2026-11-19/matrix-summary.txt) | 6314 |
+| [research/disk-relaxation/2026-11-19/matrix.sh](../research/disk-relaxation/2026-11-19/matrix.sh) | 1652 |
+| [research/disk-relaxation/2026-11-19/native-report.json](../research/disk-relaxation/2026-11-19/native-report.json) | 19417 |
+| [research/disk-relaxation/2026-11-19/probe_production.py](../research/disk-relaxation/2026-11-19/probe_production.py) | 4084 |
+| [research/disk-relaxation/2026-11-19/real11-disk-provenance.json](../research/disk-relaxation/2026-11-19/real11-disk-provenance.json) | 21726 |
+| [research/disk-relaxation/2026-11-19/real11-disk-report.md](../research/disk-relaxation/2026-11-19/real11-disk-report.md) | 52948 |
+| [research/disk-relaxation/2026-11-19/real11-disk-summary.json](../research/disk-relaxation/2026-11-19/real11-disk-summary.json) | 4472 |
+| [research/disk-relaxation/2026-11-19/real11-stock-report.md](../research/disk-relaxation/2026-11-19/real11-stock-report.md) | 56214 |
+| [research/disk-relaxation/2026-11-19/real11-stock-summary.json](../research/disk-relaxation/2026-11-19/real11-stock-summary.json) | 6199 |
+| [research/disk-relaxation/2026-11-19/search-test-dispatch.json](../research/disk-relaxation/2026-11-19/search-test-dispatch.json) | 615 |
+| [research/disk-relaxation/README.md](../research/disk-relaxation/README.md) | 4013 |
 | [research/early-passage-screen/B6_OPTIONS.md](../research/early-passage-screen/B6_OPTIONS.md) | 89574 |
 | [research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md](../research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md) | 87066 |
 | [research/early-passage-screen/README.md](../research/early-passage-screen/README.md) | 5291 |

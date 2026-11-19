@@ -1,0 +1,88 @@
+{
+ "distinct": 408,
+ "supported": 227,
+ "supportChanged": [],
+ "statuses": {
+  "Solved": 169,
+  "PrimalInfeasible": 56,
+  "NumericalError": 2
+ },
+ "verdictChanged": [
+  {
+   "id": "744cb202d84474f2e4164439562e7f9f77d3f4c96260c4bb1a39a97dadfa34c8",
+   "variant": "threshold0",
+   "now": "NumericalError",
+   "audit": "PrimalInfeasible"
+  }
+ ],
+ "wrongExclusions": [],
+ "rejectedRelaxedPoints": [],
+ "feasibleWithoutFullPoint": [],
+ "materialGaps": [
+  {
+   "id": "53883563f60fdcc2a139d59289a66fab8691eeff7e489d33c25f89ced2c868be",
+   "variant": "threshold0",
+   "gap": 0.0001258665930663483,
+   "peak": 0.10303352156684846,
+   "alarm": true
+  },
+  {
+   "id": "2cf171789e5f82c7a46a25dfcc8d34c7f8c6f2974f25c8530eb2e391e5fcfe47",
+   "variant": "threshold0",
+   "gap": 0.00015934560929053987,
+   "peak": 0.10172302584266514,
+   "alarm": true
+  },
+  {
+   "id": "eb25f5f2b3f4afd313fc1cd21cd5112b0cb61200a79b084c382d529ab7299f8b",
+   "variant": "threshold0",
+   "gap": 0.00035819665034830805,
+   "peak": 0.21561219380191832,
+   "alarm": true
+  },
+  {
+   "id": "97bbf8b1ee8ab0a89067289d3a9c4c3508f92968a03030c3a54aa987d6903e53",
+   "variant": "threshold0",
+   "gap": 0.013250955941623621,
+   "peak": 0.8017203944888444,
+   "alarm": true
+  },
+  {
+   "id": "241bbfa4759ec15ff3b9808b5a9e7f4d020af7b8a597ee7595020bf782ef0e64",
+   "variant": "threshold0",
+   "gap": 0.296034180807184,
+   "peak": 0.8347125975659615,
+   "alarm": true
+  },
+  {
+   "id": "9d51052ddd2e633dc048495ccc6b789010b6481452f10c3f14162c56545b381a",
+   "variant": "threshold0",
+   "gap": 0.0009714030794487627,
+   "peak": 0.21195019989805625,
+   "alarm": true
+  },
+  {
+   "id": "93ee5cce884ca95c0ead8670900af48cf7acc3183a81a7839117f6d7b1e8a12b",
+   "variant": "captured",
+   "gap": 0.000472891075542492,
+   "peak": 0.44172853807218626,
+   "alarm": true
+  },
+  {
+   "id": "646007a57107667fb59655f37a12698d14bc9320d4acf1ef2a424f50efec7a7b",
+   "variant": "captured",
+   "gap": 0.0004728910307960632,
+   "peak": 0.4415571179584748,
+   "alarm": true
+  },
+  {
+   "id": "9dd1f83c6b601f3dcaca56ecb391c06bfb0555382021915159d8b7874ab943cd",
+   "variant": "captured",
+   "gap": 0.00047289107214076864,
+   "peak": 0.44160677553644734,
+   "alarm": true
+  }
+ ],
+ "alarms": 45,
+ "missedMaterialGaps": []
+}

@@ -35,6 +35,7 @@ production code.
 | `e266785c` | geometry-driven avoidance passages | 64 | -1093.2381026602418 | 53 / 49 | 37 | 47/47 | [geometry passages](../research/geometry-passages/README.md) |
 | `b2977e0f` + step 2 | avoidance on obstacle clusters | 64 | -1093.2381026602416 | 25 / 21 | 37 | 20/20 | [obstacle clusters](../research/obstacle-clusters/README.md) |
 | `6b964cb0` + step 4 | legs optimize, switch-tick climb, close fallbacks | 64 | -1093.2381026602416 | 18 / 17 | 37 | 10/10 | [switch climb](../research/switch-climb/README.md) |
+| `4375cd96` | disk relaxation; one IPOPT finalization (stock `c9deef42` paired: 18 / 17, 7.54 s) | 64 | -1093.2381026602418 | 14 / 0 + 1 finalization | 37 | 10/10 | [disk relaxation](../research/disk-relaxation/README.md) |
 | `db7f8f61` + avoidance table | block table for generators and avoidance | 64 | -1093.2381026602416 | 18 / 17 | 37 | 10/10 | [block table](../research/block-table/README.md) |
 
 The switch-climb run finds T64 at 6.1 s and stops at 10.0 s with

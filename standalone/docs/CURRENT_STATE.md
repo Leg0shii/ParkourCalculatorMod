@@ -9,6 +9,13 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
 - Base branch: the fork's `main`. It contains the Real11 extension work: extended
   geometry and bounds, the six-direction [face catalog](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
   (not yet consumed by any generator) and the [longer Real11 task](../research/real11-long-solve/README.md).
+- Local, not pushed: `feat/disk-interim-solver`. Automatic discovery runs on the
+  Clarabel [disk relaxation](reference/NUMERICAL_SOLVER.md#disk-relaxation): the
+  HiGHS LP screen is gone, interim candidates are relaxed, an acceleration-shortfall
+  alarm confirms with IPOPT and promotes real gaps, and one IPOPT finalization
+  publishes the physical route ([execution](ANCHOR_SEARCH_EXECUTION_REFERENCE.md#numerical-backend-and-finalization)).
+  Real11 keeps the replayed T64 with 0 interim IPOPT workers and 1 finalization call,
+  median search 3.6 s against 7.5 s on `c9deef42` ([evidence](../research/disk-relaxation/README.md)).
 - Merged as PR #4 (`feat/jvm-free-orchestrator`): search is JVM-free. The
   in-process Python movement bridge is the default and the Java bridge an explicit
   oracle ([evidence](../research/jvm-free-bridge/README.md)).

@@ -223,8 +223,10 @@ keys or adding a pose constraint. No mixed or uncertainty mode exists.
 | [`numerics.disk`](../src/parkour_solver/numerics/disk.py) `RelaxedDispatch` | Relaxed candidate requests and their IPOPT fallbacks; the finalization lives in `search_goals(finalize=True)`. |
 
 Physical automatic continuation is outer schema2 / DFS8 / movement context4 /
-repair assembly13. Hard3/search5/comparison1/guide2/proposal1 semantics participate
-in the relevant context fingerprints. Matching schema numbers alone do not make
+repair assembly13. Hard3/search5/comparison1/guide2/proposal1 semantics, event
+constraint policy15 and numerical policy1, the DFS `numericalBackend`, the solve
+policy's `numerical` field, reachability proof policy3 and constraint generation
+policy14 participate in the relevant context fingerprints. Matching schema numbers alone do not make
 an older checkpoint compatible. Old wrong-policy exact continuations reject;
 checkpoint storage format stays version1. Never redirect work to an old checkout
 because a source-era handoff contains its absolute path.
