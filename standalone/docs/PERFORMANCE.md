@@ -59,6 +59,12 @@ report. An approach as long as the scene's 200-input limit cost more than the sh
 ones it replaced (2.14 s), so the shared approach stops at the last tick a generator
 can query.
 
+The block table removes generator questions about blocks out of one flight's reach.
+On the Real11 control (`1df37d63` plus the table, load average 6 to 7) it built 5 owner
+entries in 0.0008 s of CPU and cut route-based generator questions from 445 to 366, with the
+same 148 approach builds and an identical report apart from timings; the removed questions
+are the far B6 flight-case rejections.
+
 ## Measured hotspots
 
 Unrestricted 300 s profile at `bbb375cf`

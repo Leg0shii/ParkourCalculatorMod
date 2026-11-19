@@ -147,7 +147,7 @@ def _sequence_allowed(context, initial, event, jumping, rows, support=None):
 
 
 def open_stepping_choices(context):
-    from parkour_solver.reachability.service import interaction_allowed
+    from parkour_solver.reachability.service import candidate_blocks, interaction_allowed
     from parkour_solver.movement.program import scalar_initial
     from parkour_solver.movement.normal import approaches, feet_allowed, first_descent, named_choice
     initial = scalar_initial(context['state'])
@@ -156,8 +156,9 @@ def open_stepping_choices(context):
     allowed = context.get('cases')
     def enabled(case):
         return allowed is None or case in allowed
+    blocks = candidate_blocks(context)
     if initial['onGround']:
-        for block in scene['blocks']:
+        for block in blocks:
             if not feet_allowed(context, block):
                 continue
             box = box_for(block, context)
@@ -192,7 +193,7 @@ def open_stepping_choices(context):
                         if choice:
                             yield choice
     for initial, jumping, trace in approaches(context):
-        for lower in scene['blocks']:
+        for lower in blocks:
             if context.get('checkBudget'):
                 context['checkBudget']()
             if not feet_allowed(context, lower):
@@ -205,14 +206,15 @@ def open_stepping_choices(context):
                 continue
             y = trace['position'][landing]
             for lower_rows, lower_regions in top_choices(context, lower, landing, 'case:lower_landing', jumping=jumping):
-                yield from _open_flight_cases(context, initial, jumping, lower, lower_rows, lower_regions, landing, y, enabled)
+                yield from _open_flight_cases(context, initial, jumping, blocks, lower, lower_rows, lower_regions, landing, y,
+                                              enabled)
 
 
-def _open_flight_cases(context, initial, jumping, lower, lower_rows, lower_regions, landing, y, enabled):
+def _open_flight_cases(context, initial, jumping, blocks, lower, lower_rows, lower_regions, landing, y, enabled):
     from parkour_solver.reachability.service import interaction_allowed
     from parkour_solver.movement.normal import feet_allowed, named_choice
     scene = context['scene']
-    for higher in scene['blocks']:
+    for higher in blocks:
         if higher['top'] <= lower['top'] or not feet_allowed(context, higher):
             continue
         box = box_for(higher, context)

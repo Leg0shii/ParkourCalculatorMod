@@ -6,6 +6,7 @@ from parkour_solver.movement.ceiling_profiles import ceiling_profile, ceiling_se
 from parkour_solver.movement.contact_combinations import (bounding_region, contact_event, finite_rows, reachable_option,
                                                           region_choices, scene_contact_options)
 from parkour_solver.movement.units import profile_program, shifted_unit
+from parkour_solver.reachability.service import candidate_option
 
 
 def grind_options(context, feet, allowed=None):
@@ -15,6 +16,8 @@ def grind_options(context, feet, allowed=None):
     for option in scene_contact_options(scene, 1, -1):
         if context.get('checkBudget'):
             context['checkBudget']()
+        if not candidate_option(context, option):
+            continue
         clearance = option.plane - feet
         owner = '+'.join(sorted(blocks[i]['id'] for i in option.members))
         if not 0 <= clearance < f32(.42) or allowed is not None and not any(allowed(list(box), owner) for box in option.boxes):
@@ -94,6 +97,8 @@ def open_ceiling_choices(context):
     for option in scene_contact_options(scene, 1, -1):
         if context.get('checkBudget'):
             context['checkBudget']()
+        if not candidate_option(context, option):
+            continue
         plane, owner = option.plane, '+'.join(sorted(names[i] for i in option.members))
         for state, jumping, trace in approaches(context):
             hit = next((t for t, move in enumerate(trace['movement'])

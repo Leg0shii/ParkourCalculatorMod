@@ -8,6 +8,7 @@ from parkour_solver.schema import integer, number
 from parkour_solver.movement.cases import entry_possible
 from parkour_solver.movement.program import append_choice, boundary_state, compile_program, empty_program, truncate_program, program_search_key
 from parkour_solver.movement.generation import GENERATORS, generate_choices, propose_choices, assess_proposal
+from parkour_solver.search.anchors.policy import launch_owner
 from parkour_solver.search.comparison import compare_candidates
 
 
@@ -235,6 +236,7 @@ def find_movement_blocks(request, compiler, *, seconds=60, candidate_seconds=2, 
         if context_adapter is not None:
             context_adapter(context)
         gate.context(context)
+        context['launchOwner'] = launch_owner(scene, context['program'])
     def screen(program):
         return screen_program(scene,program,compiler,max(.001,deadline-time.monotonic()),gate=gate)
     for program in iter_movement_programs(scene, settings=cfg, deadline=deadline, cancel_event=cancel_event,

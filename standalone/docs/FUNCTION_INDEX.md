@@ -238,11 +238,11 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `grind_options` | [11](../src/parkour_solver/movement/ceiling_generation.py#L11) | function |
-| `ceiling_profiles` | [39](../src/parkour_solver/movement/ceiling_generation.py#L39) | function |
-| `CeilingGenerator` | [56](../src/parkour_solver/movement/ceiling_generation.py#L56) | class |
-| `CeilingGenerator.generate` | [57](../src/parkour_solver/movement/ceiling_generation.py#L57) | function |
-| `open_ceiling_choices` | [85](../src/parkour_solver/movement/ceiling_generation.py#L85) | function |
+| `grind_options` | [12](../src/parkour_solver/movement/ceiling_generation.py#L12) | function |
+| `ceiling_profiles` | [42](../src/parkour_solver/movement/ceiling_generation.py#L42) | function |
+| `CeilingGenerator` | [59](../src/parkour_solver/movement/ceiling_generation.py#L59) | class |
+| `CeilingGenerator.generate` | [60](../src/parkour_solver/movement/ceiling_generation.py#L60) | function |
+| `open_ceiling_choices` | [88](../src/parkour_solver/movement/ceiling_generation.py#L88) | function |
 
 ## movement/ceiling_profiles.py
 
@@ -440,7 +440,7 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `SteppingGenerator.generate` | [106](../src/parkour_solver/movement/stepping.py#L106) | function |
 | `_sequence_allowed` | [138](../src/parkour_solver/movement/stepping.py#L138) | function |
 | `open_stepping_choices` | [149](../src/parkour_solver/movement/stepping.py#L149) | function |
-| `_open_flight_cases` | [211](../src/parkour_solver/movement/stepping.py#L211) | function |
+| `_open_flight_cases` | [213](../src/parkour_solver/movement/stepping.py#L213) | function |
 
 ## movement/units.py
 
@@ -579,20 +579,23 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `block_interaction` | [84](../src/parkour_solver/reachability/service.py#L84) | function |
 | `interaction_allowed` | [89](../src/parkour_solver/reachability/service.py#L89) | function |
 | `bounds_allowed` | [93](../src/parkour_solver/reachability/service.py#L93) | function |
-| `InteractionGate` | [101](../src/parkour_solver/reachability/service.py#L101) | class |
-| `InteractionGate.__init__` | [103](../src/parkour_solver/reachability/service.py#L103) | function |
-| `InteractionGate._cached` | [112](../src/parkour_solver/reachability/service.py#L112) | function |
-| `InteractionGate.prepare` | [125](../src/parkour_solver/reachability/service.py#L125) | function |
-| `InteractionGate.analyze_model` | [142](../src/parkour_solver/reachability/service.py#L142) | function |
-| `InteractionGate.analyze` | [160](../src/parkour_solver/reachability/service.py#L160) | function |
-| `InteractionGate.condition` | [166](../src/parkour_solver/reachability/service.py#L166) | function |
-| `InteractionGate.envelopes` | [174](../src/parkour_solver/reachability/service.py#L174) | function |
-| `InteractionGate.sequence` | [178](../src/parkour_solver/reachability/service.py#L178) | function |
-| `InteractionGate.check_program` | [191](../src/parkour_solver/reachability/service.py#L191) | function |
-| `InteractionGate.query` | [216](../src/parkour_solver/reachability/service.py#L216) | function |
-| `InteractionGate.required` | [257](../src/parkour_solver/reachability/service.py#L257) | function |
-| `InteractionGate.context` | [278](../src/parkour_solver/reachability/service.py#L278) | function |
-| `InteractionGate.summary` | [281](../src/parkour_solver/reachability/service.py#L281) | function |
+| `candidate_blocks` | [101](../src/parkour_solver/reachability/service.py#L101) | function |
+| `candidate_option` | [110](../src/parkour_solver/reachability/service.py#L110) | function |
+| `InteractionGate` | [118](../src/parkour_solver/reachability/service.py#L118) | class |
+| `InteractionGate.__init__` | [120](../src/parkour_solver/reachability/service.py#L120) | function |
+| `InteractionGate.reachable_blocks` | [130](../src/parkour_solver/reachability/service.py#L130) | function |
+| `InteractionGate._cached` | [176](../src/parkour_solver/reachability/service.py#L176) | function |
+| `InteractionGate.prepare` | [189](../src/parkour_solver/reachability/service.py#L189) | function |
+| `InteractionGate.analyze_model` | [206](../src/parkour_solver/reachability/service.py#L206) | function |
+| `InteractionGate.analyze` | [224](../src/parkour_solver/reachability/service.py#L224) | function |
+| `InteractionGate.condition` | [230](../src/parkour_solver/reachability/service.py#L230) | function |
+| `InteractionGate.envelopes` | [238](../src/parkour_solver/reachability/service.py#L238) | function |
+| `InteractionGate.sequence` | [242](../src/parkour_solver/reachability/service.py#L242) | function |
+| `InteractionGate.check_program` | [255](../src/parkour_solver/reachability/service.py#L255) | function |
+| `InteractionGate.query` | [280](../src/parkour_solver/reachability/service.py#L280) | function |
+| `InteractionGate.required` | [321](../src/parkour_solver/reachability/service.py#L321) | function |
+| `InteractionGate.context` | [342](../src/parkour_solver/reachability/service.py#L342) | function |
+| `InteractionGate.summary` | [345](../src/parkour_solver/reachability/service.py#L345) | function |
 
 ## reachability/viability.py
 
@@ -680,14 +683,15 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `semantic_settings` | [44](../src/parkour_solver/search/anchors/policy.py#L44) | function |
 | `owner` | [49](../src/parkour_solver/search/anchors/policy.py#L49) | function |
 | `visits` | [54](../src/parkour_solver/search/anchors/policy.py#L54) | function |
-| `feet_touches` | [85](../src/parkour_solver/search/anchors/policy.py#L85) | function |
-| `visit_state` | [97](../src/parkour_solver/search/anchors/policy.py#L97) | function |
-| `audit` | [120](../src/parkour_solver/search/anchors/policy.py#L120) | function |
-| `local_counts` | [138](../src/parkour_solver/search/anchors/policy.py#L138) | function |
-| `priority` | [143](../src/parkour_solver/search/anchors/policy.py#L143) | function |
-| `within_caps` | [147](../src/parkour_solver/search/anchors/policy.py#L147) | function |
-| `transfer_structure` | [161](../src/parkour_solver/search/anchors/policy.py#L161) | function |
-| `single_jump_structure` | [200](../src/parkour_solver/search/anchors/policy.py#L200) | function |
+| `launch_owner` | [82](../src/parkour_solver/search/anchors/policy.py#L82) | function |
+| `feet_touches` | [90](../src/parkour_solver/search/anchors/policy.py#L90) | function |
+| `visit_state` | [102](../src/parkour_solver/search/anchors/policy.py#L102) | function |
+| `audit` | [125](../src/parkour_solver/search/anchors/policy.py#L125) | function |
+| `local_counts` | [143](../src/parkour_solver/search/anchors/policy.py#L143) | function |
+| `priority` | [148](../src/parkour_solver/search/anchors/policy.py#L148) | function |
+| `within_caps` | [152](../src/parkour_solver/search/anchors/policy.py#L152) | function |
+| `transfer_structure` | [166](../src/parkour_solver/search/anchors/policy.py#L166) | function |
+| `single_jump_structure` | [205](../src/parkour_solver/search/anchors/policy.py#L205) | function |
 
 ## search/application.py
 
@@ -941,9 +945,9 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `iter_movement_programs` | [14](../src/parkour_solver/search/movement.py#L14) | function |
-| `find_movement_blocks` | [211](../src/parkour_solver/search/movement.py#L211) | function |
-| `screen_program` | [277](../src/parkour_solver/search/movement.py#L277) | function |
+| `iter_movement_programs` | [15](../src/parkour_solver/search/movement.py#L15) | function |
+| `find_movement_blocks` | [212](../src/parkour_solver/search/movement.py#L212) | function |
+| `screen_program` | [279](../src/parkour_solver/search/movement.py#L279) | function |
 
 ## search/ordered_route.py
 
@@ -1197,18 +1201,20 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `Surface` | [432](../src/parkour_solver/spatial/surfaces.py#L432) | class |
 | `SceneGeometry` | [444](../src/parkour_solver/spatial/surfaces.py#L444) | class |
 | `SceneGeometry.__init__` | [447](../src/parkour_solver/spatial/surfaces.py#L447) | function |
-| `SceneGeometry.clusters` | [455](../src/parkour_solver/spatial/surfaces.py#L455) | function |
-| `SceneGeometry.cluster` | [458](../src/parkour_solver/spatial/surfaces.py#L458) | function |
-| `SceneGeometry._cluster_map` | [461](../src/parkour_solver/spatial/surfaces.py#L461) | function |
-| `SceneGeometry.active` | [483](../src/parkour_solver/spatial/surfaces.py#L483) | function |
-| `SceneGeometry.sides` | [486](../src/parkour_solver/spatial/surfaces.py#L486) | function |
-| `SceneGeometry.player_surfaces` | [506](../src/parkour_solver/spatial/surfaces.py#L506) | function |
-| `SceneGeometry.contact_options` | [550](../src/parkour_solver/spatial/surfaces.py#L550) | function |
-| `ContactOption` | [591](../src/parkour_solver/spatial/surfaces.py#L591) | class |
-| `_maximal_rectangles` | [599](../src/parkour_solver/spatial/surfaces.py#L599) | function |
-| `_erode` | [625](../src/parkour_solver/spatial/surfaces.py#L625) | function |
-| `_scene_geometry` | [632](../src/parkour_solver/spatial/surfaces.py#L632) | function |
-| `scene_geometry` | [636](../src/parkour_solver/spatial/surfaces.py#L636) | function |
+| `SceneGeometry.near` | [458](../src/parkour_solver/spatial/surfaces.py#L458) | function |
+| `SceneGeometry._cells` | [469](../src/parkour_solver/spatial/surfaces.py#L469) | function |
+| `SceneGeometry.clusters` | [474](../src/parkour_solver/spatial/surfaces.py#L474) | function |
+| `SceneGeometry.cluster` | [477](../src/parkour_solver/spatial/surfaces.py#L477) | function |
+| `SceneGeometry._cluster_map` | [480](../src/parkour_solver/spatial/surfaces.py#L480) | function |
+| `SceneGeometry.active` | [502](../src/parkour_solver/spatial/surfaces.py#L502) | function |
+| `SceneGeometry.sides` | [505](../src/parkour_solver/spatial/surfaces.py#L505) | function |
+| `SceneGeometry.player_surfaces` | [525](../src/parkour_solver/spatial/surfaces.py#L525) | function |
+| `SceneGeometry.contact_options` | [569](../src/parkour_solver/spatial/surfaces.py#L569) | function |
+| `ContactOption` | [610](../src/parkour_solver/spatial/surfaces.py#L610) | class |
+| `_maximal_rectangles` | [618](../src/parkour_solver/spatial/surfaces.py#L618) | function |
+| `_erode` | [644](../src/parkour_solver/spatial/surfaces.py#L644) | function |
+| `_scene_geometry` | [651](../src/parkour_solver/spatial/surfaces.py#L651) | function |
+| `scene_geometry` | [655](../src/parkour_solver/spatial/surfaces.py#L655) | function |
 
 ## validation/numerical.py
 

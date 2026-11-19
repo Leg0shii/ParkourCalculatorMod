@@ -12,7 +12,7 @@ from parkour_solver.spatial.checkpoints import Checkpoint, retain_prefix
 from parkour_solver.search.goals import goal_spec, goal_key, region_arrival, _landing_prefixes
 from parkour_solver.search.virtual_goals import KIND, bind_goal, satisfied
 from parkour_solver.search.compat.minimum_runs import POLICY_VERSION, latest_jump, remember, exclusion
-from parkour_solver.search.anchors.policy import semantic_settings
+from parkour_solver.search.anchors.policy import launch_owner, semantic_settings
 from parkour_solver.constraints.variants import GENERATION_POLICY
 from parkour_solver.search.comparison import comparison_label, priority_key, compare_candidates, POLICY_VERSION as COMPARISON_POLICY_VERSION
 
@@ -263,6 +263,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
     def configure(ctx, f):
         stage_adapter(f).context(ctx)
         gate.context(ctx)
+        ctx['launchOwner'] = launch_owner(scene, ctx['program'])
         ctx['regionItems'] = True
         ctx['frameId'] = f['id']
 

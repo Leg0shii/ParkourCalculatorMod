@@ -451,6 +451,25 @@ class SceneGeometry:
             bounds[0] + HALF_WIDTH, bounds[1], bounds[2] + HALF_WIDTH,
             bounds[3] - HALF_WIDTH, bounds[4] - BODY_HEIGHT, bounds[5] - HALF_WIDTH)
         self._clusters, self._sides, self._surfaces, self._options = {}, {}, {}, {}
+        self._grid = None
+
+    GRID_CELL = 4.
+
+    def near(self, rectangle):
+        if self._grid is None:
+            self._grid = {}
+            for i, b in enumerate(self.boxes):
+                for cell in self._cells(b[0], b[2], b[3], b[5]):
+                    self._grid.setdefault(cell, []).append(i)
+        x0, z0, x1, z1 = rectangle
+        found = {i for cell in self._cells(x0, z0, x1, z1) for i in self._grid.get(cell, ())}
+        return sorted(i for i in found if self.boxes[i][0] <= x1 and x0 <= self.boxes[i][3]
+                      and self.boxes[i][2] <= z1 and z0 <= self.boxes[i][5])
+
+    def _cells(self, x0, z0, x1, z1):
+        size = self.GRID_CELL
+        return itertools.product(range(math.floor(x0 / size), math.floor(x1 / size) + 1),
+                                 range(math.floor(z0 / size), math.floor(z1 / size) + 1))
 
     def clusters(self, indices):
         return tuple(self._cluster_map(indices).values())

@@ -62,8 +62,9 @@ def feet_allowed(context, block):
 def normal_choices(context):
     from parkour_solver.movement.contact_combinations import (contact_event, reachable_option, region_choices,
                                                               scene_contact_options)
+    from parkour_solver.reachability.service import candidate_blocks
     for initial, jumping, trace in approaches(context):
-        for block in context['scene']['blocks']:
+        for block in candidate_blocks(context):
             if context.get('checkBudget'):
                 context['checkBudget']()
             if context.get('supportAllowed') is not None and not context['supportAllowed'](block):

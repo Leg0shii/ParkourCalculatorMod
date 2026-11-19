@@ -403,6 +403,22 @@ class ClusterTests(unittest.TestCase):
                     self.assertTrue(any(b[0] < grown[2] and grown[0] < b[3] and b[2] < grown[3] and grown[1] < b[5]
                                         for b in boxes), (boxes, r, i))
 
+    def test_near_matches_a_scan_on_cell_borders_and_long_boxes(self):
+        rng = random.Random(11)
+        for _ in range(40):
+            solids = []
+            for _ in range(rng.randint(1, 30)):
+                x, z = rng.randint(-20, 20), rng.randint(-20, 20)
+                solids.append([x, rng.randint(0, 5), z, x+rng.choice([1, 1, 3, 13]), 6, z+rng.choice([1, 1, 3, 13])])
+            geometry = scene_geometry(dict(solids=solids))
+            for _ in range(50):
+                x0 = rng.choice([rng.uniform(-30, 30), 4.*rng.randint(-8, 8), rng.randint(-25, 25)-.3])
+                z0 = rng.choice([rng.uniform(-30, 30), 4.*rng.randint(-8, 8), rng.randint(-25, 25)-.3])
+                rect = [x0, z0, x0+rng.choice([0., 4., rng.uniform(0, 20)]), z0+rng.choice([0., 4., rng.uniform(0, 20)])]
+                expected = [i for i, b in enumerate(geometry.boxes)
+                            if b[0] <= rect[2] and rect[0] <= b[3] and b[2] <= rect[3] and rect[1] <= b[5]]
+                self.assertEqual(geometry.near(rect), expected, (solids, rect))
+
 
 
 def planar(rects):

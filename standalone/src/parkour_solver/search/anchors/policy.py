@@ -79,6 +79,11 @@ def visits(scene, program):
     return result
 
 
+def launch_owner(scene, program):
+    tick, name = visits(scene, program)[-1]
+    return None if any(program['profile']['ladderTicks'][tick:]) else name
+
+
 FEET_CASES = frozenset(('normal_step', 'slab_boost', 'blip', 'blip_up', 'corner_jump_cancel', 'corner_blip_up'))
 
 

@@ -2,8 +2,8 @@
 
 ## Current gate
 
-`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the removal of the unused
-`fair_parents` option over `cfc2a3ec`: **719 tests, no failures, errors or skips**, source unchanged
+`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the block table prefilter over
+`1df37d63`: **724 tests, no failures, errors or skips**, source unchanged
 during the run, layout validation passed.
 A run of the switch-climb source (`55e3beef`) under a load average of 5.5 failed
 `test_prescribed_points_do_not_remove_remote_free_space` (its two 2 s arms
@@ -22,6 +22,7 @@ persistence without the removed 32/128 limits.
 
 | Source | Tests | Evidence |
 | --- | ---: | --- |
+| `1df37d63` + block table prefilter | 724 | not archived |
 | `cfc2a3ec` + unused `fair_parents` option removed | 719 | not archived |
 | `7bf91bbb` + unused fair-parent generator removed | 719 | not archived |
 | `4b16b0e6` + a missing generator gate is an error | 720 | not archived |

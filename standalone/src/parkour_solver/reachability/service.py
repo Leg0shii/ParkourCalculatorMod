@@ -98,6 +98,23 @@ def bounds_allowed(context, bounds, tick, *, label, jumping=False, phases=('Y', 
     return gate is None or not gate.query(context, bounds, tick, label=label, jumping=jumping, phases=phases)['ruledOut']
 
 
+def candidate_blocks(context):
+    blocks = context['scene']['blocks']
+    owner = context.get('launchOwner')
+    if owner is None or context['interactionGate'] is None:
+        return blocks
+    kept = context['interactionGate'].reachable_blocks(owner)['blocks']
+    return [b for b in blocks if b['id'] in kept]
+
+
+def candidate_option(context, option):
+    owner = context.get('launchOwner')
+    if owner is None or context['interactionGate'] is None:
+        return True
+    solids = context['interactionGate'].reachable_blocks(owner)['solids']
+    return any(i in solids for i in option.members)
+
+
 class InteractionGate:
     """Session-shared preparation, coefficient and exact-model proof cache."""
     def __init__(self, scene, compiler, *, seconds=1):
@@ -108,6 +125,53 @@ class InteractionGate:
         self.exclusions = []
         from parkour_solver.reachability.linear import STATS
         self.linear_start = {kind: collections.Counter(counts) for kind, counts in STATS.items()}
+        self.block_table, self.jump_traces = {}, {}
+
+    def reachable_blocks(self, owner):
+        if owner in self.block_table:
+            return self.block_table[owner]
+        import math
+        import time
+        from parkour_solver.movement.normal import first_descent, replay
+        from parkour_solver.physics.vertical import REST_CARRY
+        from parkour_solver.scene.geometry import BODY_HEIGHT
+        from parkour_solver.spatial.surfaces import scene_geometry
+        started = time.process_time()
+        blocks = self.scene['blocks']
+        geometry = scene_geometry(self.scene['collisionScene'])
+        lowest = min(b['top'] for b in blocks)
+        by_solid = {}
+        for b in blocks:
+            by_solid.setdefault(b['solidIndex'], []).append(b['id'])
+        kept, ticks = set(), None
+        for block in blocks:
+            if block.get('sourceBlock', block['id']) != owner:
+                continue
+            kept.add(block['id'])
+            if block['top'] not in self.jump_traces:
+                state = dict(position=block['top'], velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
+                self.jump_traces[block['top']] = replay(state, 200, jumping=True, threshold=0.)
+            trace = self.jump_traces[block['top']]
+            descent = first_descent(trace, lowest)
+            flight = 200 if descent is None else descent+1
+            ticks = flight if ticks is None else min(ticks, flight)
+            radius = .4+.7+.4*(flight-1)
+            ceiling = max(trace['position'])+.6+BODY_HEIGHT
+            own = geometry.boxes[block['solidIndex']]
+            foot = [own[0], own[2], own[3], own[5]]
+            for i in geometry.near([foot[0]-radius, foot[1]-radius, foot[2]+radius, foot[3]+radius]):
+                box = geometry.boxes[i]
+                if box[1] > ceiling:
+                    continue
+                dx = max(0., box[0]-foot[2], foot[0]-box[3])
+                dz = max(0., box[2]-foot[3], foot[1]-box[5])
+                if math.hypot(dx, dz) <= radius:
+                    kept.update(by_solid.get(i, ()))
+        solids = frozenset(b['solidIndex'] for b in blocks if b['id'] in kept)
+        self.block_table[owner] = dict(blocks=frozenset(kept), solids=solids, ticks=ticks)
+        self.metrics['blockTableBuilds'] = self.metrics.get('blockTableBuilds', 0)+1
+        self.metrics['blockTableSeconds'] = self.metrics.get('blockTableSeconds', 0.)+time.process_time()-started
+        return self.block_table[owner]
 
     def _cached(self, key, build, kind):
         hit = key in self.cache
