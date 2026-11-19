@@ -18,7 +18,7 @@ from parkour_solver.search.compat.corridor_queue import collision_request
 
 
 # Per-session work counters the event report sums across allocation sessions.
-NUMERICAL_COUNTS = ('workerLaunches', 'feasibleSeedReturns', 'conicCandidates', 'conicUndecided', 'relaxedFallbacks',
+NUMERICAL_COUNTS = ('workerLaunches', 'feasibleSeedReturns', 'conicCandidates', 'relaxedFallbacks',
                     'confirmations', 'confirmationIpoptCalls', 'materialGaps', 'promotions')
 
 

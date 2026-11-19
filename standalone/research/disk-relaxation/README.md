@@ -53,7 +53,10 @@ exclusions, 0 relaxed points rejected by the validator, 0 relaxed-feasible reque
 without a full-strength point; 9 material score gaps (1.3e-4 to 0.296 blocks), all
 alarmed, and 45 alarms in total. Two threshold-0 variants end `NumericalError`
 (undecided, never excluding) where the audit prototype, with rows in request rather
-than sorted order, had one `PrimalInfeasible` and one `MaxIterations`.
+than sorted order, had one `PrimalInfeasible` and one `MaxIterations`. With the
+zero-cost retry of undecided specs both are `PrimalInfeasible` (58 infeasible, 0
+undecided, otherwise unchanged; [summary](2026-11-19/heldout-probe-retry-summary.json));
+they are the `disk-undecided` test fixture.
 
 ## Search tests through the dispatch
 

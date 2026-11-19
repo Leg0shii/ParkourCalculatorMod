@@ -59,7 +59,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | File | Bytes |
 | --- | ---: |
 | [docs/AGENT_SETUP.md](AGENT_SETUP.md) | 3797 |
-| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 31967 |
+| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 32012 |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 17874 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 7585 |
 | [docs/CODE_MAP.md](CODE_MAP.md) | 26030 |
@@ -68,8 +68,8 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 27678 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11608 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 27560 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 207291 |
-| [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 78419 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 209088 |
+| [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 78500 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4956 |
 | [docs/LAYOUT.md](LAYOUT.md) | 6373 |
@@ -77,7 +77,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/PERFORMANCE.md](PERFORMANCE.md) | 11997 |
 | [docs/REAL11_EXTENDED_GEOMETRY.md](REAL11_EXTENDED_GEOMETRY.md) | 12332 |
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
-| [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 16451 |
+| [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 16454 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 13510 |
 | [docs/TESTING.md](TESTING.md) | 18285 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27768 |
@@ -93,7 +93,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/design/MIXED_MOVEMENT_CONTACTS.md](design/MIXED_MOVEMENT_CONTACTS.md) | 5966 |
 | [docs/design/MOVEMENT_UNITS.md](design/MOVEMENT_UNITS.md) | 13672 |
 | [docs/design/OBSTACLES_AND_BLOCKAGES.md](design/OBSTACLES_AND_BLOCKAGES.md) | 25624 |
-| [docs/design/OBSTACLE_RELEVANCE.md](design/OBSTACLE_RELEVANCE.md) | 15422 |
+| [docs/design/OBSTACLE_RELEVANCE.md](design/OBSTACLE_RELEVANCE.md) | 15601 |
 | [docs/design/OBSTACLE_SEARCH.md](design/OBSTACLE_SEARCH.md) | 11808 |
 | [docs/design/ORCHESTRATOR_CONTRACT.md](design/ORCHESTRATOR_CONTRACT.md) | 2449 |
 | [docs/design/PRUNING_IMPROVEMENTS_BACKLOG.md](design/PRUNING_IMPROVEMENTS_BACKLOG.md) | 3528 |
@@ -105,7 +105,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/history/dependencies/autonomy-route_guidance-requirements.txt](history/dependencies/autonomy-route_guidance-requirements.txt) | 63 |
 | [docs/history/dependencies/ipopt-requirements.txt](history/dependencies/ipopt-requirements.txt) | 27 |
 | [docs/reference/MOVEMENT_PORT.md](reference/MOVEMENT_PORT.md) | 12343 |
-| [docs/reference/NUMERICAL_SOLVER.md](reference/NUMERICAL_SOLVER.md) | 22605 |
+| [docs/reference/NUMERICAL_SOLVER.md](reference/NUMERICAL_SOLVER.md) | 22920 |
 | [docs/reference/REPLAY.md](reference/REPLAY.md) | 8680 |
 | [docs/research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md) | 67882 |
 | [docs/research/HEURISTIC_SOURCE_REVIEW.md](research/HEURISTIC_SOURCE_REVIEW.md) | 17131 |
@@ -643,6 +643,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/dfs-interactions/real11-fixture.json](../research/dfs-interactions/real11-fixture.json) | 5388 |
 | [research/dfs-interactions/summarize.py](../research/dfs-interactions/summarize.py) | 8271 |
 | [research/disk-relaxation/2026-11-19/coverage.py](../research/disk-relaxation/2026-11-19/coverage.py) | 1700 |
+| [research/disk-relaxation/2026-11-19/heldout-probe-retry-summary.json](../research/disk-relaxation/2026-11-19/heldout-probe-retry-summary.json) | 2222 |
 | [research/disk-relaxation/2026-11-19/heldout-probe-summary.json](../research/disk-relaxation/2026-11-19/heldout-probe-summary.json) | 2246 |
 | [research/disk-relaxation/2026-11-19/matrix-runs.jsonl](../research/disk-relaxation/2026-11-19/matrix-runs.jsonl) | 6013 |
 | [research/disk-relaxation/2026-11-19/matrix-summary.txt](../research/disk-relaxation/2026-11-19/matrix-summary.txt) | 6314 |
@@ -655,7 +656,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/disk-relaxation/2026-11-19/real11-stock-report.md](../research/disk-relaxation/2026-11-19/real11-stock-report.md) | 56214 |
 | [research/disk-relaxation/2026-11-19/real11-stock-summary.json](../research/disk-relaxation/2026-11-19/real11-stock-summary.json) | 6199 |
 | [research/disk-relaxation/2026-11-19/search-test-dispatch.json](../research/disk-relaxation/2026-11-19/search-test-dispatch.json) | 615 |
-| [research/disk-relaxation/README.md](../research/disk-relaxation/README.md) | 4013 |
+| [research/disk-relaxation/README.md](../research/disk-relaxation/README.md) | 4236 |
 | [research/early-passage-screen/B6_OPTIONS.md](../research/early-passage-screen/B6_OPTIONS.md) | 89574 |
 | [research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md](../research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md) | 87066 |
 | [research/early-passage-screen/README.md](../research/early-passage-screen/README.md) | 5291 |
@@ -1352,7 +1353,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/numerics/builders.py](../src/parkour_solver/numerics/builders.py) | 4633 |
 | [src/parkour_solver/numerics/constraints.py](../src/parkour_solver/numerics/constraints.py) | 1410 |
 | [src/parkour_solver/numerics/continuation.py](../src/parkour_solver/numerics/continuation.py) | 4237 |
-| [src/parkour_solver/numerics/disk.py](../src/parkour_solver/numerics/disk.py) | 17193 |
+| [src/parkour_solver/numerics/disk.py](../src/parkour_solver/numerics/disk.py) | 17758 |
 | [src/parkour_solver/numerics/model.py](../src/parkour_solver/numerics/model.py) | 11687 |
 | [src/parkour_solver/numerics/solver.py](../src/parkour_solver/numerics/solver.py) | 8818 |
 | [src/parkour_solver/numerics/worker.py](../src/parkour_solver/numerics/worker.py) | 13786 |
@@ -1397,11 +1398,11 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/search/deferrals.py](../src/parkour_solver/search/deferrals.py) | 1105 |
 | [src/parkour_solver/search/dfs.py](../src/parkour_solver/search/dfs.py) | 71369 |
 | [src/parkour_solver/search/domain.py](../src/parkour_solver/search/domain.py) | 959 |
-| [src/parkour_solver/search/engine.py](../src/parkour_solver/search/engine.py) | 23508 |
+| [src/parkour_solver/search/engine.py](../src/parkour_solver/search/engine.py) | 23417 |
 | [src/parkour_solver/search/entry.py](../src/parkour_solver/search/entry.py) | 10726 |
 | [src/parkour_solver/search/events/__init__.py](../src/parkour_solver/search/events/__init__.py) | 0 |
 | [src/parkour_solver/search/events/adapter.py](../src/parkour_solver/search/events/adapter.py) | 10037 |
-| [src/parkour_solver/search/events/engine.py](../src/parkour_solver/search/events/engine.py) | 15623 |
+| [src/parkour_solver/search/events/engine.py](../src/parkour_solver/search/events/engine.py) | 15605 |
 | [src/parkour_solver/search/feasibility.py](../src/parkour_solver/search/feasibility.py) | 4137 |
 | [src/parkour_solver/search/frontier.py](../src/parkour_solver/search/frontier.py) | 14104 |
 | [src/parkour_solver/search/goals.py](../src/parkour_solver/search/goals.py) | 4458 |
@@ -1495,6 +1496,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/fixtures/movement/wall-reversal.json](../tests/fixtures/movement/wall-reversal.json) | 632 |
 | [tests/fixtures/movement/xyz-contact-corner.json](../tests/fixtures/movement/xyz-contact-corner.json) | 1393 |
 | [tests/fixtures/numerics/disk-real11.json.gz](../tests/fixtures/numerics/disk-real11.json.gz) | 16685 |
+| [tests/fixtures/numerics/disk-undecided.json.gz](../tests/fixtures/numerics/disk-undecided.json.gz) | 1677 |
 | [tests/fixtures/numerics/real11-200-ladders.json.gz](../tests/fixtures/numerics/real11-200-ladders.json.gz) | 6454 |
 | [tests/fixtures/numerics/real11-200.json.gz](../tests/fixtures/numerics/real11-200.json.gz) | 4422 |
 | [tests/fixtures/numerics/real11-400-ladders.json.gz](../tests/fixtures/numerics/real11-400-ladders.json.gz) | 10910 |
@@ -1582,7 +1584,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/numerics/test_capture.py](../tests/unit/numerics/test_capture.py) | 4383 |
 | [tests/unit/numerics/test_constraints.py](../tests/unit/numerics/test_constraints.py) | 3961 |
 | [tests/unit/numerics/test_continuation.py](../tests/unit/numerics/test_continuation.py) | 4844 |
-| [tests/unit/numerics/test_disk.py](../tests/unit/numerics/test_disk.py) | 17759 |
+| [tests/unit/numerics/test_disk.py](../tests/unit/numerics/test_disk.py) | 18387 |
 | [tests/unit/numerics/test_integration.py](../tests/unit/numerics/test_integration.py) | 9197 |
 | [tests/unit/numerics/test_ladder_model.py](../tests/unit/numerics/test_ladder_model.py) | 6840 |
 | [tests/unit/numerics/test_model.py](../tests/unit/numerics/test_model.py) | 5256 |
@@ -1596,7 +1598,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/search/__init__.py](../tests/unit/search/__init__.py) | 0 |
 | [tests/unit/search/test_anchor_dfs.py](../tests/unit/search/test_anchor_dfs.py) | 29018 |
 | [tests/unit/search/test_anchor_policy.py](../tests/unit/search/test_anchor_policy.py) | 17143 |
-| [tests/unit/search/test_anchor_search.py](../tests/unit/search/test_anchor_search.py) | 18267 |
+| [tests/unit/search/test_anchor_search.py](../tests/unit/search/test_anchor_search.py) | 18124 |
 | [tests/unit/search/test_anchor_time_bound.py](../tests/unit/search/test_anchor_time_bound.py) | 1919 |
 | [tests/unit/search/test_block_search.py](../tests/unit/search/test_block_search.py) | 16987 |
 | [tests/unit/search/test_candidate_comparison.py](../tests/unit/search/test_candidate_comparison.py) | 6042 |

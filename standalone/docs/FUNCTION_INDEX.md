@@ -510,15 +510,16 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | --- | ---: | --- |
 | `spec` | [31](../src/parkour_solver/numerics/disk.py#L31) | function |
 | `solve` | [60](../src/parkour_solver/numerics/disk.py#L60) | function |
-| `screen` | [81](../src/parkour_solver/numerics/disk.py#L81) | function |
-| `deficits` | [96](../src/parkour_solver/numerics/disk.py#L96) | function |
-| `RelaxedDispatch` | [103](../src/parkour_solver/numerics/disk.py#L103) | class |
-| `RelaxedDispatch.__init__` | [112](../src/parkour_solver/numerics/disk.py#L112) | function |
-| `RelaxedDispatch.solve` | [116](../src/parkour_solver/numerics/disk.py#L116) | function |
-| `RelaxedDispatch.confirm` | [154](../src/parkour_solver/numerics/disk.py#L154) | function |
-| `_result` | [189](../src/parkour_solver/numerics/disk.py#L189) | function |
-| `_solve` | [205](../src/parkour_solver/numerics/disk.py#L205) | function |
-| `_cost` | [305](../src/parkour_solver/numerics/disk.py#L305) | function |
+| `screen` | [85](../src/parkour_solver/numerics/disk.py#L85) | function |
+| `deficits` | [100](../src/parkour_solver/numerics/disk.py#L100) | function |
+| `RelaxedDispatch` | [107](../src/parkour_solver/numerics/disk.py#L107) | class |
+| `RelaxedDispatch.__init__` | [116](../src/parkour_solver/numerics/disk.py#L116) | function |
+| `RelaxedDispatch.solve` | [120](../src/parkour_solver/numerics/disk.py#L120) | function |
+| `RelaxedDispatch.confirm` | [158](../src/parkour_solver/numerics/disk.py#L158) | function |
+| `_result` | [193](../src/parkour_solver/numerics/disk.py#L193) | function |
+| `_attempt` | [209](../src/parkour_solver/numerics/disk.py#L209) | function |
+| `_solve` | [217](../src/parkour_solver/numerics/disk.py#L217) | function |
+| `_cost` | [317](../src/parkour_solver/numerics/disk.py#L317) | function |
 
 ## numerics/model.py
 
@@ -927,8 +928,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `segment_solids` | [56](../src/parkour_solver/search/engine.py#L56) | function |
 | `evaluate_program` | [70](../src/parkour_solver/search/engine.py#L70) | function |
 | `numerical_counts` | [219](../src/parkour_solver/search/engine.py#L219) | function |
-| `_key` | [240](../src/parkour_solver/search/engine.py#L240) | function |
-| `find_checkpoint_route` | [244](../src/parkour_solver/search/engine.py#L244) | function |
+| `_key` | [239](../src/parkour_solver/search/engine.py#L239) | function |
+| `find_checkpoint_route` | [243](../src/parkour_solver/search/engine.py#L243) | function |
 
 ## search/entry.py
 

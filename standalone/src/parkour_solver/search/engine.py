@@ -226,7 +226,6 @@ def numerical_counts(diagnostics):
         counts['feasibleSeedReturns'] += (ipopt and confirmation is None and d.get('workerLaunched') is False
                                           and d.get('status') == 'feasible')
         counts['conicCandidates'] += not ipopt and d.get('status') == 'feasible'
-        counts['conicUndecided'] += not ipopt and d.get('termination') == 'disk_undecided'
         if confirmation is not None:
             counts['confirmations'] += 1
             counts['confirmationIpoptCalls'] += not confirmation['cached']

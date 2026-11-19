@@ -65,11 +65,15 @@ def solve(content, *, seconds, kind='candidate'):
         stats['cacheHits'] += 1
         return dict(_DECIDED[encoded], cached=True)
     stats['solved'] += 1
-    try:
-        result = _solve(content, min(CAP, seconds))
-    except (ValueError, RuntimeError) as error:
-        result = dict(status='exception', outcome='undecided', controls=None, objective=None,
-                      iterations=0, message=repr(error))
+    result = _attempt(content, min(CAP, seconds))
+    if result['outcome'] == 'undecided' and 'objective' in content:
+        # Infeasibility does not depend on the cost, and some infeasible requests
+        # end NumericalError only under their objective. A feasible retry is not
+        # the optimum, so only its infeasibility is kept.
+        stats['retried'] += 1
+        retry = _attempt({k: v for k, v in content.items() if k != 'objective'}, min(CAP, seconds))
+        if retry['outcome'] == 'infeasible':
+            result = dict(retry, retried=True)
     stats[result['outcome']] += 1
     if result['outcome'] != 'undecided':
         _DECIDED[encoded] = result
@@ -104,8 +108,8 @@ class RelaxedDispatch:
     """`find_route`'s numerical callable: Clarabel unless IPOPT must decide.
 
     IPOPT runs, with stock semantics, on requests outside the supported class,
-    optimization requests of a promoted lineage, and relaxed points the scalar
-    validator rejects. An optimization request whose relaxed optimum leaves more
+    optimization requests of a promoted lineage, requests the relaxation leaves
+    undecided, and relaxed points the scalar validator rejects. An optimization request whose relaxed optimum leaves more
     than ALARM_FRACTION of some tick's acceleration unused is confirmed by IPOPT;
     a confirmed score gap above MATERIAL_GAP promotes the lineage.
     """
@@ -137,7 +141,7 @@ class RelaxedDispatch:
         if solved['outcome'] == 'infeasible':
             return _result(problem, started, 'unknown', None, 'disk_finished', solved['status'], relaxed)
         if solved['outcome'] == 'undecided':
-            return _result(problem, started, 'unknown', None, 'disk_undecided', solved['status'], relaxed)
+            return full('relaxed_undecided')
         candidate = validate_controls(problem, solved['controls'])
         if not candidate['feasible']:
             return full('rejected_relaxed_point')
@@ -200,6 +204,14 @@ def _result(problem, started, status, candidate, termination, solver_status, rel
             'termination': termination, 'workerStatus': solver_status, 'workerLaunched': False, 'error': None,
             'tolerance': TOLERANCE, 'phases': [], 'backend': 'clarabel', 'disk': relaxed,
             'diagnostics': {'rejectedCandidates': 0, 'lastRejection': None, 'stderr': []}}
+
+
+def _attempt(content, time_limit):
+    try:
+        return _solve(content, time_limit)
+    except (ValueError, RuntimeError) as error:
+        return dict(status='exception', outcome='undecided', controls=None, objective=None,
+                    iterations=0, message=repr(error))
 
 
 def _solve(content, time_limit):

@@ -181,8 +181,12 @@ threshold, ladder ticks, an inertia pattern or non-X/Z rows have no spec.
 
 `Solved`/`AlmostSolved` give a relaxed point, `PrimalInfeasible`/
 `AlmostPrimalInfeasible` exclude the full request (the disk contains the circle),
-and any other status is undecided. Decided results are cached process-wide by
-the canonical spec (1024 entries). `validation.numerical.validate_controls`
+and any other status is undecided. An undecided spec with an objective is solved
+once more with zero cost (`retried: true` on a result it decides): infeasibility
+does not depend on the cost, and some infeasible requests end `NumericalError`
+only under their objective. A feasible retry is not the optimum, so the request
+stays undecided. Decided results are cached process-wide by the canonical spec
+(1024 entries). `validation.numerical.validate_controls`
 replays the returned acceleration vectors through the same scalar checks as
 `validate` (which converts facings to full-strength vectors first) and also
 rejects a vector outside its disk by more than `1e-7`. `deficits` reports each
@@ -193,11 +197,11 @@ shape and is what automatic discovery hands `find_route`. A feasible relaxed poi
 that passes `validate_controls` returns `status: feasible` with the candidate
 (`model: relaxed_disk`, `controls`, derived facings as a seed), `backend:
 clarabel`, `termination: disk_finished` and `workerLaunched: false`; an infeasible
-request returns `unknown` with the Clarabel status in `workerStatus`, and an
-undecided one `termination: disk_undecided`. IPOPT answers, with `backend: ipopt`
-and a `fallback` reason, requests with no spec (`unsupported`), optimization
-requests of a promoted lineage (`promoted`) and relaxed points the validator
-rejects (`rejected_relaxed_point`). A relaxed optimum of an optimization request
+request returns `unknown` with the Clarabel status in `workerStatus`. IPOPT
+answers, with `backend: ipopt` and a `fallback` reason, requests with no spec
+(`unsupported`), optimization requests of a promoted lineage (`promoted`),
+requests the relaxation leaves undecided (`relaxed_undecided`) and relaxed points
+the validator rejects (`rejected_relaxed_point`). A relaxed optimum of an optimization request
 (`stop_on_feasible=False`) with some tick's relative acceleration shortfall above
 1% is confirmed: IPOPT re-solves the same request and its result replaces the
 relaxed one. The seed takes the disk direction on ticks where the relaxed point

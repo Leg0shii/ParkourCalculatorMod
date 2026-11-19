@@ -102,6 +102,14 @@ class ArchivedReal11Tests(unittest.TestCase):
             self.assertGreaterEqual(sense*candidate['objective'], sense*row['stockObjective']-1e-6, row['problemHash'])
         self.assertEqual((verdicts.count('feasible'), verdicts.count('infeasible')), (14, 4))
 
+    def test_requests_undecided_under_their_objective_are_excluded_by_the_zero_cost_retry(self):
+        for row in read('disk-undecided.json.gz')['rows']:
+            content = disk.spec(prepare(row['request']), strict=True)
+            self.assertEqual(disk._solve(content, disk.CAP)['outcome'], 'undecided', row['capturedId'])
+            result = disk.solve(content, seconds=disk.CAP)
+            self.assertEqual((result['outcome'], result['retried']), ('infeasible', True), row['capturedId'])
+            self.assertIn(result['status'], disk.INFEASIBLE)
+
 
 @unittest.skipUnless(RUNTIME, 'Set PKC_IPOPT_PYTHON to compare the relaxation with IPOPT')
 class IpoptOracleTests(unittest.TestCase):
@@ -198,22 +206,23 @@ class DispatchTests(unittest.TestCase):
         self.assertEqual(incumbents, [candidate])
         self.assertEqual(result['problemHash'], fingerprint(p))
 
-    def test_relaxed_infeasible_and_undecided_requests_are_unknown_without_ipopt(self):
+    def test_relaxed_infeasible_requests_are_unknown_without_ipopt(self):
         result, calls, _ = self.dispatch(request(2, .1, walls=[dict(mode='X', t1=2, cmp='GE', rhs=5.)]))
         self.assertEqual((result['status'], result['termination'], result['candidate'], calls),
                          ('unknown', 'disk_finished', None, []))
         self.assertIn(result['workerStatus'], disk.INFEASIBLE)
-        with mock.patch.object(disk, 'MAX_ITER', 1):
-            result, calls, _ = self.dispatch(request(4, .17, walls=[dict(mode='X', t1=3, cmp='LE', rhs=.6)]))
-        self.assertEqual((result['status'], result['termination'], calls), ('unknown', 'disk_undecided', []))
 
-    def test_ipopt_decides_unsupported_promoted_and_rejected_requests(self):
+    def test_ipopt_decides_unsupported_promoted_undecided_and_rejected_requests(self):
         result, calls, _ = self.dispatch(request(2, .1, threshold=.005))
         self.assertEqual((result['backend'], result['fallback'], calls), ('ipopt', 'unsupported', [False]))
         result, calls, _ = self.dispatch(request(2, .1), promoted=True)
         self.assertEqual((result['backend'], result['fallback'], calls), ('ipopt', 'promoted', [False]))
         result, calls, _ = self.dispatch(request(2, .1), promoted=True, stop_on_feasible=True)
         self.assertEqual((result['backend'], calls), ('clarabel', []))
+        with mock.patch.object(disk, 'MAX_ITER', 1):
+            result, calls, _ = self.dispatch(request(4, .17, walls=[dict(mode='X', t1=3, cmp='LE', rhs=.6)]),
+                                             stop_on_feasible=True)
+        self.assertEqual((result['backend'], result['fallback'], calls), ('ipopt', 'relaxed_undecided', [True]))
         outside = dict(status='Solved', outcome='feasible', controls=[[.2, 0.], [0., 0.]], objective=0., iterations=1,
                        cached=False)
         with mock.patch.object(disk, 'solve', return_value=outside):

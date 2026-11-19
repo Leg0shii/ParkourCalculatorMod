@@ -87,11 +87,11 @@ candidate request with the Clarabel disk relaxation: a feasible point becomes a
 candidate tagged `model='relaxed_disk'` with its acceleration `controls` and is
 checked, repaired, ranked and adopted exactly like an IPOPT candidate; a
 relaxation-infeasible request counts as oracle-rejected (`termination
-'disk_finished'`, Clarabel status in `workerStatus`); an undecided one is unknown.
-IPOPT answers, with stock semantics, requests outside the supported class
-(threshold, ladder, non-X/Z rows), optimization requests of a promoted lineage
-(program key `numericalPromoted`, inherited by descendants) and relaxed points the
-scalar validator rejects. An anchor or terminal optimization whose relaxed optimum
+'disk_finished'`, Clarabel status in `workerStatus`). IPOPT answers, with stock
+semantics, requests outside the supported class (threshold, ladder, non-X/Z rows),
+optimization requests of a promoted lineage (program key `numericalPromoted`,
+inherited by descendants), requests the relaxation leaves undecided even after its
+zero-cost retry, and relaxed points the scalar validator rejects. An anchor or terminal optimization whose relaxed optimum
 leaves more than 1% of some tick's acceleration unused is confirmed by IPOPT
 before its score is used; a confirmed gap above `1e-4` sets `numericalPromoted` on
 the evaluated program, which its child, variants and later retries copy
