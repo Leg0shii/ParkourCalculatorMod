@@ -2,14 +2,13 @@ from tests.support.paths import AUTONOMY_DATA
 import copy
 import json
 import os
-from pathlib import Path
 import unittest
 
 from parkour_solver.api import find_route, prepare_route, schedule
 from parkour_solver.movement.profiles import compile_open_air_route
 from parkour_solver.search.support_profiles import compile_block_path, find_blocks
 from parkour_solver.scene.normalize import prepare_scene
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.scene.route import initial_guess, supports
 from parkour_solver.validation.vertical import validate_vertical_schedule
 from parkour_solver.scene.geometry import BODY_HEIGHT
@@ -17,19 +16,18 @@ from parkour_solver.validation.scene import check_geometry
 from parkour_solver.numerics import prepare, validate
 
 
-CONFIG = os.environ.get('PKC_RUN_TICKS_COMPILER')
 RUNTIME = os.environ.get('PKC_IPOPT_PYTHON')
 FIXTURES = AUTONOMY_DATA / 'fixtures'
 
 
-@unittest.skipUnless(CONFIG and RUNTIME, 'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(RUNTIME, 'Set PKC_IPOPT_PYTHON')
 class IntegrationTests(unittest.TestCase):
     def test_wall_and_ceiling_the_player_cannot_pass_between_are_one_obstacle(self):
         # The wall and the overhanging ceiling are 0.14 apart, so one cluster's
         # walk passes both, with a corner side bounded by each of them.
         request = json.loads((FIXTURES / 'obstacle-interleaved.json').read_text())
         request.update(ceilingHits=False, maxWallHits=0)
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=55, route_seconds=45,
                                  candidate_seconds=1, retries=0, python_executable=RUNTIME)
         self.assertEqual(result['status'], 'feasible', result)
@@ -44,7 +42,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(sum(u['total'] for u in best['blockageUsage']), len(timeline))
 
     def test_full_obstacle_geometry_finds_cross_and_wide_neos_and_checks_both_models(self):
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             for fixture, kind in [('obstacle-cross-neo.json', 'cross_neo'), ('obstacle-wide-neo.json', 'wide_neo')]:
                 with self.subTest(fixture=fixture):
                     request = json.loads((FIXTURES / fixture).read_text())
@@ -79,7 +77,7 @@ class IntegrationTests(unittest.TestCase):
     def test_source_runoff_can_leave_the_near_side_and_stays_clear_while_y_overlaps(self):
         request = json.loads((FIXTURES / 'obstacle-runoff-side.json').read_text())
         request.update(ceilingHits=False, maxWallHits=0)
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=20, route_seconds=5,
                                  candidate_seconds=1, retries=0, python_executable=RUNTIME)
         self.assertEqual(result['status'], 'feasible', result)
@@ -94,7 +92,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertTrue(best['geometryCheck']['feasible'])
 
     def test_ceiling_can_be_passed_under_and_a_sealed_wall_is_never_accepted(self):
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             for name, status in [('obstacle-under-ceiling.json', 'feasible'), ('obstacle-blocked.json', 'unknown')]:
                 request = json.loads((FIXTURES / name).read_text())
                 request.update(ceilingHits=False, maxWallHits=0)
@@ -111,7 +109,7 @@ class IntegrationTests(unittest.TestCase):
     def test_shared_scene_bridge_detects_swept_walls_and_releases_below_the_bottom(self):
         geometry = {'version': 1, 'profile': 'minecraft-1.8.9', 'bounds': [-5, -5, -5, 10, 10, 10],
                     'solids': [[1, 0, -3, 2, 5, 3]], 'stepHeight': .6}
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             blocked = compiler.check_scene(geometry, [[.5, 1, .5], [3.5, 1, .5]],
                                            [[3, 0, 0]], [False, False], 2)
             clear = compiler.check_scene(geometry, [[.5, -2, .5], [3.5, -2, .5]],
@@ -123,7 +121,7 @@ class IntegrationTests(unittest.TestCase):
 
     def test_runoff_competes_as_a_shorter_profile_in_the_same_route_search(self):
         request = json.loads((FIXTURES / 'blocks-runoff.json').read_text())
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=20, route_seconds=4,
                                  candidate_seconds=1, retries=0, python_executable=RUNTIME)
             best = result['best']
@@ -140,7 +138,7 @@ class IntegrationTests(unittest.TestCase):
 
     def test_a_jump_can_be_followed_by_a_zero_delay_runoff(self):
         request = json.loads((FIXTURES / 'blocks-jump-runoff.json').read_text())
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=20, route_seconds=4,
                                  candidate_seconds=1, retries=0, python_executable=RUNTIME)
         self.assertEqual(result['status'], 'feasible', result)
@@ -160,7 +158,7 @@ class IntegrationTests(unittest.TestCase):
         request['initial']['velocity'][0] = .4
         request['blocks'][1].update(bounds=[1.5, 2.5, 0, 1], top=.9375)
         request['maxRunTicksPerJump'] = request['maxTotalRunTicks'] = 1
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=15, route_seconds=3,
                                  candidate_seconds=1, retries=0, python_executable=RUNTIME)
         self.assertEqual(result['status'], 'feasible', result)
@@ -178,7 +176,7 @@ class IntegrationTests(unittest.TestCase):
         compiled = compile_block_path(scene, ['start', 'goal'])
         route = compiled['route']
         plan = schedule(route, [1])
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             coefficients = compiler.compile(route, plan, 3)
         problem = prepare(dict(coefficients, version=1, ticks=plan['ticks'], position=[.9, .5],
                                velocity=[.4, 0], yaw=initial_guess(route, plan), threshold=.005,
@@ -198,7 +196,7 @@ class IntegrationTests(unittest.TestCase):
         request = json.loads((FIXTURES / 'blocks-required-run.json').read_text())
         request['blocks'][0]['bounds'] = [2.5, 3.5, 0, 1]
         values = {}
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             for sense in ['MAX', 'MIN']:
                 request['objective'] = {'axis': 'Z', 'sense': sense}
                 result = find_blocks(request, compiler, seconds=15, route_seconds=4,
@@ -215,7 +213,7 @@ class IntegrationTests(unittest.TestCase):
 
     def test_staircase_uses_two_short_profiles_and_searches_the_run_between_them(self):
         request = json.loads((FIXTURES / 'blocks-staircase.json').read_text())
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=20, route_seconds=4,
                                  candidate_seconds=1, retries=0, improve=True, python_executable=RUNTIME)
         self.assertEqual(result['status'], 'feasible', result)
@@ -236,7 +234,7 @@ class IntegrationTests(unittest.TestCase):
         request['maxJumps'] = 1
         request['blocks'] = [b for b in request['blocks'] if b['id'] != 'step']
         request['blocks'][0].update(bounds=[2.8, 3.8, 0, 1], top=1.5)
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=20, route_seconds=4,
                                  candidate_seconds=1, retries=0, python_executable=RUNTIME)
         self.assertEqual(result['status'], 'feasible', result)
@@ -246,7 +244,7 @@ class IntegrationTests(unittest.TestCase):
 
     def test_different_heights_generate_edge_specific_airtimes(self):
         request = json.loads((FIXTURES / 'blocks-height-route.json').read_text())
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=20, route_seconds=4,
                                  candidate_seconds=1, retries=0, python_executable=RUNTIME)
         self.assertEqual(result['status'], 'feasible', result)
@@ -263,7 +261,7 @@ class IntegrationTests(unittest.TestCase):
                    'maxRunTicksPerJump': 0, 'maxTotalRunTicks': 0,
                    'blocks': [{'id': 'start', 'bounds': [-5, 5, -5, 5], 'top': 2},
                               {'id': 'goal', 'bounds': [2, 3, 0, 1], 'top': 1}]}
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=15, route_seconds=5,
                                  candidate_seconds=1, retries=0, python_executable=RUNTIME)
         self.assertEqual(result['status'], 'unknown', result)
@@ -272,7 +270,7 @@ class IntegrationTests(unittest.TestCase):
 
     def test_selected_block_path_can_require_an_added_ground_input(self):
         request = json.loads((FIXTURES / 'blocks-required-run.json').read_text())
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=15, route_seconds=5,
                                  candidate_seconds=1, retries=0, python_executable=RUNTIME)
         self.assertEqual(result['status'], 'feasible', result)
@@ -283,7 +281,7 @@ class IntegrationTests(unittest.TestCase):
     def test_only_endpoints_are_fixed_and_remote_supports_are_pruned(self):
         request = json.loads((FIXTURES / 'blocks-route-choice.json').read_text())
         original = copy.deepcopy(request)
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=25, route_seconds=4,
                                  candidate_seconds=1, retries=0, python_executable=RUNTIME)
         self.assertEqual(result['status'], 'feasible', result)
@@ -304,7 +302,7 @@ class IntegrationTests(unittest.TestCase):
         request = json.loads((FIXTURES / 'blocks-momentum-choice.json').read_text())
         scene = prepare_scene(request)
         exhaustive = []
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             for path in [['start', 'goal']] + [['start', b['id'], 'goal'] for b in request['blocks'] if b['id'] != 'goal']:
                 route = compile_block_path(scene, path)['route']
                 result = find_route(route, compiler, seconds=5, candidate_seconds=1,
@@ -330,7 +328,7 @@ class IntegrationTests(unittest.TestCase):
         compiled = compile_open_air_route(request)
         self.assertEqual(compiled['status'], 'derived')
         self.assertEqual(compiled['route']['airtimes'], [12, 12])
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_route(compiled['route'], compiler, seconds=25, candidate_seconds=3,
                                 retries=0, python_executable=RUNTIME)
         self.assertEqual(result['status'], 'feasible', result)
@@ -340,7 +338,7 @@ class IntegrationTests(unittest.TestCase):
     def test_java_compiles_ground_jump_and_air_with_the_existing_model(self):
         r = prepare_route(json.loads((FIXTURES / 'one-required-run-tick.json').read_text()))
         plan = schedule(r, [1])
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as c:
+        with PythonCompiler() as c:
             coefficients = c.compile(r, plan, 3)
         self.assertEqual(coefficients['friction'][0], coefficients['friction'][1])
         self.assertLess(coefficients['friction'][0], coefficients['friction'][2])
@@ -350,7 +348,7 @@ class IntegrationTests(unittest.TestCase):
     def test_java_reuses_the_mod_footprint_deriver(self):
         import math
         r = prepare_route(json.loads((FIXTURES / 'one-required-run-tick.json').read_text()))
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as c:
+        with PythonCompiler() as c:
             footprints = c.derive_footprints(r, 3)
             r['blocks'][1] = {'centerBounds': [4, 4.5, 0, 1], 'top': 1}
             supplied = c.derive_footprints(r, 3)
@@ -367,7 +365,7 @@ class IntegrationTests(unittest.TestCase):
             with self.subTest(name=name):
                 request = json.loads((FIXTURES / name).read_text())
                 original = copy.deepcopy(request)
-                with JavaCompiler(json.loads(Path(CONFIG).read_text())) as c:
+                with PythonCompiler() as c:
                     result = find_route(request, c, seconds=25, candidate_seconds=3,
                                         retries=0, python_executable=RUNTIME)
                 self.assertEqual(result['status'], 'feasible', result)
@@ -389,7 +387,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(request['constraints'], [])
         self.assertFalse(request['source']['authoredScalarRulesUsed'])
         self.assertEqual(request['source']['recordedAllocation'], [0, 0, 0, 0, 0, 1])
-        with JavaCompiler(json.loads(Path(CONFIG).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_route(request, compiler, seconds=30, candidate_seconds=3,
                                 retries=1, python_executable=RUNTIME)
             self.assertEqual(result['status'], 'feasible', result)

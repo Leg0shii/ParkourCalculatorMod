@@ -457,7 +457,7 @@ initial-state analysis; `compile_program` currently rejects a zero-input program
 Do not require a dummy input or a numerical solve to establish launch bounds.
 
 Use two cache levels. Coefficients are keyed by the exact request payload already
-sent by `JavaCompiler.compile` (ground/jump inputs, inputs/physics and shared
+sent by the bridge's `compile` (ground/jump inputs, inputs/physics and shared
 contact/vertical data). Factor that payload builder once in the existing compiler
 path; do not duplicate its field selection to invent a cache key. X/Z row or
 objective changes alone must not cause a new coefficient request.

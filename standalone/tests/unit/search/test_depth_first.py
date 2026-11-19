@@ -224,13 +224,11 @@ class CompilerRecoveryTests(unittest.TestCase):
             self.assertEqual(compiler._exchange(dict(value=7),2),dict(value=7))
 
 
-@unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'),'Requires coefficient compiler')
 class HistoricalInteractionTests(unittest.TestCase):
     def test_real11_b4_blip_is_excluded_before_its_wall_options_are_built(self):
-        import gzip, os
-        from pathlib import Path
+        import gzip
         from parkour_solver.scene.normalize import prepare_scene
-        from parkour_solver.bridge.compiler import JavaCompiler
+        from parkour_solver.bridge.python_compiler import PythonCompiler
         from parkour_solver.reachability.service import InteractionGate
         from parkour_solver.movement.program import boundary_state
         from parkour_solver.movement.stepping import open_stepping_choices
@@ -245,7 +243,7 @@ class HistoricalInteractionTests(unittest.TestCase):
         b4=scene['collisionScene']['solids'][next(b['solidIndex'] for b in scene['blocks'] if b['id']=='b4')]
         ungated=[c for c in open_stepping_choices(dict(ctx)) if any(b4 in e['boxes'] for e in c['profile']['caseEvents'])]
         self.assertTrue(ungated)
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             gate=InteractionGate(scene,compiler)
             gate.context(ctx)
             gated=list(open_stepping_choices(ctx))

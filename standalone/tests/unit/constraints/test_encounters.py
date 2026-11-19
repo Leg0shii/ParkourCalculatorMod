@@ -293,7 +293,6 @@ class EncounterTests(unittest.TestCase):
 
 
 
-@unittest.skipUnless(__import__('os').environ.get('PKC_RUN_TICKS_COMPILER'), 'Requires coefficient compiler')
 class BlockTableEncounterTests(unittest.TestCase):
     def assert_dropped_clusters_are_clear(self, scene, roots):
         from tests.support.block_table import compiler, nodes

@@ -1,11 +1,9 @@
 from tests.support.paths import MOVEMENT_FIXTURES
 import copy
 import json
-import os
-from pathlib import Path
 import unittest
 
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.scene.ladders import climb_walls, entry_channels, ladder_columns
 from parkour_solver.search.ladder_ranking import rank_ladder_schedules, straight_line_score
 from parkour_solver.movement.ladder.schedules import generate_ladder_schedules
@@ -31,10 +29,9 @@ class LadderGeometryTests(unittest.TestCase):
         self.assertAlmostEqual(capped['distance'], .15000000596046448)
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER'), 'Set PKC_RUN_TICKS_COMPILER')
 class LadderBridgeTests(unittest.TestCase):
     def setUp(self):
-        self.compiler = JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+        self.compiler = PythonCompiler()
         self.addCleanup(self.compiler.close)
 
     def test_shared_compiler_realizes_sneak_and_repeated_wall_sprint_loss(self):

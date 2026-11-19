@@ -1,8 +1,6 @@
 import copy
 import itertools
-import json
 import os
-from pathlib import Path
 import time
 import unittest
 
@@ -11,7 +9,7 @@ from parkour_solver.spatial.checkpoints import Checkpoint, checkpoint
 from parkour_solver.search.engine import find_checkpoint_route
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
 from parkour_solver.spatial.compat.corridors import Corridor
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.search.movement import iter_movement_programs
 from tests.support.checkpoint_guidance import flat_scene, programs
 
@@ -31,6 +29,14 @@ class FixedClockTests(unittest.TestCase):
         self.assertEqual(ranked['profile']['airtime'],16)
         self.assertEqual(policy.audit(ordinary)['progress'],0)
         self.assertEqual(policy.audit(ranked)['progress'],1)
+
+    def test_archived_virtual_finish_settings_bind_to_the_search(self):
+        import inspect, json
+        from parkour_solver.search.application import task_settings
+        from tools.paths import RESEARCH_ROOT
+        fixture = json.loads((RESEARCH_ROOT / 'virtual-finish/fixture.json').read_text())
+        self.assertIn('fair_parents', fixture['settings'])
+        inspect.signature(find_checkpoint_route).bind(fixture['request'], None, **task_settings(fixture))
 
     def test_unknown_spatial_goal_is_rejected_before_compilation(self):
         scene=flat_scene()
@@ -57,7 +63,7 @@ class FixedClockTests(unittest.TestCase):
         self.assertEqual(new[0]['profile']['airtime'],2)
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
                      'Set compiler and IPOPT Python for fixed-clock solves')
 class FixedClockNumericalTests(unittest.TestCase):
     def test_terminal_clock_can_overshoot_goal_and_finish_airborne(self):
@@ -68,7 +74,7 @@ class FixedClockNumericalTests(unittest.TestCase):
             movementSearch=dict(types=['normal'],maxInputs=16,maxPrefixes=64,maxQueuedPrefixes=64,maxChoicesPerType=16))
         original=copy.deepcopy(request)
         cp=Checkpoint(8,-1,(1.,0.),(.5,1.,.5),(8.,3.,.5),())
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result=find_checkpoint_route(request,compiler,terminal_checkpoint=cp,checkpoints=[],
                 spatial_points=[[.5,1,.5],[.5,3,.5],[8,3,.5]],seconds=10,
                 max_candidates=12,max_solver_calls=32,candidate_seconds=.7,score_seconds=2,
@@ -113,7 +119,7 @@ class FixedClockNumericalTests(unittest.TestCase):
             seen.append(gates)
             self.assertFalse(any(gate['box']==middle for gate in gates))
             return original(checkpoint,candidate,gates)
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler, \
+        with PythonCompiler() as compiler, \
              patch.object(Checkpoint,'stage',stage):
             result=evaluate_program(request,p,compiler,adapter,SearchWork(16),motion_bound(request,compiler,2),
                 checkpoint=cp,seconds=5,candidate_seconds=.7,solver_calls=16,

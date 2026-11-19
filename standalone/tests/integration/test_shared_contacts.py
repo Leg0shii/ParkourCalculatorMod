@@ -1,16 +1,12 @@
-import json
-import os
-from pathlib import Path
 import unittest
 
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.scene.route import HALF_WIDTH
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER'), 'Set PKC_RUN_TICKS_COMPILER')
 class SharedContactTests(unittest.TestCase):
     def setUp(self):
-        self.compiler = JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+        self.compiler = PythonCompiler()
         self.addCleanup(self.compiler.close)
 
     def test_hit_cancels_sprint_with_carried_air_factor(self):

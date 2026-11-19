@@ -12,7 +12,7 @@ and the [original inventory/review](LAYOUT.md) record its scope.
 | `tests/support/`, `tests/fixtures/` | Shared builders/harnesses and small reusable test data. No test imports another test case. |
 | `cases/` | Curated runnable user tasks. Real11 physical anchors are a maintained derived input; its README records domain/configuration changes. |
 | `tools/` | Current native gate, scoped profiling, saved-report audits and optional plotting. Tools may import production APIs. |
-| `native/java/`, `native/gradle/` | Four Java bridge sources and their standalone build/export/replay adapters. They reuse existing mod physics. |
+| `native/java/`, `native/gradle/` | Four Java bridge sources and their standalone build/export/replay adapters. They reuse existing mod physics. The runtime needs none of them: they generate the coefficient tables, serve as the differential oracle and own executable replay/export. |
 | `research/` | Scientific prototype, maintained older experiment drivers and immutable dated evidence bundles. Excluded from the installed package. |
 | `docs/design/` | Detailed implemented/deferred designs; use the decisions index for authority. |
 | `docs/history/`, `docs/research/`, `docs/reference/` | Source-era records, literature investigations and detailed reusable contracts. |

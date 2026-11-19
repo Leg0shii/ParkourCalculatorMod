@@ -7,19 +7,21 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `coefficient_request` | [6](../src/parkour_solver/bridge/compiler.py#L6) | function |
-| `JavaCompiler` | [17](../src/parkour_solver/bridge/compiler.py#L17) | class |
-| `JavaCompiler.__init__` | [18](../src/parkour_solver/bridge/compiler.py#L18) | function |
-| `JavaCompiler._start` | [26](../src/parkour_solver/bridge/compiler.py#L26) | function |
-| `JavaCompiler._errors` | [33](../src/parkour_solver/bridge/compiler.py#L33) | function |
-| `JavaCompiler.compile` | [41](../src/parkour_solver/bridge/compiler.py#L41) | function |
-| `JavaCompiler.derive_footprints` | [44](../src/parkour_solver/bridge/compiler.py#L44) | function |
-| `JavaCompiler.derive_standing_footprints` | [47](../src/parkour_solver/bridge/compiler.py#L47) | function |
-| `JavaCompiler.check_scene` | [50](../src/parkour_solver/bridge/compiler.py#L50) | function |
-| `JavaCompiler._exchange` | [56](../src/parkour_solver/bridge/compiler.py#L56) | function |
-| `JavaCompiler.close` | [85](../src/parkour_solver/bridge/compiler.py#L85) | function |
-| `JavaCompiler.__enter__` | [97](../src/parkour_solver/bridge/compiler.py#L97) | function |
-| `JavaCompiler.__exit__` | [100](../src/parkour_solver/bridge/compiler.py#L100) | function |
+| `open_compiler` | [9](../src/parkour_solver/bridge/compiler.py#L9) | function |
+| `coefficient_request` | [18](../src/parkour_solver/bridge/compiler.py#L18) | function |
+| `JavaCompiler` | [29](../src/parkour_solver/bridge/compiler.py#L29) | class |
+| `JavaCompiler.__init__` | [30](../src/parkour_solver/bridge/compiler.py#L30) | function |
+| `JavaCompiler._start` | [38](../src/parkour_solver/bridge/compiler.py#L38) | function |
+| `JavaCompiler._errors` | [45](../src/parkour_solver/bridge/compiler.py#L45) | function |
+| `JavaCompiler.compile` | [53](../src/parkour_solver/bridge/compiler.py#L53) | function |
+| `JavaCompiler.provenance` | [56](../src/parkour_solver/bridge/compiler.py#L56) | function |
+| `JavaCompiler.derive_footprints` | [59](../src/parkour_solver/bridge/compiler.py#L59) | function |
+| `JavaCompiler.derive_standing_footprints` | [62](../src/parkour_solver/bridge/compiler.py#L62) | function |
+| `JavaCompiler.check_scene` | [65](../src/parkour_solver/bridge/compiler.py#L65) | function |
+| `JavaCompiler._exchange` | [71](../src/parkour_solver/bridge/compiler.py#L71) | function |
+| `JavaCompiler.close` | [100](../src/parkour_solver/bridge/compiler.py#L100) | function |
+| `JavaCompiler.__enter__` | [112](../src/parkour_solver/bridge/compiler.py#L112) | function |
+| `JavaCompiler.__exit__` | [115](../src/parkour_solver/bridge/compiler.py#L115) | function |
 
 ## bridge/counting.py
 
@@ -29,6 +31,21 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `CountingCompiler.__init__` | [7](../src/parkour_solver/bridge/counting.py#L7) | function |
 | `CountingCompiler.__getattr__` | [12](../src/parkour_solver/bridge/counting.py#L12) | function |
 | `CountingCompiler.summary` | [28](../src/parkour_solver/bridge/counting.py#L28) | function |
+
+## bridge/python_compiler.py
+
+| Symbol | Line | Kind |
+| --- | ---: | --- |
+| `PythonCompiler` | [18](../src/parkour_solver/bridge/python_compiler.py#L18) | class |
+| `PythonCompiler.compile` | [19](../src/parkour_solver/bridge/python_compiler.py#L19) | function |
+| `PythonCompiler.derive_footprints` | [22](../src/parkour_solver/bridge/python_compiler.py#L22) | function |
+| `PythonCompiler.derive_standing_footprints` | [25](../src/parkour_solver/bridge/python_compiler.py#L25) | function |
+| `PythonCompiler.check_scene` | [28](../src/parkour_solver/bridge/python_compiler.py#L28) | function |
+| `PythonCompiler._exchange` | [34](../src/parkour_solver/bridge/python_compiler.py#L34) | function |
+| `PythonCompiler.provenance` | [52](../src/parkour_solver/bridge/python_compiler.py#L52) | function |
+| `PythonCompiler.close` | [56](../src/parkour_solver/bridge/python_compiler.py#L56) | function |
+| `PythonCompiler.__enter__` | [59](../src/parkour_solver/bridge/python_compiler.py#L59) | function |
+| `PythonCompiler.__exit__` | [62](../src/parkour_solver/bridge/python_compiler.py#L62) | function |
 
 ## cli/blocks.py
 
@@ -61,7 +78,7 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `main` | [28](../src/parkour_solver/cli/solve.py#L28) | function |
+| `main` | [27](../src/parkour_solver/cli/solve.py#L27) | function |
 
 ## constraints/avoidance.py
 
@@ -534,6 +551,18 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | --- | ---: | --- |
 | `wrap` | [5](../src/parkour_solver/physics/angles.py#L5) | function |
 
+## physics/coefficients.py
+
+| Symbol | Line | Kind |
+| --- | ---: | --- |
+| `_flags` | [13](../src/parkour_solver/physics/coefficients.py#L13) | function |
+| `_schedule` | [21](../src/parkour_solver/physics/coefficients.py#L21) | function |
+| `_policy` | [32](../src/parkour_solver/physics/coefficients.py#L32) | function |
+| `shared` | [40](../src/parkour_solver/physics/coefficients.py#L40) | function |
+| `legacy_forward_bits` | [104](../src/parkour_solver/physics/coefficients.py#L104) | function |
+| `legacy` | [109](../src/parkour_solver/physics/coefficients.py#L109) | function |
+| `compile_request` | [129](../src/parkour_solver/physics/coefficients.py#L129) | function |
+
 ## physics/vertical.py
 
 | Symbol | Line | Kind |
@@ -607,10 +636,15 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `thin` | [14](../src/parkour_solver/scene/geometry.py#L14) | function |
-| `box_bounds` | [19](../src/parkour_solver/scene/geometry.py#L19) | function |
-| `normalize_geometry` | [29](../src/parkour_solver/scene/geometry.py#L29) | function |
-| `expanded_box` | [96](../src/parkour_solver/scene/geometry.py#L96) | function |
+| `thin` | [17](../src/parkour_solver/scene/geometry.py#L17) | function |
+| `box_bounds` | [22](../src/parkour_solver/scene/geometry.py#L22) | function |
+| `normalize_geometry` | [32](../src/parkour_solver/scene/geometry.py#L32) | function |
+| `_ordered` | [99](../src/parkour_solver/scene/geometry.py#L99) | function |
+| `_unordered` | [104](../src/parkour_solver/scene/geometry.py#L104) | function |
+| `_first` | [108](../src/parkour_solver/scene/geometry.py#L108) | function |
+| `support_center_interval` | [126](../src/parkour_solver/scene/geometry.py#L126) | function |
+| `route_footprints` | [142](../src/parkour_solver/scene/geometry.py#L142) | function |
+| `expanded_box` | [157](../src/parkour_solver/scene/geometry.py#L157) | function |
 
 ## scene/ladders.py
 
@@ -651,6 +685,34 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `row_tick` | [174](../src/parkour_solver/scene/route.py#L174) | function |
 | `schedule` | [178](../src/parkour_solver/scene/route.py#L178) | function |
 | `initial_guess` | [340](../src/parkour_solver/scene/route.py#L340) | function |
+
+## scene/static_collision.py
+
+| Symbol | Line | Kind |
+| --- | ---: | --- |
+| `_number` | [20](../src/parkour_solver/scene/static_collision.py#L20) | function |
+| `_box` | [26](../src/parkour_solver/scene/static_collision.py#L26) | function |
+| `_cell` | [35](../src/parkour_solver/scene/static_collision.py#L35) | function |
+| `_contains` | [44](../src/parkour_solver/scene/static_collision.py#L44) | function |
+| `_offset` | [49](../src/parkour_solver/scene/static_collision.py#L49) | function |
+| `_sweep` | [53](../src/parkour_solver/scene/static_collision.py#L53) | function |
+| `_center` | [58](../src/parkour_solver/scene/static_collision.py#L58) | function |
+| `_clip` | [62](../src/parkour_solver/scene/static_collision.py#L62) | function |
+| `_edge_step` | [82](../src/parkour_solver/scene/static_collision.py#L82) | function |
+| `Motion` | [88](../src/parkour_solver/scene/static_collision.py#L88) | class |
+| `Motion.__init__` | [92](../src/parkour_solver/scene/static_collision.py#L92) | function |
+| `StaticScene` | [99](../src/parkour_solver/scene/static_collision.py#L99) | class |
+| `StaticScene.__init__` | [102](../src/parkour_solver/scene/static_collision.py#L102) | function |
+| `StaticScene.ladder` | [130](../src/parkour_solver/scene/static_collision.py#L130) | function |
+| `StaticScene.collisions` | [133](../src/parkour_solver/scene/static_collision.py#L133) | function |
+| `StaticScene.start_box` | [139](../src/parkour_solver/scene/static_collision.py#L139) | function |
+| `StaticScene.move` | [148](../src/parkour_solver/scene/static_collision.py#L148) | function |
+| `_vector` | [200](../src/parkour_solver/scene/static_collision.py#L200) | function |
+| `_member` | [209](../src/parkour_solver/scene/static_collision.py#L209) | function |
+| `_same_face` | [219](../src/parkour_solver/scene/static_collision.py#L219) | function |
+| `_matches_face` | [235](../src/parkour_solver/scene/static_collision.py#L235) | function |
+| `_contact_mismatch` | [245](../src/parkour_solver/scene/static_collision.py#L245) | function |
+| `check_scene` | [282](../src/parkour_solver/scene/static_collision.py#L282) | function |
 
 ## schema.py
 
@@ -697,7 +759,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `run` | [8](../src/parkour_solver/search/application.py#L8) | function |
+| `task_settings` | [10](../src/parkour_solver/search/application.py#L10) | function |
+| `run` | [17](../src/parkour_solver/search/application.py#L17) | function |
 
 ## search/bounds/flight.py
 
@@ -745,8 +808,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `collision_request` | [20](../src/parkour_solver/search/compat/corridor_queue.py#L20) | function |
-| `search_routes` | [41](../src/parkour_solver/search/compat/corridor_queue.py#L41) | function |
+| `collision_request` | [21](../src/parkour_solver/search/compat/corridor_queue.py#L21) | function |
+| `search_routes` | [42](../src/parkour_solver/search/compat/corridor_queue.py#L42) | function |
 
 ## search/compat/decision_windows.py
 

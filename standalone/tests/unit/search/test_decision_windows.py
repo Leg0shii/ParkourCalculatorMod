@@ -1,9 +1,7 @@
 from tests.support.paths import AUTONOMY_DATA
 import copy
 import itertools
-import json
 import os
-from pathlib import Path
 import time
 import unittest
 
@@ -11,7 +9,7 @@ from parkour_solver.scene.normalize import prepare_scene
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
 from parkour_solver.search.engine import find_checkpoint_route
 from parkour_solver.search.compat.decision_windows import DecisionPolicy, plan_windows, retain_candidates
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.search.movement import iter_movement_programs
 from tests.support.checkpoint_guidance import flat_scene
 from tests.support.archived_events import current_events
@@ -103,12 +101,12 @@ class DecisionWindowTests(unittest.TestCase):
         self.assertTrue(any(e['kind']=='jump' for e in policy.audit(delayed)['unmatched']))
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
                      'Set compiler and IPOPT Python for numerical tests')
 class DecisionWindowNumericalTests(unittest.TestCase):
     def test_joint_decision_policy_and_original_state_replay_under_dfs(self):
         scene = flat_scene()
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_checkpoint_route(scene,compiler,opportunities=[decision('launch',0,2,kinds=['jump']),
                 decision('finish',6,20,kinds=['landing'])],cluster_gap=1,objective_gap=.25,
                 spatial_points=[[.5,1,.5],[5.5,1,.5]],seconds=12,max_candidates=12,beam_width=6,

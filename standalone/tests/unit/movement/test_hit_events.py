@@ -2,12 +2,11 @@ from tests.support.paths import AUTONOMY_DATA
 import copy
 import json
 import os
-from pathlib import Path
 import unittest
 
 from parkour_solver.movement.profiles import ordinary_jump_profile
 from parkour_solver.search.support_profiles import find_blocks
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.constraints.hit_events import wall_hit_options
 from parkour_solver.scene.route import prepare_route, schedule
 
@@ -47,13 +46,13 @@ class HitEventTests(unittest.TestCase):
         self.assertTrue(all(h['blockId'] == 'wall' for h in result['options']))
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class WallReversalIntegrationTests(unittest.TestCase):
     def test_geometry_discovers_reversal_for_x_z_and_both_signs(self):
         original = json.loads(FIXTURE.read_text())
         original['maxContactCombinations'] = 0
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             for axis, sign in [('X', 1), ('X', -1), ('Z', 1), ('Z', -1)]:
                 request = copy.deepcopy(original)
                 for key in ('position', 'velocity'):

@@ -2,7 +2,6 @@ from tests.support.paths import AUTONOMY_DATA
 import copy
 import json
 import os
-from pathlib import Path
 import unittest
 
 from parkour_solver.scene.normalize import prepare_scene
@@ -210,12 +209,12 @@ class LadderCeilingTests(unittest.TestCase):
         self.assertEqual(shifted['anchors'], {'hit': 28, 'nextClimb': 28})
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class LadderCeilingNumericalTests(unittest.TestCase):
     def setUp(self):
-        from parkour_solver.bridge.compiler import JavaCompiler
-        self.compiler = JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        self.compiler = PythonCompiler()
         self.addCleanup(self.compiler.close)
 
     def test_saved_examples_match_fixture_and_pass_scalar_and_shared_scene_acceptance(self):

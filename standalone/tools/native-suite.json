@@ -75,7 +75,8 @@
     "tests.integration.test_package_layout",
     "tests.integration.test_profiling",
     "tests.unit.constraints.test_option_keys",
-    "tests.unit.constraints.test_encounters"
+    "tests.unit.constraints.test_encounters",
+    "tests.unit.bridge.test_python_compiler"
   ],
   "excluded": "Dedicated ladder/climbable/vine/movement-entry modules, as in baseline; generic mixed ladder controls remain included",
   "baselineTests": 600

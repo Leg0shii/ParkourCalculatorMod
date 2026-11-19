@@ -13,9 +13,15 @@ machine. From `standalone/`, install the package into the parent and worker Pyth
 ```sh
 ../.venv-guidance/bin/python -m pip install --editable . --no-deps
 export PKC_IPOPT_PYTHON="$PWD/../.venv-guidance/bin/python"
-export PKC_RUN_TICKS_COMPILER="$PWD/build/native/compiler.json"
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 ```
+
+The movement bridge runs in process: coefficients come from tables generated from
+the Java bridge, and scene and footprint checks are a Python port of its
+finite-scene contract. Commands use the Java bridge only when given an explicit
+`--compiler PATH` or `PKC_RUN_TICKS_COMPILER`; the flag wins. Both bridges return
+identical replies, so request hashes match and checkpoints resume across them.
+Executable Minecraft replay and export remain Java tools.
 
 For a fresh environment, use Python3.12+ and the pinned extras:
 
@@ -35,7 +41,7 @@ Installed API and CLI/worker launch work outside the repository cwd; task,
 compiler and output paths must then be absolute. Developer `tools`/`tests` run
 from `standalone/`, without a repository-root `PYTHONPATH` requirement.
 
-## Java bridge, only when absent or affected sources changed
+## Java bridge oracle, only for oracle tests, table regeneration and replay/export
 
 From the repository root, build the standalone bridge adapters using current
 checked-in core/Forge sources. This does not launch Minecraft or run mod tests:
@@ -52,13 +58,22 @@ The JDK path is machine-specific. Outputs live under `standalone/build/native/`;
 while another numerical job uses that classpath. Four bridge sources live under
 `native/java/`; [mod references](MOD_REFERENCES.md) identifies reused APIs.
 
+After changing a Java source listed in `SOURCES` of
+[the generated coefficient tables](../src/parkour_solver/physics/_coefficient_tables.py),
+regenerate them from `standalone/`; `--check` fails when the checked-in module differs:
+
+```sh
+"$PKC_IPOPT_PYTHON" -B -m tools.generate_coefficient_tables --compiler build/native/compiler.json
+"$PKC_IPOPT_PYTHON" -B -m tools.generate_coefficient_tables --compiler build/native/compiler.json --check
+```
+
 ## Tests and layout checks
 
 From `standalone/` with the environment above:
 
 ```sh
 "$PKC_IPOPT_PYTHON" -B -m unittest tests.unit.search.test_candidate_comparison tests.unit.reachability.test_proposal_analysis tests.unit.search.test_transfer_time_bounds
-"$PKC_IPOPT_PYTHON" -B tools/native_gate.py --output /tmp/parkour-native-new
+PKC_RUN_TICKS_COMPILER="$PWD/build/native/compiler.json" "$PKC_IPOPT_PYTHON" -B tools/native_gate.py --output /tmp/parkour-native-new
 "$PKC_IPOPT_PYTHON" -B -m tools.validate_layout
 "$PKC_IPOPT_PYTHON" -B -m unittest discover -s tests -t .
 ```
@@ -66,8 +81,11 @@ From `standalone/` with the environment above:
 The explicit gate maintains the selected native module scope plus package,
 profiling and avoidance-generation/continuation controls; added regressions
 increase the total. Full discovery additionally includes dedicated ladder/climbable/vine
-capabilities and their recorded baseline; it is a different scope. Native
-variables absent means skips, not native acceptance. See [testing](TESTING.md).
+capabilities and their recorded baseline; it is a different scope. Ordinary tests
+use the Python bridge; only the Java differential tests in
+`tests.unit.bridge.test_python_compiler` read `PKC_RUN_TICKS_COMPILER`, which is why
+the gate command sets it. Native variables absent means skips, not native acceptance.
+See [testing](TESTING.md).
 Use a new gate directory; its report records source hashes, source stability,
 counts, skips, exclusions and evidence-integrity results.
 
@@ -143,7 +161,8 @@ without a first-jump whitelist; its origins and domain change are in
 ```
 
 Console `parkour-solve` is equivalent to `python -m parkour_solver`. The CLI accepts
-explicit `--compiler` and `--python` paths as well. Profile runs preserve cold
+explicit `--compiler` (Java bridge) and `--python` paths as well. Reports record the
+selected bridge under `bridge`. Profile runs preserve cold
 settings, instrumentation/source/configuration hashes, work counters and
 independent retained-witness replay; inclusive timings overlap. Profiling overhead
 and local solver behavior affect the work fitting a time budget. No archived

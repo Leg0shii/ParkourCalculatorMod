@@ -3,8 +3,6 @@ from tests.support.paths import REGRESSION_FIXTURES
 from tests.support.paths import AUTONOMY_DATA
 import gzip
 import json
-import os
-from pathlib import Path
 import unittest
 from unittest.mock import Mock, patch
 
@@ -86,10 +84,9 @@ class ProposalOwnershipTests(unittest.TestCase):
         self.assertIsNotNone(result['fullProof'])
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER'),'Set PKC_RUN_TICKS_COMPILER')
 class Real11JointPrerequisiteTests(unittest.TestCase):
     def test_b3_lower_higher_conjunction_rejects_before_wall_and_corner_fanout(self):
-        from parkour_solver.bridge.compiler import JavaCompiler
+        from parkour_solver.bridge.python_compiler import PythonCompiler
         from parkour_solver.scene.normalize import prepare_scene
         from parkour_solver.movement.program import boundary_state
         from parkour_solver.movement.stepping import open_stepping_choices
@@ -97,7 +94,7 @@ class Real11JointPrerequisiteTests(unittest.TestCase):
         base=REGRESSION_FIXTURES
         data=json.loads(gzip.decompress((base/'anchor-contexts.json.gz').read_bytes()))
         saved=data['contexts']['b3->b4'];p=saved['parent'];scene=prepare_scene(data['request'])
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             adapter=AnchorAdapter(data['domain'],data['graph'],data['policy'],motion=data['motion'],compiler=compiler)
             context=dict(mode='open',scene=scene,program=p,state=boundary_state(p),
                          maxInputs=200-p['profile']['airtime'],threshold=0.)

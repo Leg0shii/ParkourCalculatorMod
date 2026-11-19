@@ -3,7 +3,6 @@ import copy
 import hashlib
 import json
 import os
-from pathlib import Path
 import threading
 import time
 import unittest
@@ -13,7 +12,7 @@ from parkour_solver.constraints.contacts import floor_checks
 from parkour_solver.search.repair import solve_contact_branches
 from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.search.support_profiles import compile_block_path
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.movement.ladder.episodes import compose_ladder_episodes
 from parkour_solver.scene.ladders import ladder_regions, climb_walls, entry_channels, exit_faces
 from parkour_solver.movement.ladder.schedules import generate_ladder_schedules
@@ -179,11 +178,11 @@ class MovementCompositionTests(unittest.TestCase):
         self.assertEqual([e['exitState'] for e in prefix['episodes']],[6,25,43,62,81])
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class MovementCompositionIntegrationTests(unittest.TestCase):
     def test_five_airborne_ladders_and_bottom_exit_solve_from_episode_contracts(self):
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             for name,count in [('five-airborne-ladders',5),('ladder-bottom-exit',1)]:
                 with self.subTest(name=name):
                     e=json.loads((ROOT/'experiments/contact-combinations'/(name+'.json')).read_text())

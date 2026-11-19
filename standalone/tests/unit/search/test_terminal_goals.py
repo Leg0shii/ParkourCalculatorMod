@@ -1,7 +1,6 @@
 import copy
 import json
 import os
-from pathlib import Path
 import unittest
 
 from parkour_solver.search.virtual_goals import prepare_goal, height_clock, bind_goal, satisfied
@@ -51,11 +50,11 @@ class TerminalGoalTests(unittest.TestCase):
         with self.assertRaises(ValueError):prepare_goal(bad)
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
                      'Set compiler and IPOPT Python for virtual terminal solves')
 class TerminalGoalNumericalTests(unittest.TestCase):
     def test_generic_height_goal_can_finish_airborne_beyond_the_physical_block(self):
-        from parkour_solver.bridge.compiler import JavaCompiler
+        from parkour_solver.bridge.python_compiler import PythonCompiler
         from parkour_solver.search.engine import find_checkpoint_route
         from research.legacy_cell_routes.checkpoint_experiment import replay_witness
         from parkour_solver.search.compat.support_order import SupportOrder
@@ -64,7 +63,7 @@ class TerminalGoalNumericalTests(unittest.TestCase):
         goal=dict(kind='landing_height_region',height=2.,
             rows=[dict(mode='X',cmp='GE',rhs=1.5),dict(mode='Z',cmp='GE',rhs=-2.)])
         original=copy.deepcopy(scene)
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result=find_checkpoint_route(scene,compiler,spatial_points=[[.5,1,.5],[8.,3,.5]],
                 checkpoints=[],spatial_goals=[goal],program_filter=SupportOrder(scene,[],None,[0,1],max_inputs=20),
                 seconds=12,max_candidates=8,max_solver_calls=24,candidate_seconds=.8,score_seconds=2,

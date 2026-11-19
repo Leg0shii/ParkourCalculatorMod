@@ -1,13 +1,11 @@
 from tests.support.paths import AUTONOMY_DATA
 import hashlib
 import json
-import os
-from pathlib import Path
 import unittest
 
 from parkour_solver.scene.route import schedule, supports
 from parkour_solver.constraints.contacts import contact_conflicts
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.validation.scene import check_geometry
 from parkour_solver.constraints.avoidance import gate_timeline
 from parkour_solver.numerics import prepare, validate
@@ -16,7 +14,6 @@ from tests.support.archived_events import current_events
 
 
 class BlockRouteWitnessTests(unittest.TestCase):
-    @unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER'), 'Set PKC_RUN_TICKS_COMPILER')
     def test_saved_interleaving_replays_with_shared_collision_checks(self):
         root = AUTONOMY_DATA
         folder = root / 'experiments/interleaved-blockages'
@@ -36,15 +33,14 @@ class BlockRouteWitnessTests(unittest.TestCase):
         self.assertTrue(checked['feasible'], checked)
         vertical = {key: checked[key] for key in ('y', 'vy', 'onGround')}
         vertical['vertical'] = request['vertical']
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             self.assertTrue(check_geometry(result['scene']['collisionScene'], plan, checked, vertical, compiler, 3)['feasible'])
 
-    @unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER'), 'Set PKC_RUN_TICKS_COMPILER')
     def test_saved_obstacle_routes_pass_numerical_and_shared_swept_collision_checks(self):
         root = AUTONOMY_DATA
         artifacts = root / 'experiments' / 'obstacle-avoidance'
         summaries = json.loads((artifacts / 'summary.json').read_text())
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             for label, summary in summaries.items():
                 with self.subTest(label=label):
                     fixture = root / 'fixtures' / summary['fixture']

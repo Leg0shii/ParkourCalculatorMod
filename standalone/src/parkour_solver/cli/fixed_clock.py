@@ -1,6 +1,5 @@
 from parkour_solver.io.provenance import source_revision
 import argparse
-import os
 import copy
 import json
 import math
@@ -10,9 +9,10 @@ import sys
 import itertools
 
 from parkour_solver.scene.normalize import prepare_scene
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.compiler import open_compiler
 from parkour_solver.spatial.checkpoints import Checkpoint
 from parkour_solver.search.engine import find_checkpoint_route
+from parkour_solver.search.application import task_settings
 from parkour_solver.validation.witness import replay_witness
 from parkour_solver.spatial.cells import decompose
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
@@ -46,7 +46,7 @@ def run(fixture,compiler,*,on_window=None,python_executable=None,initial_program
     terminal=None if virtual is not None else Checkpoint(fixture['terminalTick'],-1,direction,initial,tuple(corridor.points[-1]),corridor.signature)
     policy=SupportOrder(scene,fixture['requiredSupports'],None if virtual is not None else fixture['terminalTick'],
         fixture.get('initialJumpInputs'),max_inputs=request['movementSearch']['maxInputs'])
-    settings=copy.deepcopy(fixture['settings'])
+    settings=task_settings(fixture)
     if virtual is not None:
         goals=settings.pop('spatial_goals',[dict(kind='landing',block=b) for b in fixture['requiredSupports']])
         if not goals or goals[-1]!=virtual:goals.append(virtual)
@@ -85,7 +85,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--input',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--compiler',type=Path,default=Path(os.environ.get('PKC_RUN_TICKS_COMPILER','build/native/compiler.json')))
+    parser.add_argument('--compiler',type=Path,help='Java bridge descriptor (default: PKC_RUN_TICKS_COMPILER, else Python)')
     parser.add_argument('--resume',type=Path)
     parser.add_argument('--retry-unknown',action='store_true')
     args=parser.parse_args()
@@ -109,7 +109,8 @@ def main():
         print(json.dumps(dict(tick=window['checkpoint']['tick'],scored=window['scored'],unknown=window['unknown'],
             retained=len(window['retained']),generation=window['generation']['termination'],
             progress=[c['value'] for c in window['candidates'] if c['id'] in window['retained']])),flush=True)
-    with CheckpointStore(args.output) as store, JavaCompiler(json.loads(args.compiler.read_text())) as compiler:
+    with CheckpointStore(args.output) as store, open_compiler(args.compiler) as compiler:
+        report['bridge']=compiler.provenance()
         checkpoint_progress=SearchCheckpoint(store,report)
         result,validation=run(fixture,compiler,on_window=progress,python_executable=sys.executable,initial_programs=seeds,
             resume_state=resumed,on_progress=checkpoint_progress,retry_unknown=args.retry_unknown)

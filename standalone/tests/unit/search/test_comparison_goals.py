@@ -1,7 +1,5 @@
 from tests.support.paths import RESEARCH_ROOT
-import json
 import os
-from pathlib import Path
 import time
 import unittest
 
@@ -16,7 +14,7 @@ from parkour_solver.search.compat.time_progress import clock_result
 from research.legacy_cell_routes.window_diagnostic import controls
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
 from parkour_solver.scene.normalize import prepare_scene
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from tests.support.checkpoint_guidance import flat_scene
 from tests.support.archived_events import current_events
 
@@ -55,11 +53,11 @@ class ComparisonGoalTests(unittest.TestCase):
         self.assertEqual(result['unavailableReason'],'terminal_before_clock')
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
                      'Set compiler and IPOPT Python for comparison goal tests')
 class ComparisonGoalNumericalTests(unittest.TestCase):
     def setUp(self):
-        self.compiler=JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+        self.compiler=PythonCompiler()
         self.addCleanup(self.compiler.close)
 
     def test_full_regression_continues_a_discarded_actual_faster_route(self):

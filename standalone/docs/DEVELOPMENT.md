@@ -6,7 +6,7 @@ Read [AGENTS](../AGENTS.md), [current state](CURRENT_STATE.md), [architecture](A
 
 ## Where new behavior belongs
 
-- Shared movement/contact/constraint rules: extend existing `src/parkour_solver` builders and shared Java compiler/scene helpers. Avoid a second derivation of stepping, signed blockage faces or player footprint geometry.
+- Shared movement/contact/constraint rules: extend existing `src/parkour_solver` builders. Movement coefficients come from the Java input model through generated tables; a change there belongs in the shared Java code, followed by table regeneration. The finite-scene and footprint checks are maintained in Python against the Java bridge as differential oracle; change both together. Avoid a second derivation of stepping, signed blockage faces or player footprint geometry.
 - Generic reachability: `reachability.intervals.py` and callers, using actual model/scope context. Eligibility must occur before generation/derived rows/checks across all families. `reachability.linear.py` is an optional numerical relaxation screen, not a change to IPOPT physics.
 - Discrete branch traversal, comparison, persistence: `search.dfs`, `search.frontier`, `search.comparison`, `search.deferrals`, `search.engine`, `search.goals` and existing repair/schema helpers. `time_progress` is the legacy common-clock record adapter, not the active anchor pruning owner. Do not embed fixture IDs in these modules.
 - Fixed continuous equations, scalar replay, native process lifecycle: `src/parkour_solver/numerics`. Do not place new discrete decision ownership inside the worker.

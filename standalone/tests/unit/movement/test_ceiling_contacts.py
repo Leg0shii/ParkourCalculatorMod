@@ -2,7 +2,6 @@ from tests.support.paths import AUTONOMY_DATA
 import copy
 import json
 import os
-from pathlib import Path
 import unittest
 
 from parkour_solver.validation.vertical import validate_vertical_schedule
@@ -11,7 +10,7 @@ from parkour_solver.search.support_profiles import build_transition_graph, compi
 from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.movement.ceiling_contacts import ceiling_profile
 from parkour_solver.movement.ceiling_profiles import ceiling_options
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.scene.route import schedule
 from parkour_solver.physics.vertical import REST_CARRY, f32
 
@@ -72,12 +71,12 @@ class OpenCeilingTests(unittest.TestCase):
         self.assertEqual(legacy['profile']['contactEvents'], walk['profile']['contactEvents'])
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class CeilingContactIntegrationTests(unittest.TestCase):
     def test_same_input_ceiling_and_wall_hit_use_one_coupled_movement_schedule(self):
         request = json.loads(FIXTURE.with_name('wall-ceiling-reversal.json').read_text())
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             result = find_blocks(request, compiler, seconds=20, route_seconds=12, candidate_seconds=1,
                                  retries=0, python_executable=os.environ['PKC_IPOPT_PYTHON'])
         self.assertEqual(result['status'], 'feasible', result)
@@ -92,7 +91,7 @@ class CeilingContactIntegrationTests(unittest.TestCase):
 
     def test_geometry_discovers_bonk_and_graph_bound_includes_shorter_profile(self):
         request = json.loads(FIXTURE.read_text())
-        with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+        with PythonCompiler() as compiler:
             graph = build_transition_graph(request, compiler, seconds=5)
             edges = [graph['transitions'][e] for e in graph['edgeOptions']['start']['goal']]
             self.assertTrue(any(e['profileKind'] == 'ordinary' for e in edges))

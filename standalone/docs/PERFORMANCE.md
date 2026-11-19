@@ -102,6 +102,9 @@ ordered options. That is targeted enumeration work, not a whole-solver speedup.
 
 ## Cost levers already in place
 
+- In-process movement bridge: on the extended B22 task at an equal 300 s budget,
+  coefficient, scene and footprint calls took 0.72 s against 6.84 s through the Java
+  process, with identical requests ([evidence](../research/jvm-free-bridge/README.md)).
 - IPOPT row reduction: final rows fall from 278 to 91 on the benchmark
   ([constraint reduction](IPOPT_CONSTRAINT_REDUCTION.md)).
 - Feasibility-only solves stop at the first validated point; only the anchor and

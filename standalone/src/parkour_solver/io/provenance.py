@@ -12,6 +12,9 @@ def source_hashes():
 def source_revision():
     import subprocess
     package=Path(__file__).resolve().parents[1]
-    result=subprocess.run(["git", "-C", str(package), "rev-parse", "HEAD"],
-                          capture_output=True, text=True)
+    try:
+        result=subprocess.run(["git", "-C", str(package), "rev-parse", "HEAD"],
+                              capture_output=True, text=True)
+    except OSError:
+        return None
     return result.stdout.strip() if result.returncode==0 else None

@@ -1,14 +1,13 @@
 from tests.support.paths import AUTONOMY_DATA
 import json
 import os
-from pathlib import Path
 import unittest
 from unittest.mock import patch
 
 from parkour_solver.scene.normalize import prepare_scene
 from research.legacy_cell_routes.experiment import compact, run_arm, verify_witness
 from parkour_solver.search.work import SearchWork
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.search.ordered_route import find_route
 from tests.support.ordered_route import route
 
@@ -78,11 +77,11 @@ class CellExperimentTests(unittest.TestCase):
             run_arm(request, 'prescribed', spatial_points=[[.5,1,.5],[.5,2,.5]])
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class CellNumericalTests(unittest.TestCase):
     def setUp(self):
-        self.compiler = JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+        self.compiler = PythonCompiler()
         self.addCleanup(self.compiler.close)
 
     def test_automatic_blockage_routes_are_repaired_and_physically_checked(self):

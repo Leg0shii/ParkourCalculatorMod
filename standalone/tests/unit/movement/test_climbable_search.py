@@ -3,7 +3,6 @@ import copy
 import hashlib
 import json
 import os
-from pathlib import Path
 import unittest
 
 from parkour_solver.search.support_profiles import find_blocks
@@ -11,7 +10,7 @@ from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.validation.vertical import validate_vertical_schedule
 from parkour_solver.movement.ladder.settings import ladder_settings
 from parkour_solver.search.climbable import run_allocations
-from parkour_solver.bridge.compiler import JavaCompiler
+from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.movement.ladder.events import compile_ladder_events
 from parkour_solver.scene.ladders import climb_walls, entry_channels, ladder_columns, schedule_constraints
 from parkour_solver.movement.ladder.schedules import generate_ladder_schedules
@@ -73,10 +72,9 @@ class ClimbableContractTests(unittest.TestCase):
             schedule_constraints(s, column, wall, entry_channels(column, wall)[0], None)
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER'), 'Set PKC_RUN_TICKS_COMPILER')
 class SavedLadderEvidenceTests(unittest.TestCase):
     def setUp(self):
-        self.compiler = JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text()))
+        self.compiler = PythonCompiler()
         self.addCleanup(self.compiler.close)
 
     def check(self, evidence):
@@ -126,8 +124,8 @@ class SavedLadderEvidenceTests(unittest.TestCase):
                 self.assertFalse(self.check(changed)['feasible'])
 
 
-@unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
-                     'Set PKC_RUN_TICKS_COMPILER and PKC_IPOPT_PYTHON')
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'),
+                     'Set PKC_IPOPT_PYTHON')
 class ClimbableIntegrationTests(unittest.TestCase):
     def test_cold_geometry_scenes_find_top_side_and_composed_routes(self):
         for name, seconds, route_seconds in [('ladder-top', 65, 32), ('ladder-side-landing', 65, 32),
@@ -135,7 +133,7 @@ class ClimbableIntegrationTests(unittest.TestCase):
                                                ('ladder-thin-top', 70, 38), ('ladder-prefix-suffix', 115, 24)]:
             with self.subTest(name=name):
                 request = json.loads((ROOT / ('fixtures/' + name + '.json')).read_text())
-                with JavaCompiler(json.loads(Path(os.environ['PKC_RUN_TICKS_COMPILER']).read_text())) as compiler:
+                with PythonCompiler() as compiler:
                     result = find_blocks(request, compiler, seconds=seconds, route_seconds=route_seconds,
                                          candidate_seconds=1, retries=0, python_executable=os.environ['PKC_IPOPT_PYTHON'])
                 self.assertEqual(result['status'], 'feasible', result)
