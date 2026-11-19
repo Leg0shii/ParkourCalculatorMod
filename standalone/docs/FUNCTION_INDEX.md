@@ -756,7 +756,6 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `DecisionPolicy.__call__` | [105](../src/parkour_solver/search/compat/decision_windows.py#L105) | function |
 | `retain_candidates` | [109](../src/parkour_solver/search/compat/decision_windows.py#L109) | function |
 | `score_features` | [130](../src/parkour_solver/search/compat/decision_windows.py#L130) | function |
-| `fair_programs` | [143](../src/parkour_solver/search/compat/decision_windows.py#L143) | function |
 
 ## search/compat/minimum_runs.py
 

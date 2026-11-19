@@ -6,12 +6,11 @@ import os
 from pathlib import Path
 import time
 import unittest
-from unittest.mock import patch
 
 from parkour_solver.scene.normalize import prepare_scene
 from research.legacy_cell_routes.checkpoint_experiment import replay_witness
 from parkour_solver.search.engine import find_checkpoint_route
-from parkour_solver.search.compat.decision_windows import DecisionPolicy, fair_programs, plan_windows, retain_candidates
+from parkour_solver.search.compat.decision_windows import DecisionPolicy, plan_windows, retain_candidates
 from parkour_solver.bridge.compiler import JavaCompiler
 from parkour_solver.search.movement import iter_movement_programs
 from tests.support.checkpoint_guidance import flat_scene
@@ -102,21 +101,6 @@ class DecisionWindowTests(unittest.TestCase):
         self.assertTrue(policy(initial))
         self.assertFalse(policy(delayed))
         self.assertTrue(any(e['kind']=='jump' for e in policy.audit(delayed)['unmatched']))
-
-    def test_fair_generation_gives_each_parent_a_turn_and_bounded_quota(self):
-        def generate(scene,settings,initial_programs,report,**kwargs):
-            for i in range(settings['maxPrefixes']):
-                report['expandedPrefixes'] = i+1
-                yield dict(seed=initial_programs[0]['tag'],index=i)
-        report = {}
-        with patch('parkour_solver.search.movement.iter_movement_programs',generate), \
-                patch('parkour_solver.search.engine._key',lambda p:p['tag']):
-            g = fair_programs({},[dict(tag='a'),dict(tag='b')],cfg=dict(maxPrefixes=6),fair=True,report=report)
-            values = [next(g) for _ in range(4)]
-            g.close()
-        self.assertEqual([v['seed'] for v in values],['a','b','a','b'])
-        self.assertEqual([r['prefixQuota'] for r in report['parents']],[3,3])
-        self.assertEqual(report['expandedPrefixes'],4)
 
 
 @unittest.skipUnless(os.environ.get('PKC_RUN_TICKS_COMPILER') and os.environ.get('PKC_IPOPT_PYTHON'),
