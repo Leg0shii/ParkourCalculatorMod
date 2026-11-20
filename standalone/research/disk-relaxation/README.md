@@ -12,7 +12,9 @@ policy1, DFS `numericalBackend`, solve policy `numerical`.
 ## Validation
 
 The native gate passes **775 tests** with zero failures, errors or skips and
-unchanged source at `a5f42e35` ([report](2026-11-19/native-report.json)).
+unchanged source at `a5f42e35` ([report](2026-11-19/native-report.json)), and
+**779 tests** at `2f9eef00`, after the undecided retry, the alarm ticks and the
+confirmation seed ([report](2026-11-19/native-report-2f9eef00.json)).
 
 ## Real11 matrix
 

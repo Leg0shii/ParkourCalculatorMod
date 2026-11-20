@@ -696,9 +696,6 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             seconds=max(.001,min(score_seconds,deadline-time.monotonic())),candidate_seconds=candidate_seconds,
             python_executable=python_executable,cancel_event=cancel_event,
             on_progress=progress,retry_unresolved=retry_unknown,**args)
-        if result.get('numericalPromotion'):
-            # Promotion is lineage state: the record, child and variants copy it.
-            program['numericalPromoted'] = True
         if anchor_route:
             from parkour_solver.observability.turns import record as observe, replay
             span,start=span_info(f)

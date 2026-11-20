@@ -19,7 +19,7 @@ from parkour_solver.search.compat.corridor_queue import collision_request
 
 # Per-session work counters the event report sums across allocation sessions.
 NUMERICAL_COUNTS = ('workerLaunches', 'feasibleSeedReturns', 'conicCandidates', 'relaxedFallbacks',
-                    'confirmations', 'confirmationIpoptCalls', 'materialGaps', 'promotions')
+                    'confirmations', 'confirmationIpoptCalls', 'materialGaps')
 
 
 def discovery_settings(settings=None):

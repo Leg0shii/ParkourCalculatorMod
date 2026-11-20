@@ -183,14 +183,14 @@ class StartAndStatusTests(unittest.TestCase):
 
 
 class DispatchTests(unittest.TestCase):
-    def dispatch(self, problem, *, promoted=False, stop_on_feasible=False):
+    def dispatch(self, problem, *, stop_on_feasible=False):
         calls, incumbents = [], []
         def full(request, **kwargs):
             calls.append(kwargs['stop_on_feasible'])
             return dict(status='unknown', feasible=False, candidate=None, termination='worker_finished',
                         workerLaunched=True, workerStatus='Solve_Succeeded')
         with mock.patch('parkour_solver.numerics.solver.solve', side_effect=full):
-            result = disk.RelaxedDispatch(promoted=promoted, gate=SimpleNamespace(cache={})).solve(
+            result = disk.RelaxedDispatch(gate=SimpleNamespace(cache={})).solve(
                 problem, seconds=1., stop_on_feasible=stop_on_feasible, on_incumbent=incumbents.append)
         return result, calls, incumbents
 
@@ -212,13 +212,9 @@ class DispatchTests(unittest.TestCase):
                          ('unknown', 'disk_finished', None, []))
         self.assertIn(result['workerStatus'], disk.INFEASIBLE)
 
-    def test_ipopt_decides_unsupported_promoted_undecided_and_rejected_requests(self):
+    def test_ipopt_decides_unsupported_undecided_and_rejected_requests(self):
         result, calls, _ = self.dispatch(request(2, .1, threshold=.005))
         self.assertEqual((result['backend'], result['fallback'], calls), ('ipopt', 'unsupported', [False]))
-        result, calls, _ = self.dispatch(request(2, .1), promoted=True)
-        self.assertEqual((result['backend'], result['fallback'], calls), ('ipopt', 'promoted', [False]))
-        result, calls, _ = self.dispatch(request(2, .1), promoted=True, stop_on_feasible=True)
-        self.assertEqual((result['backend'], calls), ('clarabel', []))
         with mock.patch.object(disk, 'MAX_ITER', 1):
             result, calls, _ = self.dispatch(request(4, .17, walls=[dict(mode='X', t1=3, cmp='LE', rhs=.6)]),
                                              stop_on_feasible=True)
@@ -287,13 +283,13 @@ class ConfirmationTests(unittest.TestCase):
         def counted(request, **kwargs):
             calls.append(kwargs['stop_on_feasible'])
             return original(request, **dict(kwargs, python_executable=RUNTIME))
-        dispatch = disk.RelaxedDispatch(promoted=False, gate=gate or SimpleNamespace(cache={}))
+        dispatch = disk.RelaxedDispatch(gate=gate or SimpleNamespace(cache={}))
         with mock.patch.object(full, 'solve', side_effect=counted):
             result = dispatch.solve(problem, seconds=5., stop_on_feasible=stop_on_feasible,
                                     on_incumbent=incumbents.append)
         return dispatch, result, calls, incumbents
 
-    def test_a_genuine_gap_is_confirmed_and_promotes_the_lineage(self):
+    def test_a_genuine_gap_is_confirmed_and_later_requests_stay_relaxed(self):
         dispatch, result, calls, incumbents = self.dispatch(analytic('true-gap'))
         confirmation = result['confirmation']
         self.assertEqual((result['backend'], result['status'], calls), ('ipopt', 'feasible', [False]))
@@ -303,15 +299,16 @@ class ConfirmationTests(unittest.TestCase):
         self.assertEqual(confirmation['gap'], confirmation['diskObjective']-result['candidate']['objective'])
         self.assertGreater(confirmation['gap'], disk.MATERIAL_GAP)
         self.assertTrue(confirmation['material'])
-        self.assertTrue(dispatch.promoted)
-        self.assertEqual([p['gap'] for p in dispatch.promotions], [confirmation['gap']])
+        # A gap only describes its own request: the next one is solved relaxed and alarms on its own.
+        result = dispatch.solve(analytic('no-alarm'), seconds=5., stop_on_feasible=False)
+        self.assertEqual((result['backend'], result['candidate']['model']), ('clarabel', 'relaxed_disk'))
 
-    def test_a_false_alarm_is_confirmed_without_promotion(self):
+    def test_a_false_alarm_is_confirmed_without_a_material_gap(self):
         dispatch, result, calls, _ = self.dispatch(analytic('false-alarm'))
         self.assertGreater(result['disk']['peakRelativeDeficit'], disk.ALARM_FRACTION)
         self.assertEqual((result['backend'], result['status'], calls), ('ipopt', 'feasible', [False]))
         self.assertLessEqual(result['confirmation']['gap'], disk.MATERIAL_GAP)
-        self.assertFalse(dispatch.promoted)
+        self.assertFalse(result['confirmation']['material'])
 
     def test_full_strength_optima_and_feasibility_requests_never_call_ipopt(self):
         _, result, calls, _ = self.dispatch(analytic('no-alarm'))
@@ -322,10 +319,9 @@ class ConfirmationTests(unittest.TestCase):
         _, result, calls, _ = self.dispatch(airborne)
         self.assertGreater(result['disk']['peakRelativeDeficit'], disk.ALARM_FRACTION)
         self.assertEqual((result['backend'], result['disk']['alarmTicks'], calls), ('clarabel', [], []))
-        dispatch, result, calls, _ = self.dispatch(analytic('true-gap'), stop_on_feasible=True)
+        _, result, calls, _ = self.dispatch(analytic('true-gap'), stop_on_feasible=True)
         self.assertEqual((result['backend'], result['candidate']['model'], calls), ('clarabel', 'relaxed_disk', []))
         self.assertGreater(result['disk']['peakRelativeDeficit'], disk.ALARM_FRACTION)
-        self.assertFalse(dispatch.promoted)
 
     def test_a_minimized_gap_keeps_its_sign(self):
         p = analytic('true-gap')
@@ -353,11 +349,11 @@ class RejectedConfirmationTests(unittest.TestCase):
         rejected = dict(status='unknown', feasible=False, candidate=None, termination='worker_finished',
                         workerLaunched=True, workerStatus='Infeasible_Problem_Detected')
         with mock.patch('parkour_solver.numerics.solver.solve', return_value=rejected):
-            dispatch = disk.RelaxedDispatch(promoted=False, gate=SimpleNamespace(cache={}))
+            dispatch = disk.RelaxedDispatch(gate=SimpleNamespace(cache={}))
             result = dispatch.solve(analytic('true-gap'), seconds=1., stop_on_feasible=False)
         self.assertEqual((result['status'], result['termination'], result['workerStatus'], result['candidate']),
                          ('unknown', 'worker_finished', 'Infeasible_Problem_Detected', None))
-        self.assertEqual((result['confirmation']['gap'], dispatch.promoted), (None, False))
+        self.assertEqual((result['confirmation']['gap'], result['confirmation']['material']), (None, False))
 
 
 if __name__ == '__main__':

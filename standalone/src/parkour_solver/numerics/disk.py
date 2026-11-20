@@ -148,15 +148,13 @@ class RelaxedDispatch:
     """`find_route`'s numerical callable: Clarabel unless IPOPT must decide.
 
     IPOPT runs, with stock semantics, on requests outside the supported class,
-    optimization requests of a promoted lineage, requests the relaxation leaves
-    undecided, and relaxed points the scalar validator rejects. An optimization
+    requests the relaxation leaves undecided, and relaxed points the scalar
+    validator rejects. Every other request is solved relaxed; an optimization
     request whose relaxed optimum leaves more than ALARM_FRACTION of a jump or
-    thin-ledge tick's acceleration unused (alarm_ticks) is confirmed by IPOPT;
-    a confirmed score gap above MATERIAL_GAP promotes the lineage.
+    thin-ledge tick's acceleration unused (alarm_ticks) is confirmed by IPOPT.
     """
-    def __init__(self, *, promoted, gate):
-        self.promoted, self.gate = promoted, gate
-        self.promotions = []
+    def __init__(self, *, gate):
+        self.gate = gate
 
     def solve(self, problem, *, seconds, stop_on_feasible, python_executable=None, cancel_event=None,
               on_incumbent=None):
@@ -172,8 +170,6 @@ class RelaxedDispatch:
         content = spec(problem, strict=True)
         if content is None:
             return full('unsupported')
-        if self.promoted and not stop_on_feasible:
-            return full('promoted')
         started = time.monotonic()
         if cancel_event is not None and cancel_event.is_set():
             return _result(problem, started, 'cancelled', None, 'cancelled', None, None)
@@ -219,10 +215,6 @@ class RelaxedDispatch:
             sense = 1 if problem['objective']['sense'] == 'MAX' else -1
             gap = sense*(relaxed_candidate['objective']-result['candidate']['objective'])
             confirmation.update(ipoptObjective=result['candidate']['objective'], gap=gap, material=gap > MATERIAL_GAP)
-            if confirmation['material']:
-                self.promoted = True
-                self.promotions.append(dict(problemHash=fingerprint(problem), gap=gap, peak=confirmation['peak'],
-                                            tick=confirmation['tick']))
             if on_incumbent is not None:
                 on_incumbent(json.loads(json.dumps(result['candidate'])))
         return dict(result, backend='ipopt', disk=relaxed, confirmation=confirmation)

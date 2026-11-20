@@ -172,7 +172,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
     dispatch = None
     if policy['numerical'] == 'relaxed':
         from parkour_solver.numerics.disk import RelaxedDispatch
-        dispatch = RelaxedDispatch(promoted=program.get('numericalPromoted', False), gate=service)
+        dispatch = RelaxedDispatch(gate=service)
     # Finalization re-solves a relaxed witness's own branch route with IPOPT.
     result = solve_contact_branches(route if final_route is None else final_route, profiles, checks,
         compiler, seconds=seconds, candidate_seconds=candidate_seconds, retries=0,
@@ -185,14 +185,11 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         validation_scope=scope, initial_variants=variants if final_route is None else None, on_progress=on_progress,
         retry_unresolved=retry_unresolved, numerical=dispatch.solve if dispatch is not None else None)
     mark('physicalSearchAndValidation')
-    if dispatch is not None and dispatch.promotions:
-        result['numericalPromotion'] = dispatch.promotions
     diagnostics=[d for a in result.get('attempts',[]) for d in a.get('diagnostics',[])]
     parent_work=work
     while not hasattr(parent_work,'counts'):
         parent_work=parent_work.parent
     counts=numerical_counts(diagnostics)
-    counts['promotions']+=len(result.get('numericalPromotion',[]))
     for counter in (parent_work.counts,scoped.local.counts):
         counter.update(counts)
     result['timings']=dict(timings,**variants.state['timings'])

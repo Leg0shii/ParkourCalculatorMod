@@ -515,13 +515,13 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `ipopt_seed` | [109](../src/parkour_solver/numerics/disk.py#L109) | function |
 | `alarm_ticks` | [121](../src/parkour_solver/numerics/disk.py#L121) | function |
 | `RelaxedDispatch` | [147](../src/parkour_solver/numerics/disk.py#L147) | class |
-| `RelaxedDispatch.__init__` | [157](../src/parkour_solver/numerics/disk.py#L157) | function |
-| `RelaxedDispatch.solve` | [161](../src/parkour_solver/numerics/disk.py#L161) | function |
-| `RelaxedDispatch.confirm` | [200](../src/parkour_solver/numerics/disk.py#L200) | function |
-| `_result` | [231](../src/parkour_solver/numerics/disk.py#L231) | function |
-| `_attempt` | [247](../src/parkour_solver/numerics/disk.py#L247) | function |
-| `_solve` | [255](../src/parkour_solver/numerics/disk.py#L255) | function |
-| `_cost` | [355](../src/parkour_solver/numerics/disk.py#L355) | function |
+| `RelaxedDispatch.__init__` | [156](../src/parkour_solver/numerics/disk.py#L156) | function |
+| `RelaxedDispatch.solve` | [159](../src/parkour_solver/numerics/disk.py#L159) | function |
+| `RelaxedDispatch.confirm` | [196](../src/parkour_solver/numerics/disk.py#L196) | function |
+| `_result` | [223](../src/parkour_solver/numerics/disk.py#L223) | function |
+| `_attempt` | [239](../src/parkour_solver/numerics/disk.py#L239) | function |
+| `_solve` | [247](../src/parkour_solver/numerics/disk.py#L247) | function |
+| `_cost` | [347](../src/parkour_solver/numerics/disk.py#L347) | function |
 
 ## numerics/model.py
 
@@ -929,9 +929,9 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `ScopedWork.accepted` | [52](../src/parkour_solver/search/engine.py#L52) | function |
 | `segment_solids` | [56](../src/parkour_solver/search/engine.py#L56) | function |
 | `evaluate_program` | [70](../src/parkour_solver/search/engine.py#L70) | function |
-| `numerical_counts` | [219](../src/parkour_solver/search/engine.py#L219) | function |
-| `_key` | [239](../src/parkour_solver/search/engine.py#L239) | function |
-| `find_checkpoint_route` | [243](../src/parkour_solver/search/engine.py#L243) | function |
+| `numerical_counts` | [216](../src/parkour_solver/search/engine.py#L216) | function |
+| `_key` | [236](../src/parkour_solver/search/engine.py#L236) | function |
+| `find_checkpoint_route` | [240](../src/parkour_solver/search/engine.py#L240) | function |
 
 ## search/entry.py
 

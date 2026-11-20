@@ -192,15 +192,15 @@ replays the returned acceleration vectors through the same scalar checks as
 rejects a vector outside its disk by more than `1e-7`. `deficits` reports each
 tick's relative acceleration shortfall.
 
-`RelaxedDispatch(promoted=..., gate=...).solve` has `solve`'s signature and result
+`RelaxedDispatch(gate=...).solve` has `solve`'s signature and result
 shape and is what automatic discovery hands `find_route`. A feasible relaxed point
 that passes `validate_controls` returns `status: feasible` with the candidate
 (`model: relaxed_disk`, `controls`, derived facings as a seed), `backend:
 clarabel`, `termination: disk_finished` and `workerLaunched: false`; an infeasible
 request returns `unknown` with the Clarabel status in `workerStatus`. IPOPT
 answers, with `backend: ipopt` and a `fallback` reason, requests with no spec
-(`unsupported`), optimization requests of a promoted lineage (`promoted`),
-requests the relaxation leaves undecided (`relaxed_undecided`) and relaxed points
+(`unsupported`), requests the relaxation leaves undecided (`relaxed_undecided`)
+and relaxed points
 the validator rejects (`rejected_relaxed_point`). A relaxed optimum of an optimization request
 (`stop_on_feasible=False`) with a relative acceleration shortfall above 1% on a
 jump tick (`vertical.jumpVelocity`) or on a ground tick (`movement.ground`) whose
@@ -218,7 +218,7 @@ of the single-attempt seeds tried it had no false infeasibilities and the fewest
 worse optima at the same cost; revisit it if confirmations start rejecting
 feasible requests. The result carries `confirmation`: the shortfall peak and
 tick, both objectives, `gap = sense*(disk - ipopt)` and `material` (`gap > 1e-4`).
-A material gap sets the dispatch's `promoted` and records the promotion. Decided
+A gap describes only its own request. Decided
 confirmations are cached per run in the interaction gate's cache by problem
 fingerprint. Search's use of it is in the
 [execution reference](../ANCHOR_SEARCH_EXECUTION_REFERENCE.md#numerical-backend-and-finalization).

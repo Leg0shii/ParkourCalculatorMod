@@ -12,7 +12,7 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
 - Local, not pushed: `feat/disk-interim-solver`. Automatic discovery runs on the
   Clarabel [disk relaxation](reference/NUMERICAL_SOLVER.md#disk-relaxation): the
   HiGHS LP screen is gone, interim candidates are relaxed, an acceleration-shortfall
-  alarm confirms with IPOPT and promotes real gaps, and one IPOPT finalization
+  alarm on jump and thin-ledge ticks confirms with IPOPT, and one IPOPT finalization
   publishes the physical route ([execution](ANCHOR_SEARCH_EXECUTION_REFERENCE.md#numerical-backend-and-finalization)).
   Real11 keeps the replayed T64 with 0 interim IPOPT workers and 1 finalization call,
   median search 3.6 s against 7.5 s on `c9deef42` ([evidence](../research/disk-relaxation/README.md)).

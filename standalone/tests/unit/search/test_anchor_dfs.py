@@ -30,7 +30,7 @@ def extend(s,parent,target,n,extra=False):
 class AnchorDFSTests(unittest.TestCase):
     def run_tree(self, *, logging=True, resume=None, calls=20, interval=1, setup=False, seconds=3,
                  on_progress=None,cancel_event=None,requests_per_evaluation=1,advance=None,node_probe=None,node_best=None,
-                 finishes=1,relaxed=False,final=None,promote=None,**settings):
+                 finishes=1,relaxed=False,final=None,**settings):
         s=scene();s['maxTotalRunTicks']=60;s['maxRunTicksPerJump']=60;dispatched=[]
         def generate(target_scene,*,report,initial_programs,continuation=None,node_evaluator,**kwargs):
             saved=copy.deepcopy(continuation) if continuation else dict(expanded=1,cursor=0,exhausted=False)
@@ -78,11 +78,8 @@ class AnchorDFSTests(unittest.TestCase):
                 extra=node_best(n)
                 best['plan'].update(walls=extra['walls'],events=extra['events'])
                 best['alternativeRows']=extra['alternativeRows']
-            result=dict(status='feasible',termination='done',best=best,work=dict(solverCalls=requests_per_evaluation),
+            return dict(status='feasible',termination='done',best=best,work=dict(solverCalls=requests_per_evaluation),
                         fullSceneValidated=True,nodeFeasibility=dict(status='feasible',model=str(n)))
-            if promote is not None and promote(p,kwargs):
-                result['numericalPromotion']=[dict(problemHash=str(n),gap=1.,peak=1.,tick=0)]
-            return result
         with patch('parkour_solver.search.engine.motion_bound',return_value={}), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate), \
@@ -370,33 +367,6 @@ class AnchorDFSTests(unittest.TestCase):
         rerun,_=self.run_tree(relaxed=True,final=final,resume=saved)
         self.assertEqual(len(calls),2)
         self.assertEqual(rerun['finalization']['stage'],'complete')
-
-    def test_a_promoted_lineage_is_inherited_by_children_not_siblings(self):
-        promote=lambda p,kwargs:p['terminalSupport']=='mid' and p['profile']['airtime']==10 and \
-            kwargs['solve_policy']['purpose']=='anchor'
-        result,_=self.run_tree(promote=promote)
-        dfs=result['searchState']['dfs']
-        mids={r['program']['profile']['airtime']:r for f in dfs['frames'] for r in f['records'] if f['goal']['block']=='mid'}
-        self.assertTrue(mids[10]['program']['numericalPromoted'])
-        self.assertTrue(mids[10]['child']['numericalPromoted'])
-        self.assertNotIn('numericalPromoted',mids[11]['program'])
-        def parents(state):
-            return {f['parents'][0]['profile']['airtime']:f['parents'][0].get('numericalPromoted',False)
-                    for f in state['frames']+state['stack'] if f['goal']['block']=='goal'}
-        self.assertEqual(parents(dfs),{10:True,11:False})
-        resumed,_=self.run_tree(resume=json.loads(json.dumps(result['searchState'])))
-        self.assertEqual(parents(resumed['searchState']['dfs']),{10:True,11:False})
-        # Generated descendants carry the flag; it never changes a program's search identity.
-        from parkour_solver.movement.normal import normal_choices
-        from parkour_solver.movement.program import empty_program, append_choice, boundary_state, program_search_key
-        base=scene();parent=empty_program(base['initial'],threshold=0.);parent['terminalSupport']='start'
-        option=next(iter(normal_choices(dict(scene=base,state=boundary_state(parent),maxInputs=30,threshold=0.,
-                                             interactionGate=None))))
-        plain=append_choice(parent,option)
-        promoted=append_choice(dict(parent,numericalPromoted=True),option)
-        self.assertTrue(promoted['numericalPromoted'])
-        self.assertNotIn('numericalPromoted',plain)
-        self.assertEqual(program_search_key(promoted),program_search_key(plain))
 
     def test_more_jump_history_remains_first_class_after_an_earlier_finish_succeeds(self):
         result,calls=self.run_recovery_tree(reject_first=False,include_setup=True,finish_tick=50)
