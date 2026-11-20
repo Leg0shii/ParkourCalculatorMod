@@ -302,13 +302,29 @@ class InteractionGate:
             if proof:return proof
             if self.scene.get('maxWallHits',0):return None
             self.metrics['relaxationChecks']=self.metrics.get('relaxationChecks',0)+1
-            checked=interaction_reachability(analysis['envelopes'],{},refine=True,objective=objective)
-            undecided=checked['reason']=='relaxation_undecided'
-            return {k:v for k,v in checked.items() if k!='ruledOut'} if checked['ruledOut'] else None
+            checked=self.relaxation(program,analysis,objective)
+            undecided=checked is not None and checked['outcome']=='undecided'
+            return checked['proof'] if checked is not None and checked['outcome']=='infeasible' else None
         result=self._cached(key,build,'screen')
         if undecided:
             self.cache.pop(key)
         return result
+
+    def relaxation(self, program, analysis, objective):
+        """The disk relaxation of the request a decision check's repair loop sends for this program without
+        avoidance rows (search.ordered_route.numerical_problem), optimizing `objective`: one Clarabel solve
+        that the repair loop's identical request finds in the content cache. None outside the supported class."""
+        import copy
+        from parkour_solver.numerics.disk import screen
+        from parkour_solver.scene.route import schedule
+        from parkour_solver.search.ordered_route import derive_footprints, numerical_problem
+        prepared=self.prepare(program)
+        route=dict(copy.deepcopy(prepared['route']),objective=dict(axis='X',sense='MAX'),guideObjective=objective)
+        if hasattr(self.compiler,'derive_footprints'):
+            derive_footprints(route,self.compiler,self.seconds)
+        plan=schedule(route,[0])
+        plan['vertical']=prepared['plan']['vertical']
+        return screen(numerical_problem(route,plan,analysis['coefficient']))
 
     def query(self, context, bounds, tick, *, label, jumping=False, phases=('Y', 'X', 'Z')):
         from parkour_solver.movement.program import append_choice, program_physics_key

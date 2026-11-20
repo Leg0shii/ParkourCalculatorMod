@@ -41,6 +41,26 @@ class ProposalAnalysisTests(unittest.TestCase):
         self.assertEqual(first['proof']['reason'],'interval_reach_contradiction')
         self.assertEqual(compiler.calls,1)
 
+    def test_the_creation_screen_solves_the_request_the_repair_loop_sends(self):
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.numerics import disk
+        from parkour_solver.search.ordered_route import find_route
+        scene=flat_scene();p=flight(scene,2);objective=dict(axis='X',sense='MAX',customYaw=30.)
+        contents=[];real=disk.solve
+        def recorded(content,**options):
+            contents.append(json.dumps(content,sort_keys=True))
+            return real(content,**options)
+        with PythonCompiler() as compiler,patch.object(disk,'solve',side_effect=recorded):
+            gate=InteractionGate(scene,compiler)
+            self.assertIsNone(gate.check_program(p,objective))
+            # A decision check's bare branch: the prepared route optimizing the decision objective.
+            route=dict(gate.prepare(p)['route'],objective=dict(axis='X',sense='MAX'),guideObjective=objective)
+            result=find_route(route,compiler,seconds=5,candidate_seconds=1,retries=0,stop_on_feasible=False,
+                              numerical=disk.RelaxedDispatch(gate=gate).solve)
+        self.assertEqual(result['status'],'feasible')
+        # The creation screen, find_route's pre-screen and the candidate solve share one content.
+        self.assertEqual((len(contents),len(set(contents))),(3,1))
+
 
 class ProposalOwnershipTests(unittest.TestCase):
     def test_resume_skips_composition_for_consumed_raw_ordinals(self):

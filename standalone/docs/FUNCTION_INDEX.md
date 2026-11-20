@@ -638,10 +638,11 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `InteractionGate.envelopes` | [268](../src/parkour_solver/reachability/service.py#L268) | function |
 | `InteractionGate.sequence` | [272](../src/parkour_solver/reachability/service.py#L272) | function |
 | `InteractionGate.check_program` | [285](../src/parkour_solver/reachability/service.py#L285) | function |
-| `InteractionGate.query` | [313](../src/parkour_solver/reachability/service.py#L313) | function |
-| `InteractionGate.required` | [360](../src/parkour_solver/reachability/service.py#L360) | function |
-| `InteractionGate.context` | [381](../src/parkour_solver/reachability/service.py#L381) | function |
-| `InteractionGate.summary` | [384](../src/parkour_solver/reachability/service.py#L384) | function |
+| `InteractionGate.relaxation` | [313](../src/parkour_solver/reachability/service.py#L313) | function |
+| `InteractionGate.query` | [329](../src/parkour_solver/reachability/service.py#L329) | function |
+| `InteractionGate.required` | [376](../src/parkour_solver/reachability/service.py#L376) | function |
+| `InteractionGate.context` | [397](../src/parkour_solver/reachability/service.py#L397) | function |
+| `InteractionGate.summary` | [400](../src/parkour_solver/reachability/service.py#L400) | function |
 
 ## reachability/viability.py
 
@@ -1032,7 +1033,9 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | Symbol | Line | Kind |
 | --- | ---: | --- |
 | `search_allocations` | [15](../src/parkour_solver/search/ordered_route.py#L15) | function |
-| `find_route` | [129](../src/parkour_solver/search/ordered_route.py#L129) | function |
+| `derive_footprints` | [129](../src/parkour_solver/search/ordered_route.py#L129) | function |
+| `numerical_problem` | [146](../src/parkour_solver/search/ordered_route.py#L146) | function |
+| `find_route` | [164](../src/parkour_solver/search/ordered_route.py#L164) | function |
 
 ## search/ranking.py
 
@@ -1107,7 +1110,7 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `build_guides` | [45](../src/parkour_solver/spatial/anchor_guides.py#L45) | function |
 | `classify` | [79](../src/parkour_solver/spatial/anchor_guides.py#L79) | function |
 | `decision_objective` | [91](../src/parkour_solver/spatial/anchor_guides.py#L91) | function |
-| `onward_objective` | [110](../src/parkour_solver/spatial/anchor_guides.py#L110) | function |
+| `onward_objective` | [112](../src/parkour_solver/spatial/anchor_guides.py#L112) | function |
 
 ## spatial/cells.py
 
