@@ -95,9 +95,9 @@ whose relaxed optimum leaves more than 1% of a jump or thin-ledge ground tick's
 acceleration unused is confirmed by IPOPT before its score is used (`work`:
 `confirmations`, `confirmationIpoptCalls`, `materialGaps`); a gap affects only its
 own request, and descendants are solved relaxed and alarm on their own.
-Decision checks are feasibility intent and never confirm. The anchor `feasibilityPolicy` keeps its only value
-`ipopt_oracle`; its oracle rejection now also accepts the Clarabel infeasible
-statuses.
+Decision checks are feasibility intent and never confirm. The anchor `feasibilityPolicy` has one value,
+`numerical_oracle`: the numerical backend's infeasibility verdict (IPOPT
+`Infeasible_Problem_Detected` or a Clarabel infeasible status) rejects the node.
 
 Traversal stops `min(5 s, a quarter of the run)` before the run deadline. The
 run then makes one IPOPT finalization: the best-ranked final-frame witness is

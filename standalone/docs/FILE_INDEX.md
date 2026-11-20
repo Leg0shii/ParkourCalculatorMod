@@ -50,16 +50,16 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | File | Bytes |
 | --- | ---: |
 | [cases/real11/README.md](../cases/real11/README.md) | 3916 |
-| [cases/real11/extended-anchors.json](../cases/real11/extended-anchors.json) | 6978 |
+| [cases/real11/extended-anchors.json](../cases/real11/extended-anchors.json) | 6982 |
 | [cases/real11/extended-geometry.json](../cases/real11/extended-geometry.json) | 4110 |
-| [cases/real11/physical-anchors.json](../cases/real11/physical-anchors.json) | 3633 |
+| [cases/real11/physical-anchors.json](../cases/real11/physical-anchors.json) | 3637 |
 
 ## docs
 
 | File | Bytes |
 | --- | ---: |
 | [docs/AGENT_SETUP.md](AGENT_SETUP.md) | 3797 |
-| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 32054 |
+| [docs/ANCHOR_SEARCH_EXECUTION_REFERENCE.md](ANCHOR_SEARCH_EXECUTION_REFERENCE.md) | 32114 |
 | [docs/ARCHITECTURE.md](ARCHITECTURE.md) | 17899 |
 | [docs/CHECKPOINT_STORAGE.md](CHECKPOINT_STORAGE.md) | 7585 |
 | [docs/CODE_MAP.md](CODE_MAP.md) | 26030 |
@@ -68,7 +68,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/DEFERRED_WORK.md](DEFERRED_WORK.md) | 27678 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 11608 |
 | [docs/DOC_INDEX.md](DOC_INDEX.md) | 27560 |
-| [docs/FILE_INDEX.md](FILE_INDEX.md) | 212348 |
+| [docs/FILE_INDEX.md](FILE_INDEX.md) | 212494 |
 | [docs/FUNCTION_INDEX.md](FUNCTION_INDEX.md) | 78663 |
 | [docs/IPOPT_CONSTRAINT_REDUCTION.md](IPOPT_CONSTRAINT_REDUCTION.md) | 5578 |
 | [docs/IPOPT_FEASIBILITY_MODE.md](IPOPT_FEASIBILITY_MODE.md) | 4956 |
@@ -79,7 +79,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [docs/REAL11_GUIDE.md](REAL11_GUIDE.md) | 20362 |
 | [docs/RESULTS_AND_DEBUGGING.md](RESULTS_AND_DEBUGGING.md) | 16517 |
 | [docs/RUNBOOK.md](RUNBOOK.md) | 13510 |
-| [docs/TESTING.md](TESTING.md) | 18679 |
+| [docs/TESTING.md](TESTING.md) | 18856 |
 | [docs/design/ANCHOR_POLICY_DECISIONS.md](design/ANCHOR_POLICY_DECISIONS.md) | 27768 |
 | [docs/design/AVOIDANCE_PASSAGES.md](design/AVOIDANCE_PASSAGES.md) | 13935 |
 | [docs/design/BRANCH_SCHEDULING_INVESTIGATION.md](design/BRANCH_SCHEDULING_INVESTIGATION.md) | 34072 |
@@ -657,8 +657,10 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/disk-relaxation/2026-11-19/matrix-summary.txt](../research/disk-relaxation/2026-11-19/matrix-summary.txt) | 6314 |
 | [research/disk-relaxation/2026-11-19/matrix.sh](../research/disk-relaxation/2026-11-19/matrix.sh) | 1652 |
 | [research/disk-relaxation/2026-11-19/native-report-2f9eef00.json](../research/disk-relaxation/2026-11-19/native-report-2f9eef00.json) | 19416 |
+| [research/disk-relaxation/2026-11-19/native-report-9ca57442.json](../research/disk-relaxation/2026-11-19/native-report-9ca57442.json) | 19416 |
 | [research/disk-relaxation/2026-11-19/native-report-ea33c191.json](../research/disk-relaxation/2026-11-19/native-report-ea33c191.json) | 19416 |
 | [research/disk-relaxation/2026-11-19/native-report.json](../research/disk-relaxation/2026-11-19/native-report.json) | 19417 |
+| [research/disk-relaxation/2026-11-19/p5-missed-gaps.txt](../research/disk-relaxation/2026-11-19/p5-missed-gaps.txt) | 7611 |
 | [research/disk-relaxation/2026-11-19/p5-study-summary.txt](../research/disk-relaxation/2026-11-19/p5-study-summary.txt) | 8019 |
 | [research/disk-relaxation/2026-11-19/p5_study.py](../research/disk-relaxation/2026-11-19/p5_study.py) | 3994 |
 | [research/disk-relaxation/2026-11-19/probe_production.py](../research/disk-relaxation/2026-11-19/probe_production.py) | 4084 |
@@ -679,7 +681,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [research/disk-relaxation/2026-11-19/seed_study_relaxed.py](../research/disk-relaxation/2026-11-19/seed_study_relaxed.py) | 3562 |
 | [research/disk-relaxation/2026-11-19/seed_summary.py](../research/disk-relaxation/2026-11-19/seed_summary.py) | 2432 |
 | [research/disk-relaxation/2026-11-19/seed_tilt.py](../research/disk-relaxation/2026-11-19/seed_tilt.py) | 3844 |
-| [research/disk-relaxation/README.md](../research/disk-relaxation/README.md) | 12911 |
+| [research/disk-relaxation/README.md](../research/disk-relaxation/README.md) | 13497 |
 | [research/early-passage-screen/B6_OPTIONS.md](../research/early-passage-screen/B6_OPTIONS.md) | 89574 |
 | [research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md](../research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md) | 87066 |
 | [research/early-passage-screen/README.md](../research/early-passage-screen/README.md) | 5291 |
@@ -1403,7 +1405,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/search/__init__.py](../src/parkour_solver/search/__init__.py) | 0 |
 | [src/parkour_solver/search/anchors/__init__.py](../src/parkour_solver/search/anchors/__init__.py) | 0 |
 | [src/parkour_solver/search/anchors/adapter.py](../src/parkour_solver/search/anchors/adapter.py) | 5199 |
-| [src/parkour_solver/search/anchors/policy.py](../src/parkour_solver/search/anchors/policy.py) | 9793 |
+| [src/parkour_solver/search/anchors/policy.py](../src/parkour_solver/search/anchors/policy.py) | 9861 |
 | [src/parkour_solver/search/application.py](../src/parkour_solver/search/application.py) | 1923 |
 | [src/parkour_solver/search/bounds/__init__.py](../src/parkour_solver/search/bounds/__init__.py) | 0 |
 | [src/parkour_solver/search/bounds/flight.py](../src/parkour_solver/search/bounds/flight.py) | 5267 |

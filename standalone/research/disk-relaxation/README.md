@@ -15,7 +15,8 @@ The native gate passes **775 tests** with zero failures, errors or skips and
 unchanged source at `a5f42e35` ([report](2026-11-19/native-report.json)), and
 **779 tests** at `2f9eef00`, after the undecided retry, the alarm ticks and the
 confirmation seed ([report](2026-11-19/native-report-2f9eef00.json)), and **778
-tests** at `ea33c191` without lineage promotion ([report](2026-11-19/native-report-ea33c191.json)).
+tests** at `ea33c191` without lineage promotion ([report](2026-11-19/native-report-ea33c191.json)),
+and **783 tests** at `9ca57442` with the relaxed scenario and cancel/resume tests ([report](2026-11-19/native-report-9ca57442.json)).
 
 ## Real11 matrix
 
@@ -183,6 +184,12 @@ the arms' objectives differed by more than 1e-4:
   gaps and 68 false alarms (13.1 s of the 35.0 s confirmation CPU).
 - 7 material gaps do not alarm (largest 1.37e-3): ground ticks 58 and 59 short
   by 0.34 to 0.63 on a 1.6 by 1.0 landing area, wider than a thin ledge.
+  They are 4 situations, each in two requests that differ by one row: three are
+  the first ground tick after landing on B5 moving -X while the objective needs
+  +X, so the relaxation brakes with 39% to 63% of the acceleration unused; one
+  runs along B5's X edge before a jump with 34% unused ([details](2026-11-19/p5-missed-gaps.txt)).
+  Alarming every short ground tick would add these 7 and 8 false alarms (peak
+  ground shortfalls 1.1% to 28.5%).
 - Production seed: 0 false no-point and 2 optimizations more than 1e-4 short of
   the best known; own seed (stock): 2 false `Infeasible_Problem_Detected` in the
   capturing run, 1 on re-solve; cold: 1 and 3.
