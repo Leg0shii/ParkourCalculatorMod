@@ -130,13 +130,14 @@ def reachable_envelopes(problem, y=None):
                 radii=radii, origin=list(problem['position']) if 'initialIntervals' not in problem else None, model=problem)
 
 
-def interaction_reachability(envelopes, interaction, *, refine=False):
+def interaction_reachability(envelopes, interaction, *, refine=False, objective=None):
     if isinstance(interaction, list):
         interaction = dict(rows=interaction)
     if envelopes.get('contradiction'):
         return dict(ruledOut=True, **envelopes['contradiction'])
     if 'alternatives' in interaction:
-        results = [interaction_reachability(envelopes, item, refine=refine) for item in interaction['alternatives']]
+        results = [interaction_reachability(envelopes, item, refine=refine, objective=objective)
+                   for item in interaction['alternatives']]
         if results and all(r['ruledOut'] for r in results):
             return dict(ruledOut=True, reason='all_interaction_alternatives_excluded', alternatives=results)
         return dict(ruledOut=False, reason='not_ruled_out')
@@ -180,10 +181,10 @@ def interaction_reachability(envelopes, interaction, *, refine=False):
                 return dict(ruledOut=True, reason='interaction_region_unreachable', tick=t, phase=phase,
                             axis=axis, reachable=[lo, hi], required=[box[i], box[i+3]])
     if refine and envelopes.get('model') is not None:
-        from parkour_solver.reachability.linear import linear_exclusion
-        checked=linear_exclusion(envelopes['model'],interaction.get('rows',[]))
+        from parkour_solver.numerics.disk import screen
+        checked=screen(envelopes['model'],interaction.get('rows',[]),objective)
         if checked is not None and checked['outcome']=='infeasible':
             return dict(ruledOut=True,**checked['proof'])
         if checked is not None and checked['outcome']=='undecided':
-            return dict(ruledOut=False,reason='linear_undecided',status=checked['status'],message=checked['message'])
+            return dict(ruledOut=False,reason='relaxation_undecided',status=checked['status'],message=checked['message'])
     return dict(ruledOut=False, reason='not_ruled_out')

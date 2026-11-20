@@ -136,10 +136,24 @@ class AnchorSearchTests(unittest.TestCase):
         self.assertEqual(requested,[True,False])
         self.assertFalse(second['repairResume']['compatible'])
 
+    def test_a_relaxed_repair_state_never_resumes_under_ipopt(self):
+        from parkour_solver.search.feasibility import policy_spec
+        def invoke(backend,resume_state=None):
+            scope=dict(solvePolicy=policy_spec(dict(numerical=backend)))
+            with patch('parkour_solver.search.repair.find_route',return_value=outcome()), \
+                 patch('parkour_solver.search.repair.validate_vertical_schedule',return_value=VERTICAL):
+                return solve_contact_branches(route(),[],[],object(),seconds=1,candidate_seconds=.1,retries=0,
+                    repair_scope=scope,candidate_filter=lambda *a:dict(accepted=True),resume_state=resume_state)
+        relaxed=invoke('relaxed')
+        self.assertTrue(invoke('relaxed',relaxed['repairState'])['repairResume']['compatible'])
+        self.assertFalse(invoke('ipopt',relaxed['repairState'])['repairResume']['compatible'])
+        with self.assertRaises(ValueError):
+            policy_spec(dict(numerical='gurobi'))
+
     def test_completed_oracle_rejects_only_selected_model_and_limits_stay_pending(self):
-        def invoke(worker_status):
+        def invoke(worker_status,termination='worker_finished'):
             response=dict(status='unknown',best=None,termination='search_exhausted',attempts=[dict(diagnostics=[
-                dict(status='unknown',termination='worker_finished',workerStatus=worker_status)])])
+                dict(status='unknown',termination=termination,workerStatus=worker_status)])])
             with patch('parkour_solver.search.repair.find_route',return_value=response):
                 return solve_contact_branches(route(),[],[],object(),seconds=1,candidate_seconds=.1,retries=0,
                     oracle_rejection=True)
@@ -149,10 +163,12 @@ class AnchorSearchTests(unittest.TestCase):
         self.assertEqual(rejected['unresolved'],[])
         self.assertFalse(limited['completed'][0]['oracleRejected'])
         self.assertEqual(len(limited['unresolved']),1)
+        # A relaxation-infeasible request excludes the full model.
+        self.assertTrue(invoke('PrimalInfeasible','disk_finished')['repairState']['completed'][0]['oracleRejected'])
 
     def test_pre_solve_proofs_complete_an_alternative_without_ipopt(self):
         from parkour_solver.search.feasibility import outcome, policy_spec
-        certificate=dict(reason='linear_control_relaxation_infeasible')
+        certificate=dict(reason='disk_control_relaxation_infeasible')
         def invoke(termination):
             response=dict(status='unknown',best=None,termination=termination,
                           attempts=[dict(status='blocked',certificate=certificate)])
@@ -206,10 +222,173 @@ class AnchorNativeTests(unittest.TestCase):
         self.assertTrue(result['best']['candidate']['onGround'][-1])
         self.assertEqual(result['searchState']['dfs']['version'],8)
         self.assertTrue(result['anchorSearch']['hardLatches'])
-        self.assertGreater(result['work']['workerLaunches'],0)
-        self.assertGreaterEqual(result['work']['solverCalls'],result['work']['workerLaunches'])
+        # Interim queries are relaxed; IPOPT runs only for alarm confirmations and the finalization.
+        self.assertEqual(result['work']['workerLaunches'],result['work']['confirmationIpoptCalls'])
+        self.assertGreater(result['work']['conicCandidates'],0)
+        self.assertGreaterEqual(result['work']['solverCalls'],result['work']['conicCandidates'])
+        self.assertNotIn('model',result['best']['candidate'])
         self.assertTrue(result['anchorSearch']['nodes'])
         self.assertEqual(result['best']['route']['objective'],dict(axis='X',sense='MAX'))
+
+
+@unittest.skipUnless(os.environ.get('PKC_IPOPT_PYTHON'), 'Set PKC_IPOPT_PYTHON for relaxed automatic search')
+class RelaxedAutomaticSearchTests(unittest.TestCase):
+    def search(self, **options):
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.search.domain import InitialJumpDomain
+        from parkour_solver.search.engine import find_checkpoint_route
+        from tests.support.checkpoint_guidance import flat_scene
+        scene = flat_scene()
+        scene['movementSearch'].update(maxInputs=28, maxPrefixes=64)
+        with PythonCompiler() as compiler:
+            settings = dict(anchor_search={}, seconds=12, score_seconds=4, max_solver_calls=40,
+                            program_filter=InitialJumpDomain([0], max_inputs=28),
+                            python_executable=os.environ['PKC_IPOPT_PYTHON'])
+            settings.update(options)
+            result = find_checkpoint_route(scene, compiler, **settings)
+            return scene, result, compiler
+
+    def test_alarms_are_the_only_interim_ipopt_and_the_published_route_is_physical(self):
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.scene.normalize import prepare_scene
+        from parkour_solver.validation.witness import replay_witness
+        _, result, _ = self.search()
+        work = result['work']
+        self.assertEqual(work['workerLaunches'], work['confirmationIpoptCalls'])
+        self.assertGreater(work['conicCandidates'], 0)
+        self.assertNotIn('model', result['best']['candidate'])
+        with PythonCompiler() as compiler:
+            self.assertTrue(replay_witness(prepare_scene(result['effectiveRequest']), result['best'], compiler)['passed'])
+
+    def test_search_runs_on_the_relaxation_and_publishes_one_physical_finalization(self):
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.numerics import disk
+        from parkour_solver.scene.normalize import prepare_scene
+        from parkour_solver.validation.witness import replay_witness
+        from parkour_solver.search import engine
+        repairs = []
+        def recorded(route, *args, **kwargs):
+            repairs.append((route, kwargs['initial_variants'], kwargs['repair_scope']['solvePolicy']))
+            return original(route, *args, **kwargs)
+        original = engine.solve_contact_branches
+        # Without the alarm the finish stays relaxed until the finalization.
+        with patch.object(engine, 'solve_contact_branches', side_effect=recorded), \
+             patch.object(disk, 'ALARM_FRACTION', 1.):
+            _, result, _ = self.search()
+        relaxed = result['searchState']['dfs']['best']
+        # Finalization repairs the relaxed witness's own branch, warm-started from its turned facings.
+        (route, variants, policy), = [r for r in repairs if r[2]['numerical'] == 'ipopt']
+        self.assertIsNone(variants)
+        self.assertEqual(policy['rankEqualCost'], False)
+        self.assertEqual(route, dict(relaxed['route'], warmYaw=disk.ipopt_seed(relaxed['candidate']['yaw'])))
+        self.assertEqual(relaxed['candidate']['model'], 'relaxed_disk')
+        self.assertNotIn('model', result['best']['candidate'])
+        self.assertEqual(result['work']['workerLaunches'], 0)
+        self.assertGreater(result['work']['conicCandidates'], 0)
+        self.assertEqual(result['work']['finalizationIpoptCalls'], 1)
+        self.assertEqual(result['finalization']['stage'], 'complete')
+        with PythonCompiler() as compiler:
+            scene = prepare_scene(result['effectiveRequest'])
+            physical = replay_witness(scene, result['best'], compiler)
+            self.assertTrue(physical['passed'])
+            self.assertIsNone(physical['model'])
+            checked = replay_witness(scene, relaxed, compiler)
+            self.assertTrue(checked['passed'])
+            self.assertEqual(checked['model'], 'relaxed_disk')
+            perturbed = json.loads(json.dumps(relaxed))
+            perturbed['candidate']['controls'][3][0] *= .9
+            self.assertFalse(replay_witness(scene, perturbed, compiler)['passed'])
+
+    def solve_relaxed(self, request):
+        """Automatic search on the relaxed backend; returns its published, replayed physical route."""
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.scene.normalize import prepare_scene
+        from parkour_solver.search.engine import find_checkpoint_route
+        from parkour_solver.validation.witness import replay_witness
+        with PythonCompiler() as compiler:
+            result = find_checkpoint_route(prepare_scene(request), compiler, anchor_search={}, seconds=20, score_seconds=4,
+                                           max_solver_calls=40, python_executable=os.environ['PKC_IPOPT_PYTHON'])
+            best = result['best']
+            self.assertIsNotNone(best, result['termination'])
+            work = result['work']
+            self.assertGreater(work['conicCandidates'], 0)
+            self.assertEqual(work['workerLaunches'], work['confirmationIpoptCalls'])
+            self.assertEqual(result['finalization']['stage'], 'complete')
+            self.assertNotIn('model', best['candidate'])
+            self.assertTrue(replay_witness(prepare_scene(result['effectiveRequest']), best, compiler)['passed'])
+        return best
+
+    def boxes(self, types, **blocks):
+        return dict(version=1, sceneModel='collision_boxes', geometryBounds=[-10,-6,-10,20,12,10],
+            initial=dict(position=[.5,1,.5], velocity=[.25,-.0784000015258789,0], yaw=-90),
+            startBlock='start', goalBlock='goal', maxWallHits=0, maxContactCombinations=0,
+            blocks=[dict(id=k, boxes=v) for k, v in blocks.items()],
+            movementSearch=dict(types=types, maxInputs=30, maxPrefixes=96, maxQueuedPrefixes=128, maxChoicesPerType=16))
+
+    def test_relaxed_route_slab_boosts_onto_a_step_and_jumps_on(self):
+        best = self.solve_relaxed(self.boxes(['normal','stepping'], start=[[-2,0,-2,1,1,2]], slab=[[1,1,-2,4,1.5,2]],
+                                             goal=[[6,0,-1,7,1.5,1]]))
+        self.assertEqual(best['vertical']['contacts'][0]['case'], 'slab_boost')
+        self.assertEqual(sum(best['plan']['jump']), 2)
+        self.assertGreaterEqual(best['candidate']['positions'][-1][0], 5.7)
+
+    def test_relaxed_routes_hit_a_ceiling_and_grind_under_one(self):
+        from tests.support.stepping_cases import fixture
+        best = self.solve_relaxed(self.boxes(['normal','ceiling'], start=[[-2,0,-2,3,1,2]], roof=[[1,3.5,-2,4,4.5,2]],
+                                             goal=[[5,0,-1,6,1,1]]))
+        self.assertIn(1, [c['direction'] for c in best['vertical']['contacts']])
+        grind = dict(fixture('grind')['request'], movementSearch=dict(types=['normal','ceiling'], maxInputs=20))
+        self.assertEqual(self.solve_relaxed(grind)['vertical']['contacts'][0]['case'], 'grind')
+
+    def test_relaxed_route_turns_toward_a_goal_off_the_initial_heading(self):
+        best = self.solve_relaxed(self.boxes(['normal'], start=[[-2,0,-2,2,1,2]], goal=[[-1,0,4.5,1,1,6]]))
+        self.assertGreater(max(best['candidate']['yaw'])-min(best['candidate']['yaw']), 30)
+        self.assertGreater(best['candidate']['positions'][-1][1], 4.2)
+
+    def test_relaxed_route_runs_off_the_start_and_jumps_from_the_lower_block(self):
+        best = self.solve_relaxed(self.boxes(['normal'], start=[[-2,0,-2,1,1,2]], middle=[[1,-1,-2,4,0,2]],
+                                             goal=[[6,-1,-1,7,0,1]]))
+        plan = best['plan']
+        self.assertFalse(any(plan['jump'][:plan['grounded'].index(False)]))
+        self.assertEqual(sum(plan['jump']), 1)
+
+    def test_cancelled_sessions_publish_no_relaxed_route_and_resume_without_repeating_requests(self):
+        import threading
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.numerics import disk
+        from parkour_solver.numerics.model import fingerprint, prepare
+        fixture = dict(request=self.boxes(['normal'], start=[[-2,0,-2,1,1,2]], middle=[[1,-1,-2,4,0,2]], goal=[[6,-1,-1,7,0,1]]),
+                       anchorSearch=dict(anchors=[]), settings=dict(seconds=20, score_seconds=4, max_solver_calls=40))
+        requests = []
+        original = disk.RelaxedDispatch.solve
+        def recorded(dispatch, problem, **options):
+            requests.append(fingerprint(prepare(dict(problem, seconds=options['seconds']))))
+            return original(dispatch, problem, **options)
+        def session(compiler, saved, stop):
+            cancel = threading.Event()
+            result, validation = run(fixture, compiler, python_executable=os.environ['PKC_IPOPT_PYTHON'],
+                resume_state=json.loads(json.dumps(saved)) if saved else None, cancel_event=cancel,
+                on_progress=lambda state: stop(state['dfs'] or {}) and cancel.set())
+            return result, validation
+        relaxed = lambda dfs: (dfs.get('best') or {}).get('candidate', {}).get('model') == 'relaxed_disk'
+        finalizing = lambda dfs: (dfs.get('finalization') or {}).get('stage') == 'running'
+        with PythonCompiler() as compiler, patch.object(disk.RelaxedDispatch, 'solve', recorded):
+            traversal, _ = session(compiler, None, relaxed)
+            finalization, _ = session(compiler, traversal['searchState'], finalizing)
+            rerun, validation = session(compiler, finalization['searchState'], lambda dfs: False)
+            published = len(requests)
+            complete, _ = session(compiler, rerun['searchState'], lambda dfs: False)
+        for cancelled in (traversal, finalization):
+            self.assertEqual((cancelled['status'], cancelled['termination'], cancelled['best']), ('cancelled', 'cancelled', None))
+            self.assertEqual(cancelled['provisionalBest']['model'], 'relaxed_disk')
+        self.assertNotIn('finalization', traversal)
+        self.assertEqual((finalization['finalization']['stage'], finalization['work']['finalizationIpoptCalls']), ('running', 0))
+        self.assertEqual((rerun['finalization']['stage'], rerun['work']['finalizationIpoptCalls']), ('complete', 1))
+        self.assertTrue(validation[0]['passed'])
+        self.assertNotIn('model', rerun['best']['candidate'])
+        self.assertEqual(len(set(requests)), len(requests))
+        self.assertEqual((len(requests), complete['work']['finalizationIpoptCalls']), (published, 0))
+        self.assertEqual(complete['best']['candidate'], rerun['best']['candidate'])
 
 
 if __name__=='__main__':unittest.main()

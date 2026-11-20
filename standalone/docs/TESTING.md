@@ -2,10 +2,10 @@
 
 ## Current gate
 
-`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the JVM-free bridge, archived
-fixed-clock settings and the corridor queue's shared constraint policy over `88c462e3`:
-**744 tests, no failures, errors or skips**, source unchanged during the run, layout
-validation passed ([evidence](../research/jvm-free-bridge/README.md#test-gates)).
+`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the disk relaxation in
+automatic discovery at `944bfe54`: **782 tests, no failures, errors or skips**, source
+unchanged during the run, layout validation passed
+([report](../research/disk-relaxation/2026-11-19/native-report-944bfe54.json)).
 The gate fails on any skip, so it needs `PKC_RUN_TICKS_COMPILER` for the Java
 differential tests and the `research` extra for the route-guidance tests.
 A run of the switch-climb source (`55e3beef`) under a load average of 5.5 failed
@@ -25,6 +25,13 @@ persistence without the removed 32/128 limits.
 
 | Source | Tests | Evidence |
 | --- | ---: | --- |
+| `ea33c191` + no lineage promotion (its test removed) | 778 | [report](../research/disk-relaxation/2026-11-19/native-report-ea33c191.json) |
+| `9ca57442` + relaxed scenario and cancel/resume tests, cancellation fix, import cleanup | 783 | [report](../research/disk-relaxation/2026-11-19/native-report-9ca57442.json) |
+| `61e59e29` + feasibility policy renamed to `numerical_oracle` | 783 | [report](../research/disk-relaxation/2026-11-19/native-report-61e59e29.json) |
+| `944bfe54` + alarm only on jump ticks more than 10% short | 782 | [report](../research/disk-relaxation/2026-11-19/native-report-944bfe54.json) |
+| `2f9eef00` + jump/thin-ledge alarm ticks, symmetry-broken confirmation seed | 779 | [report](../research/disk-relaxation/2026-11-19/native-report-2f9eef00.json) |
+| `5edfc66a` + zero-cost retry of undecided disk specs | 776 | not archived |
+| `a5f42e35` disk relaxation, alarm confirmation, one IPOPT finalization | 775 | [report](../research/disk-relaxation/2026-11-19/native-report.json) |
 | `88c462e3` + JVM-free bridge, archived fixed-clock settings, corridor queue policy | 744 | [summary](../research/jvm-free-bridge/README.md#test-gates) |
 | `861390e1` + JVM-free bridge | 742 | [summary](../research/jvm-free-bridge/README.md#test-gates) |
 | `0ee47d9d` + corridor queue uses the shared constraint policy | 728 | not archived |

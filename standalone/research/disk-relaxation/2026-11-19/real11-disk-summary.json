@@ -1,0 +1,190 @@
+{
+  "ticks": 64,
+  "objective": -1093.2381026602418,
+  "firstFullSolutionSeconds": 1.9432983323931694,
+  "searchSeconds": 3.620468083769083,
+  "work": {
+    "workerLaunches": 0,
+    "feasibleSeedReturns": 0,
+    "conicCandidates": 14,
+    "conicUndecided": 0,
+    "relaxedFallbacks": 0,
+    "confirmations": 0,
+    "confirmationIpoptCalls": 0,
+    "materialGaps": 0,
+    "promotions": 0,
+    "finalizationIpoptCalls": 1,
+    "solverCalls": 14,
+    "maxSolverCalls": 1024
+  },
+  "expandedPrefixes": 37,
+  "termination": "exhausted",
+  "stop": {
+    "suspendedFrames": [],
+    "oracleRejectedRoutes": [],
+    "unknownRequests": []
+  },
+  "runDeferrals": 12,
+  "runRestorations": 0,
+  "deferredNodes": 0,
+  "comparisonWork": {
+    "assessments": 27,
+    "cacheHits": 15,
+    "peerChecks": 24
+  },
+  "interactionMetrics": {
+    "blockTableBuilds": 5,
+    "blockTableSeconds": 0.0007889999999999286,
+    "approachBuilds": 74,
+    "preparationMisses": 166,
+    "coefficientMisses": 156,
+    "analysisMisses": 167,
+    "screenMisses": 68,
+    "preparationHits": 69,
+    "coefficientHits": 79,
+    "analysisHits": 68,
+    "relaxationChecks": 68,
+    "sequenceChecks": 14,
+    "sequenceExclusions": 14
+  },
+  "relaxationChecks": {
+    "screen": {
+      "solved": 124,
+      "feasible": 106,
+      "infeasible": 18,
+      "cacheHits": 1
+    },
+    "candidate": {
+      "cacheHits": 14
+    }
+  },
+  "transferTimeBounds": {
+    "b1\u2192b2": {
+      "version": 1,
+      "source": "b1",
+      "target": "b2",
+      "sourceTop": 5,
+      "sourceBox": [
+        742,
+        0,
+        -1105,
+        747,
+        5,
+        -1103
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 9,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 9,
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:688d5324edda1111dacf0f6e83297db2ed8b10b44cbf26313989ba6ce481e7a1"
+    },
+    "b2\u2192b3": {
+      "version": 1,
+      "source": "b2",
+      "target": "b3",
+      "sourceTop": 6,
+      "sourceBox": [
+        741,
+        0,
+        -1104,
+        742,
+        6,
+        -1103
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 9,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 9,
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:965cf764b1ccb02bdcf4ffff509ec72128c6d25b89507eba4a04430ecea9a5ad"
+    },
+    "b3\u2192b4": {
+      "version": 1,
+      "source": "b3",
+      "target": "b4",
+      "sourceTop": 7,
+      "sourceBox": [
+        738,
+        0,
+        -1101,
+        739,
+        7,
+        -1100
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 10,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 10,
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:7b3606643aa5832e8ba376c9308596959f2b9b2ecefcb1cd9b1e40a15c030fa1"
+    },
+    "b4\u2192b5": {
+      "version": 1,
+      "source": "b4",
+      "target": "b5",
+      "sourceTop": 7.5,
+      "sourceBox": [
+        734,
+        0,
+        -1100,
+        735,
+        7.5,
+        -1099
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 15,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 15,
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:a18307c26334d1a52897cb2539b8b2d79025452358421f76a0e56d3553f936bb"
+    },
+    "b5\u2192b7": {
+      "version": 1,
+      "source": "b5",
+      "target": "b7",
+      "sourceTop": 6,
+      "sourceBox": [
+        730,
+        0,
+        -1096,
+        731,
+        6,
+        -1095
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 9,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 9,
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:293723e2fc9949fe63b6d6c835bcf159f3fa91773576f664562f5917a3b8a171"
+    }
+  },
+  "wrappers": 15,
+  "workers": 1,
+  "validatedWitnesses": 10,
+  "allReplaysPassed": true,
+  "sourceUnchanged": true,
+  "sessions": [],
+  "resume": {
+    "exact": false,
+    "session": 1
+  },
+  "profileMode": "bookkeeping",
+  "durable": false
+}

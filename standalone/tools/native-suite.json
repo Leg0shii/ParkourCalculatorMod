@@ -1,5 +1,5 @@
 {
-  "source": "dd738c98 acceptance (same 600 tests) plus package/profiler and exact-option continuation regressions; geometry-driven encounter replacement controls",
+  "source": "Native gate selection: the dd738c98 acceptance modules plus package/profiler, exact-option continuation, geometry-driven encounter and disk-relaxation modules. Per-revision counts and reports live in docs/TESTING.md.",
   "modules": [
     "tests.integration.test_acceptance",
     "tests.unit.movement.test_block_contacts",
@@ -65,6 +65,7 @@
     "tests.unit.search.test_transfer_time_bounds",
     "tests.unit.numerics.test_capture",
     "tests.unit.numerics.test_constraints",
+    "tests.unit.numerics.test_disk",
     "tests.unit.numerics.test_continuation",
     "tests.unit.numerics.test_integration",
     "tests.unit.numerics.test_ladder_model",
@@ -78,6 +79,5 @@
     "tests.unit.constraints.test_encounters",
     "tests.unit.bridge.test_python_compiler"
   ],
-  "excluded": "Dedicated ladder/climbable/vine/movement-entry modules, as in baseline; generic mixed ladder controls remain included",
-  "baselineTests": 600
+  "excluded": "Dedicated ladder/climbable/vine/movement-entry modules, as in baseline; generic mixed ladder controls remain included"
 }

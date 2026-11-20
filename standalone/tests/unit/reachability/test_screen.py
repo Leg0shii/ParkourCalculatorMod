@@ -1,14 +1,12 @@
 import random
 import copy
-import json
 import math
 import unittest
-from types import SimpleNamespace
 from unittest.mock import patch
 
 from parkour_solver.reachability.intervals import interaction_reachability, reachable_envelopes, travel_radii
 from parkour_solver.reachability.screen import contradiction
-from parkour_solver.numerics import prepare, validate
+from parkour_solver.numerics import disk, prepare, validate
 
 
 class ScreenTests(unittest.TestCase):
@@ -129,81 +127,47 @@ class TravelTests(unittest.TestCase):
                     carry = move * f
                 self.assertEqual(travel_radii(speed, magnitudes, frictions, margin=margin), expected)
 
-class LinearCheckTests(unittest.TestCase):
+class DiskScreenTests(unittest.TestCase):
     def model(self, rhs):
         return dict(ticks=2,position=[0.,0.],velocity=[0.,0.],magnitude=[1.,0.],friction=[1.,1.],threshold=0.,
                     walls=[dict(mode='X',t1=1,cmp='GE',rhs=.9),dict(mode='X',t1=2,cmp='LE',rhs=rhs)])
 
-    def test_scipy_reports_a_model_error_as_status_2_so_only_native_infeasible_is_a_proof(self):
-        from scipy.optimize import linprog
-        error = linprog([0.],A_ub=[[1e20]],b_ub=[1.],bounds=[(None,None)],method='highs')
-        self.assertEqual(error.status,2)
-        self.assertNotIn('(HiGHS Status 8:',error.message)
-        from parkour_solver.reachability import linear
-        with patch('scipy.optimize.linprog',return_value=error):
-            self.assertEqual(linear._check(json.dumps(linear_spec(self.model(1.5))))['outcome'],'undecided')
-        self.assertEqual(linear._check(json.dumps(linear_spec(self.model(1.5))))['outcome'],'infeasible')
-
-    def test_unknown_retries_once_with_interior_point_inside_the_budget(self):
-        from scipy.optimize import linprog
-        from parkour_solver.reachability import linear
-        calls = []
-        def solve(*args, **kwargs):
-            calls.append(kwargs)
-            if len(calls) == 1:
-                return SimpleNamespace(status=4,message='(HiGHS Status 15: model_status is Unknown)')
-            return linprog(*args, **kwargs)
-        with patch('scipy.optimize.linprog',side_effect=solve):
-            result = linear._check(json.dumps(linear_spec(self.model(1.5))))
-        self.assertEqual([c['method'] for c in calls],['highs','highs-ipm'])
-        self.assertLess(calls[1]['options']['time_limit'],1.)
-        self.assertGreater(calls[1]['options']['time_limit'],0.)
-        self.assertEqual((result['outcome'],result['proof']['solver'],result['retried']),('infeasible','ipm',True))
+    def test_coupled_rows_the_intervals_miss_are_excluded_by_the_relaxation(self):
+        envelopes = reachable_envelopes(self.model(1.75))
+        self.assertFalse(interaction_reachability(envelopes,{})['ruledOut'])
+        proof = interaction_reachability(envelopes,{},refine=True)
+        self.assertEqual((proof['reason'],proof['relaxation']),('disk_control_relaxation_infeasible','acceleration_disk'))
+        self.assertIn(proof['status'],disk.INFEASIBLE)
+        self.assertFalse(interaction_reachability(reachable_envelopes(self.model(1.85)),{},refine=True)['ruledOut'])
 
     def test_undecided_results_are_solved_again_and_decided_ones_are_cached(self):
-        from parkour_solver.reachability import linear
-        undecided = dict(outcome='undecided',status=1,message='Time limit reached.')
-        with patch('parkour_solver.reachability.linear._check',side_effect=lambda e:dict(undecided)) as check:
+        undecided = dict(status='MaxIterations',outcome='undecided',controls=None,objective=None,iterations=200)
+        with patch.object(disk,'_solve',side_effect=lambda *a:dict(undecided)) as solved:
             for _ in range(2):
-                self.assertEqual(linear.linear_exclusion(self.model(1.25))['outcome'],'undecided')
-        self.assertEqual(check.call_count,2)
-        self.assertEqual(interaction_reachability(reachable_envelopes(self.model(1.75)),{},refine=True)['reason'],
-                         'linear_control_relaxation_infeasible')
-        with patch('parkour_solver.reachability.linear._check',side_effect=AssertionError('cached')):
-            self.assertEqual(linear.linear_exclusion(self.model(1.75))['outcome'],'infeasible')
+                checked = interaction_reachability(reachable_envelopes(self.model(1.25)),{},refine=True)
+                self.assertEqual((checked['ruledOut'],checked['reason']),(False,'relaxation_undecided'))
+        self.assertEqual(solved.call_count,2)
+        self.assertTrue(interaction_reachability(reachable_envelopes(self.model(1.7)),{},refine=True)['ruledOut'])
+        with patch.object(disk,'_solve',side_effect=AssertionError('cached')):
+            self.assertEqual(disk.screen(self.model(1.7))['outcome'],'infeasible')
 
-    def test_lp_cost_is_the_configured_ipopt_objective(self):
-        from parkour_solver.reachability.linear import _cost
-        n, width = 3, 11
-        pos = lambda axis, t: axis*width+t
-        spec = lambda **objective: dict(ticks=n,objective=dict(dict(tick=n,axis='X',sense='MAX',customYaw=None,type=None),**objective))
-        def nonzero(cost):
-            return {i:round(v,12) for i,v in enumerate(cost) if v}
-        self.assertEqual(nonzero(_cost(dict(ticks=n),width,pos)),{})
-        self.assertEqual(nonzero(_cost(spec(),width,pos)),{pos(0,n):-1.})
-        self.assertEqual(nonzero(_cost(spec(axis='Z',sense='MIN'),width,pos)),{pos(1,n):1.})
-        yaw = 30.
-        dx, dz = -math.sin(math.radians(yaw)), math.cos(math.radians(yaw))
-        self.assertEqual(nonzero(_cost(spec(customYaw=yaw,type='POSITION'),width,pos)),
-                         {pos(0,n):round(-dx,12),pos(1,n):round(-dz,12)})
-        self.assertEqual(nonzero(_cost(spec(customYaw=yaw,type='MOTION'),width,pos)),
-                         {pos(0,n):round(-dx,12),pos(1,n):round(-dz,12),pos(0,n-1):round(dx,12),pos(1,n-1):round(dz,12)})
-
-    def test_constant_zero_objective_mode_keeps_zero_cost(self):
-        from parkour_solver.reachability import linear
-        model = dict(self.model(1.6),objective=dict(tick=2,axis='X',sense='MAX'),objectiveMode='constant_zero')
-        with patch('parkour_solver.reachability.linear._check',side_effect=lambda e:dict(outcome='feasible',spec=json.loads(e))):
-            self.assertNotIn('objective',linear.linear_exclusion(model)['spec'])
+    def test_screen_objective_is_the_model_objective_unless_constant_zero_else_the_supplied_one(self):
+        supplied = dict(axis='Z',sense='MIN')
+        model = dict(self.model(1.6),objective=dict(tick=1,axis='X',sense='MAX'),objectiveMode='constant_zero')
+        self.assertEqual(disk.spec(model,(),supplied,strict=False)['objective']['axis'],'Z')
+        self.assertEqual(disk.spec(model,(),supplied,strict=False)['objective']['tick'],2)
+        self.assertNotIn('objective',disk.spec(model,strict=False))
         model.pop('objectiveMode')
-        with patch('parkour_solver.reachability.linear._check',side_effect=lambda e:dict(outcome='feasible',spec=json.loads(e))):
-            self.assertEqual(linear.linear_exclusion(model)['spec']['objective']['axis'],'X')
+        self.assertEqual(disk.spec(model,(),supplied,strict=False)['objective'],
+                         dict(tick=1,axis='X',sense='MAX',customYaw=None,type=None))
 
-
-def linear_spec(model):
-    rows = [(r['mode'],r['t1'],None,'PLUS',r['cmp'],r['rhs']) for r in model['walls']]
-    spec = {k:model[k] for k in ('ticks','position','velocity','magnitude','friction')}
-    spec.update(rows=sorted(set(rows),key=str),contacts=[],initialIntervals=None)
-    return spec
+    def test_screens_drop_rows_the_relaxation_cannot_express(self):
+        model = self.model(1.75)
+        model['walls'].append(dict(mode='F',t1=0,cmp='EQ',rhs=90.))
+        self.assertIsNone(disk.spec(model,strict=True))
+        self.assertEqual(disk.screen(model)['outcome'],'infeasible')
+        self.assertIsNone(disk.screen(dict(model,walls=[],contacts=[])))
+        self.assertIsNone(disk.screen(dict(model,threshold=.005)))
 
 
 if __name__ == '__main__':

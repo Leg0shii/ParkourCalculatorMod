@@ -7,7 +7,7 @@ Read [AGENTS](../AGENTS.md), [current state](CURRENT_STATE.md), [architecture](A
 ## Where new behavior belongs
 
 - Shared movement/contact/constraint rules: extend existing `src/parkour_solver` builders. Movement coefficients come from the Java input model through generated tables; a change there belongs in the shared Java code, followed by table regeneration. The finite-scene and footprint checks are maintained in Python against the Java bridge as differential oracle; change both together. Avoid a second derivation of stepping, signed blockage faces or player footprint geometry.
-- Generic reachability: `reachability.intervals.py` and callers, using actual model/scope context. Eligibility must occur before generation/derived rows/checks across all families. `reachability.linear.py` is an optional numerical relaxation screen, not a change to IPOPT physics.
+- Generic reachability: `reachability.intervals.py` and callers, using actual model/scope context. Eligibility must occur before generation/derived rows/checks across all families. `numerics.disk.screen` is a numerical relaxation screen, not a change to IPOPT physics.
 - Discrete branch traversal, comparison, persistence: `search.dfs`, `search.frontier`, `search.comparison`, `search.deferrals`, `search.engine`, `search.goals` and existing repair/schema helpers. `time_progress` is the legacy common-clock record adapter, not the active anchor pruning owner. Do not embed fixture IDs in these modules.
 - Fixed continuous equations, scalar replay, native process lifecycle: `src/parkour_solver/numerics`. Do not place new discrete decision ownership inside the worker.
 - One-off reproduction/measurement: a clearly named script in an experiment directory, with settings, source/provenance and a result note. Extract shared logic into production modules when genuinely reused.
@@ -108,7 +108,7 @@ Markdown uses descriptive relative links and small comparable tables. Put blank 
 
 ## Boundaries on claims
 
-Conservative interval/phase exclusion differs from a numerical LP infeasibility result with tolerances. IPOPT is a local continuous solver, not a global discrete certificate. A guide is not a reach envelope. A valid supplied-scene trajectory is not validated against undeclared world blocks. Keep exact local replay and actual-world validation as separate claims. These distinctions should appear in output and audit records, not as implementation jargon in user-facing product flows.
+Conservative interval/phase exclusion differs from a numerical relaxation infeasibility result with tolerances. IPOPT is a local continuous solver, not a global discrete certificate. A guide is not a reach envelope. A valid supplied-scene trajectory is not validated against undeclared world blocks. Keep exact local replay and actual-world validation as separate claims. These distinctions should appear in output and audit records, not as implementation jargon in user-facing product flows.
 
 
 For a new named contact case, make its vertical contact metadata explicit through the existing profile/compiler path. Reachability must cover intended movement and collision probes, not just realized endpoints. Current named step/grind phases deliberately keep unknown Y and outer intended X/Z bounds. Tightening that uncertainty requires a sound probe model and feasible-control regressions (including the five-input grind/blip route), not an endpoint-height shortcut.

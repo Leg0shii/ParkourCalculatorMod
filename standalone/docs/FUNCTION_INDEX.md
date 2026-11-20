@@ -155,22 +155,22 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | --- | ---: | --- |
 | `ConstraintVariants` | [19](../src/parkour_solver/constraints/variants.py#L19) | class |
 | `ConstraintVariants.for_plan` | [21](../src/parkour_solver/constraints/variants.py#L21) | function |
-| `ConstraintVariants.__init__` | [48](../src/parkour_solver/constraints/variants.py#L48) | function |
-| `ConstraintVariants.metric` | [104](../src/parkour_solver/constraints/variants.py#L104) | function |
-| `ConstraintVariants.coordinate` | [108](../src/parkour_solver/constraints/variants.py#L108) | function |
-| `ConstraintVariants.check` | [113](../src/parkour_solver/constraints/variants.py#L113) | function |
-| `ConstraintVariants.face_row` | [121](../src/parkour_solver/constraints/variants.py#L121) | function |
-| `ConstraintVariants.effective_key` | [126](../src/parkour_solver/constraints/variants.py#L126) | function |
-| `ConstraintVariants.analyze` | [138](../src/parkour_solver/constraints/variants.py#L138) | function |
-| `ConstraintVariants._screen` | [156](../src/parkour_solver/constraints/variants.py#L156) | function |
-| `ConstraintVariants.excluded` | [159](../src/parkour_solver/constraints/variants.py#L159) | function |
-| `ConstraintVariants.prepare_item` | [166](../src/parkour_solver/constraints/variants.py#L166) | function |
-| `ConstraintVariants.option` | [188](../src/parkour_solver/constraints/variants.py#L188) | function |
-| `ConstraintVariants.entailed` | [200](../src/parkour_solver/constraints/variants.py#L200) | function |
-| `ConstraintVariants.__iter__` | [203](../src/parkour_solver/constraints/variants.py#L203) | function |
-| `ConstraintVariants.__next__` | [206](../src/parkour_solver/constraints/variants.py#L206) | function |
-| `ConstraintVariants.choose_item` | [214](../src/parkour_solver/constraints/variants.py#L214) | function |
-| `ConstraintVariants._next_variant` | [242](../src/parkour_solver/constraints/variants.py#L242) | function |
+| `ConstraintVariants.__init__` | [49](../src/parkour_solver/constraints/variants.py#L49) | function |
+| `ConstraintVariants.metric` | [107](../src/parkour_solver/constraints/variants.py#L107) | function |
+| `ConstraintVariants.coordinate` | [111](../src/parkour_solver/constraints/variants.py#L111) | function |
+| `ConstraintVariants.check` | [116](../src/parkour_solver/constraints/variants.py#L116) | function |
+| `ConstraintVariants.face_row` | [124](../src/parkour_solver/constraints/variants.py#L124) | function |
+| `ConstraintVariants.effective_key` | [129](../src/parkour_solver/constraints/variants.py#L129) | function |
+| `ConstraintVariants.analyze` | [141](../src/parkour_solver/constraints/variants.py#L141) | function |
+| `ConstraintVariants._screen` | [159](../src/parkour_solver/constraints/variants.py#L159) | function |
+| `ConstraintVariants.excluded` | [162](../src/parkour_solver/constraints/variants.py#L162) | function |
+| `ConstraintVariants.prepare_item` | [169](../src/parkour_solver/constraints/variants.py#L169) | function |
+| `ConstraintVariants.option` | [191](../src/parkour_solver/constraints/variants.py#L191) | function |
+| `ConstraintVariants.entailed` | [203](../src/parkour_solver/constraints/variants.py#L203) | function |
+| `ConstraintVariants.__iter__` | [206](../src/parkour_solver/constraints/variants.py#L206) | function |
+| `ConstraintVariants.__next__` | [209](../src/parkour_solver/constraints/variants.py#L209) | function |
+| `ConstraintVariants.choose_item` | [217](../src/parkour_solver/constraints/variants.py#L217) | function |
+| `ConstraintVariants._next_variant` | [245](../src/parkour_solver/constraints/variants.py#L245) | function |
 
 ## io/capture.py
 
@@ -504,6 +504,25 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `Incumbent.pattern` | [28](../src/parkour_solver/numerics/continuation.py#L28) | function |
 | `run` | [34](../src/parkour_solver/numerics/continuation.py#L34) | function |
 
+## numerics/disk.py
+
+| Symbol | Line | Kind |
+| --- | ---: | --- |
+| `spec` | [32](../src/parkour_solver/numerics/disk.py#L32) | function |
+| `solve` | [61](../src/parkour_solver/numerics/disk.py#L61) | function |
+| `screen` | [86](../src/parkour_solver/numerics/disk.py#L86) | function |
+| `deficits` | [101](../src/parkour_solver/numerics/disk.py#L101) | function |
+| `ipopt_seed` | [108](../src/parkour_solver/numerics/disk.py#L108) | function |
+| `alarm_ticks` | [120](../src/parkour_solver/numerics/disk.py#L120) | function |
+| `RelaxedDispatch` | [131](../src/parkour_solver/numerics/disk.py#L131) | class |
+| `RelaxedDispatch.__init__` | [140](../src/parkour_solver/numerics/disk.py#L140) | function |
+| `RelaxedDispatch.solve` | [143](../src/parkour_solver/numerics/disk.py#L143) | function |
+| `RelaxedDispatch.confirm` | [180](../src/parkour_solver/numerics/disk.py#L180) | function |
+| `_result` | [207](../src/parkour_solver/numerics/disk.py#L207) | function |
+| `_attempt` | [223](../src/parkour_solver/numerics/disk.py#L223) | function |
+| `_solve` | [231](../src/parkour_solver/numerics/disk.py#L231) | function |
+| `_cost` | [331](../src/parkour_solver/numerics/disk.py#L331) | function |
+
 ## numerics/model.py
 
 | Symbol | Line | Kind |
@@ -583,20 +602,12 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `reachable_envelopes` | [23](../src/parkour_solver/reachability/intervals.py#L23) | function |
 | `interaction_reachability` | [133](../src/parkour_solver/reachability/intervals.py#L133) | function |
 
-## reachability/linear.py
-
-| Symbol | Line | Kind |
-| --- | ---: | --- |
-| `linear_exclusion` | [11](../src/parkour_solver/reachability/linear.py#L11) | function |
-| `_cost` | [48](../src/parkour_solver/reachability/linear.py#L48) | function |
-| `_check` | [67](../src/parkour_solver/reachability/linear.py#L67) | function |
-
 ## reachability/screen.py
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
 | `condition_envelopes` | [6](../src/parkour_solver/reachability/screen.py#L6) | function |
-| `contradiction` | [41](../src/parkour_solver/reachability/screen.py#L41) | function |
+| `contradiction` | [42](../src/parkour_solver/reachability/screen.py#L42) | function |
 
 ## reachability/service.py
 
@@ -621,10 +632,10 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `InteractionGate.envelopes` | [239](../src/parkour_solver/reachability/service.py#L239) | function |
 | `InteractionGate.sequence` | [243](../src/parkour_solver/reachability/service.py#L243) | function |
 | `InteractionGate.check_program` | [256](../src/parkour_solver/reachability/service.py#L256) | function |
-| `InteractionGate.query` | [281](../src/parkour_solver/reachability/service.py#L281) | function |
-| `InteractionGate.required` | [328](../src/parkour_solver/reachability/service.py#L328) | function |
-| `InteractionGate.context` | [349](../src/parkour_solver/reachability/service.py#L349) | function |
-| `InteractionGate.summary` | [352](../src/parkour_solver/reachability/service.py#L352) | function |
+| `InteractionGate.query` | [284](../src/parkour_solver/reachability/service.py#L284) | function |
+| `InteractionGate.required` | [331](../src/parkour_solver/reachability/service.py#L331) | function |
+| `InteractionGate.context` | [352](../src/parkour_solver/reachability/service.py#L352) | function |
+| `InteractionGate.summary` | [355](../src/parkour_solver/reachability/service.py#L355) | function |
 
 ## reachability/viability.py
 
@@ -908,18 +919,19 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `ScopedWork` | [25](../src/parkour_solver/search/engine.py#L25) | class |
-| `ScopedWork.__init__` | [26](../src/parkour_solver/search/engine.py#L26) | function |
-| `ScopedWork.deadline` | [31](../src/parkour_solver/search/engine.py#L31) | function |
-| `ScopedWork.termination` | [35](../src/parkour_solver/search/engine.py#L35) | function |
-| `ScopedWork.check` | [38](../src/parkour_solver/search/engine.py#L38) | function |
-| `ScopedWork.proposal` | [42](../src/parkour_solver/search/engine.py#L42) | function |
-| `ScopedWork.before_solve` | [46](../src/parkour_solver/search/engine.py#L46) | function |
-| `ScopedWork.accepted` | [51](../src/parkour_solver/search/engine.py#L51) | function |
-| `segment_solids` | [55](../src/parkour_solver/search/engine.py#L55) | function |
-| `evaluate_program` | [69](../src/parkour_solver/search/engine.py#L69) | function |
-| `_key` | [208](../src/parkour_solver/search/engine.py#L208) | function |
-| `find_checkpoint_route` | [212](../src/parkour_solver/search/engine.py#L212) | function |
+| `ScopedWork` | [26](../src/parkour_solver/search/engine.py#L26) | class |
+| `ScopedWork.__init__` | [27](../src/parkour_solver/search/engine.py#L27) | function |
+| `ScopedWork.deadline` | [32](../src/parkour_solver/search/engine.py#L32) | function |
+| `ScopedWork.termination` | [36](../src/parkour_solver/search/engine.py#L36) | function |
+| `ScopedWork.check` | [39](../src/parkour_solver/search/engine.py#L39) | function |
+| `ScopedWork.proposal` | [43](../src/parkour_solver/search/engine.py#L43) | function |
+| `ScopedWork.before_solve` | [47](../src/parkour_solver/search/engine.py#L47) | function |
+| `ScopedWork.accepted` | [52](../src/parkour_solver/search/engine.py#L52) | function |
+| `segment_solids` | [56](../src/parkour_solver/search/engine.py#L56) | function |
+| `evaluate_program` | [70](../src/parkour_solver/search/engine.py#L70) | function |
+| `numerical_counts` | [216](../src/parkour_solver/search/engine.py#L216) | function |
+| `_key` | [236](../src/parkour_solver/search/engine.py#L236) | function |
+| `find_checkpoint_route` | [240](../src/parkour_solver/search/engine.py#L240) | function |
 
 ## search/entry.py
 
@@ -953,20 +965,20 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `discovery_settings` | [19](../src/parkour_solver/search/events/engine.py#L19) | function |
-| `search_event_routes` | [32](../src/parkour_solver/search/events/engine.py#L32) | function |
+| `discovery_settings` | [25](../src/parkour_solver/search/events/engine.py#L25) | function |
+| `search_event_routes` | [38](../src/parkour_solver/search/events/engine.py#L38) | function |
 
 ## search/feasibility.py
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
 | `policy_spec` | [9](../src/parkour_solver/search/feasibility.py#L9) | function |
-| `node_identity` | [26](../src/parkour_solver/search/feasibility.py#L26) | function |
-| `outcome` | [33](../src/parkour_solver/search/feasibility.py#L33) | function |
-| `meaningful_choice` | [60](../src/parkour_solver/search/feasibility.py#L60) | function |
-| `solve_due` | [67](../src/parkour_solver/search/feasibility.py#L67) | function |
-| `unresolved_only` | [71](../src/parkour_solver/search/feasibility.py#L71) | function |
-| `restore_unknown_nodes` | [77](../src/parkour_solver/search/feasibility.py#L77) | function |
+| `node_identity` | [27](../src/parkour_solver/search/feasibility.py#L27) | function |
+| `outcome` | [34](../src/parkour_solver/search/feasibility.py#L34) | function |
+| `meaningful_choice` | [61](../src/parkour_solver/search/feasibility.py#L61) | function |
+| `solve_due` | [68](../src/parkour_solver/search/feasibility.py#L68) | function |
+| `unresolved_only` | [72](../src/parkour_solver/search/feasibility.py#L72) | function |
+| `restore_unknown_nodes` | [78](../src/parkour_solver/search/feasibility.py#L78) | function |
 
 ## search/frontier.py
 
@@ -1009,16 +1021,16 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `iter_movement_programs` | [15](../src/parkour_solver/search/movement.py#L15) | function |
-| `find_movement_blocks` | [212](../src/parkour_solver/search/movement.py#L212) | function |
-| `screen_program` | [279](../src/parkour_solver/search/movement.py#L279) | function |
+| `iter_movement_programs` | [14](../src/parkour_solver/search/movement.py#L14) | function |
+| `find_movement_blocks` | [211](../src/parkour_solver/search/movement.py#L211) | function |
+| `screen_program` | [278](../src/parkour_solver/search/movement.py#L278) | function |
 
 ## search/ordered_route.py
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `search_allocations` | [14](../src/parkour_solver/search/ordered_route.py#L14) | function |
-| `find_route` | [128](../src/parkour_solver/search/ordered_route.py#L128) | function |
+| `search_allocations` | [15](../src/parkour_solver/search/ordered_route.py#L15) | function |
+| `find_route` | [129](../src/parkour_solver/search/ordered_route.py#L129) | function |
 
 ## search/ranking.py
 
@@ -1032,7 +1044,7 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `solve_contact_branches` | [23](../src/parkour_solver/search/repair.py#L23) | function |
+| `solve_contact_branches` | [20](../src/parkour_solver/search/repair.py#L20) | function |
 
 ## search/repair_state.py
 
@@ -1285,6 +1297,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | Symbol | Line | Kind |
 | --- | ---: | --- |
 | `validate` | [8](../src/parkour_solver/validation/numerical.py#L8) | function |
+| `validate_controls` | [21](../src/parkour_solver/validation/numerical.py#L21) | function |
+| `_replay` | [43](../src/parkour_solver/validation/numerical.py#L43) | function |
 
 ## validation/scene.py
 
@@ -1319,5 +1333,5 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `replay_witness` | [10](../src/parkour_solver/validation/witness.py#L10) | function |
-| `witnesses` | [42](../src/parkour_solver/validation/witness.py#L42) | function |
+| `replay_witness` | [11](../src/parkour_solver/validation/witness.py#L11) | function |
+| `witnesses` | [50](../src/parkour_solver/validation/witness.py#L50) | function |

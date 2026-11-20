@@ -1,0 +1,253 @@
+{
+  "ticks": 64,
+  "objective": -1093.2381026602416,
+  "firstFullSolutionSeconds": 4.524244286119938,
+  "searchSeconds": 7.63689324632287,
+  "work": {
+    "solverCalls": 18,
+    "workerLaunches": 17,
+    "feasibleSeedReturns": 1,
+    "maxSolverCalls": 1024
+  },
+  "expandedPrefixes": 37,
+  "termination": "exhausted",
+  "stop": {
+    "suspendedFrames": [],
+    "oracleRejectedRoutes": [
+      {
+        "frame": 3,
+        "goal": "b5",
+        "record": "550c3623d7a1d41004eccd7875945e56f6213bebad9890c1497497e1b11a5f60",
+        "recordStatus": "unknown",
+        "node": "oracle_rejected"
+      },
+      {
+        "frame": 1,
+        "goal": "b3",
+        "record": "3733455ba6dc39c34413edc268ed1fab249419017760de7855ce7b6a6f2b4085",
+        "recordStatus": "unknown",
+        "node": "oracle_rejected"
+      }
+    ],
+    "unknownRequests": [
+      {
+        "index": 2,
+        "workerStatus": "Infeasible_Problem_Detected",
+        "owners": [
+          {
+            "frame": 1,
+            "goal": "b3",
+            "record": "3733455ba6dc39c34413edc268ed1fab249419017760de7855ce7b6a6f2b4085",
+            "recordStatus": "unknown",
+            "node": "oracle_rejected"
+          }
+        ]
+      },
+      {
+        "index": 5,
+        "workerStatus": "Infeasible_Problem_Detected",
+        "owners": [
+          {
+            "frame": 3,
+            "goal": "b5",
+            "record": "550c3623d7a1d41004eccd7875945e56f6213bebad9890c1497497e1b11a5f60",
+            "recordStatus": "unknown",
+            "node": "oracle_rejected"
+          }
+        ]
+      },
+      {
+        "index": 8,
+        "workerStatus": "Infeasible_Problem_Detected",
+        "owners": [
+          {
+            "frame": 4,
+            "goal": "b7",
+            "record": "2b5cb3f21afc09b9b0d6b7cc0045cb9945e5bd30a0f4d4756288ce27fe5e30ff",
+            "recordStatus": "feasible",
+            "node": "feasible"
+          }
+        ]
+      },
+      {
+        "index": 15,
+        "workerStatus": "Infeasible_Problem_Detected",
+        "owners": [
+          {
+            "frame": 7,
+            "goal": "b5",
+            "record": "8dce1e70cfc365555e752133de09af51c93249e6641ee11f283ecb3d67f213d9",
+            "recordStatus": "feasible",
+            "node": "feasible"
+          }
+        ]
+      }
+    ]
+  },
+  "runDeferrals": 12,
+  "runRestorations": 0,
+  "deferredNodes": 0,
+  "comparisonWork": {
+    "assessments": 27,
+    "cacheHits": 15,
+    "peerChecks": 24
+  },
+  "interactionMetrics": {
+    "blockTableBuilds": 5,
+    "blockTableSeconds": 0.0007880000000000109,
+    "approachBuilds": 74,
+    "preparationMisses": 168,
+    "coefficientMisses": 156,
+    "analysisMisses": 169,
+    "screenMisses": 68,
+    "preparationHits": 69,
+    "coefficientHits": 81,
+    "analysisHits": 68,
+    "linearChecks": 68,
+    "sequenceChecks": 14,
+    "sequenceExclusions": 14
+  },
+  "linearChecks": {
+    "withObjective": {
+      "solved": 18,
+      "feasible": 18
+    },
+    "zeroCost": {
+      "solved": 114,
+      "feasible": 99,
+      "infeasible": 15,
+      "ipmRetries": 1,
+      "ipmResolved": 1,
+      "cacheHits": 1
+    }
+  },
+  "transferTimeBounds": {
+    "b1\u2192b2": {
+      "version": 1,
+      "source": "b1",
+      "target": "b2",
+      "sourceTop": 5,
+      "sourceBox": [
+        742,
+        0,
+        -1105,
+        747,
+        5,
+        -1103
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 9,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 9,
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:688d5324edda1111dacf0f6e83297db2ed8b10b44cbf26313989ba6ce481e7a1"
+    },
+    "b2\u2192b3": {
+      "version": 1,
+      "source": "b2",
+      "target": "b3",
+      "sourceTop": 6,
+      "sourceBox": [
+        741,
+        0,
+        -1104,
+        742,
+        6,
+        -1103
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 9,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 9,
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:965cf764b1ccb02bdcf4ffff509ec72128c6d25b89507eba4a04430ecea9a5ad"
+    },
+    "b3\u2192b4": {
+      "version": 1,
+      "source": "b3",
+      "target": "b4",
+      "sourceTop": 7,
+      "sourceBox": [
+        738,
+        0,
+        -1101,
+        739,
+        7,
+        -1100
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 10,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 10,
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:7b3606643aa5832e8ba376c9308596959f2b9b2ecefcb1cd9b1e40a15c030fa1"
+    },
+    "b4\u2192b5": {
+      "version": 1,
+      "source": "b4",
+      "target": "b5",
+      "sourceTop": 7.5,
+      "sourceBox": [
+        734,
+        0,
+        -1100,
+        735,
+        7.5,
+        -1099
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 15,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 15,
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:a18307c26334d1a52897cb2539b8b2d79025452358421f76a0e56d3553f936bb"
+    },
+    "b5\u2192b7": {
+      "version": 1,
+      "source": "b5",
+      "target": "b7",
+      "sourceTop": 6,
+      "sourceBox": [
+        730,
+        0,
+        -1096,
+        731,
+        6,
+        -1095
+      ],
+      "threshold": 0.0,
+      "assumption": "hard_transfer_without_stepping",
+      "ticks": 9,
+      "status": "bounded",
+      "proofIds": [],
+      "ceilings": [],
+      "ordinaryTicks": 9,
+      "reason": "no_shortening_ceiling_height_window",
+      "id": "transfer-time:293723e2fc9949fe63b6d6c835bcf159f3fa91773576f664562f5917a3b8a171"
+    }
+  },
+  "wrappers": 18,
+  "workers": 17,
+  "validatedWitnesses": 10,
+  "allReplaysPassed": true,
+  "sourceUnchanged": true,
+  "sessions": [],
+  "resume": {
+    "exact": false,
+    "session": 1
+  },
+  "profileMode": "bookkeeping",
+  "durable": false
+}

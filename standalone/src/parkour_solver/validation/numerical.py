@@ -11,6 +11,38 @@ def validate(problem, yaw):
         raise ValueError('Wrong returned facing count')
     for value in yaw:
         number(value, 'returned facing')
+    controls = []
+    for t in range(n):
+        angle = problem['base'][t] + math.radians(yaw[t])
+        controls.append([problem['magnitude'][t] * math.cos(angle), problem['magnitude'][t] * math.sin(angle)])
+    return _replay(problem, yaw, controls)
+
+
+def validate_controls(problem, controls):
+    """Replay acceleration vectors of a relaxed (|a| <= magnitude) candidate."""
+    n = problem['ticks']
+    if not isinstance(controls, list) or len(controls) != n or any(
+            not isinstance(c, list) or len(c) != 2 for c in controls):
+        raise ValueError('Wrong returned control count')
+    for c in controls:
+        for value in c:
+            number(value, 'returned control')
+    yaw = [wrap(math.degrees(math.atan2(c[1], c[0]) - problem['base'][t])) for t, c in enumerate(controls)]
+    result = _replay(problem, yaw, controls)
+    # Full-magnitude controls exceed the disk by rounding; only a real excess fails.
+    excess = [math.hypot(*c) - m for c, m in zip(controls, problem['magnitude'])]
+    worst = max(range(n), key=excess.__getitem__)
+    if excess[worst] > TOLERANCE:
+        result['feasible'] = False
+        if excess[worst] > result['violation']:
+            result.update(violation=excess[worst], worstConstraint='acceleration_disk@' + str(worst))
+    result['controls'] = [c[:] for c in controls]
+    return result
+
+
+def _replay(problem, yaw, controls):
+    """The one recurrence/contact/wall/vertical check; controls[t] is tick t's acceleration."""
+    n = problem['ticks']
     positions, velocities = [problem['position'][:]], [problem['velocity'][:]]
     contacts = {(c['state'], c['axis']): c for c in problem['contacts']}
     threshold = problem['threshold']
@@ -25,7 +57,6 @@ def validate(problem, yaw):
     grounded = [vertical['onGround']] if vertical else []
     vertical_failures = []
     for t in range(n):
-        angle = problem['base'][t] + math.radians(yaw[t])
         move, next_velocity, tick_caps = [], [], []
         hit = False
         for axis in range(2):
@@ -35,8 +66,7 @@ def validate(problem, yaw):
                 branch = problem['inertiaPattern'][t][axis]
                 if (branch == 0 and not zero) or (branch in (-1, 1) and branch * incoming < threshold):
                     mismatches.append({'tick': t, 'axis': axis, 'incoming': incoming, 'branch': branch})
-            direction = math.cos(angle) if axis == 0 else math.sin(angle)
-            displacement = (0 if zero else incoming) + problem['magnitude'][t] * direction
+            displacement = (0 if zero else incoming) + controls[t][axis]
             tick_caps.append(cap_branch(displacement) if ladder[t] else 0)
             if 'ladderPattern' in problem and ladder[t]:
                 b = problem['ladderPattern'][t][axis]

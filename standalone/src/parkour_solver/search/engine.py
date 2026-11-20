@@ -1,4 +1,5 @@
 import copy
+from collections import Counter
 import hashlib
 import math
 import time
@@ -6,7 +7,7 @@ import time
 from parkour_solver.constraints.contacts import floor_checks
 from parkour_solver.search.repair import solve_contact_branches
 from parkour_solver.scene.normalize import prepare_scene
-from parkour_solver.movement.program import compile_program, program_physics_key
+from parkour_solver.movement.program import program_physics_key
 from parkour_solver.movement.settings import movement_settings
 from parkour_solver.scene.route import supports
 from parkour_solver.schema import integer, number
@@ -18,7 +19,7 @@ from parkour_solver.bridge.counting import CountingCompiler; from parkour_solver
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
 from parkour_solver.search.goals import goal_spec, landing_satisfied
 from parkour_solver.search.identity import solve_scope, solve_identity, validation_prefix
-from parkour_solver.reachability.intervals import motion_bound, reachable_envelopes
+from parkour_solver.reachability.intervals import motion_bound
 from parkour_solver.constraints.variants import ConstraintVariants
 
 
@@ -69,7 +70,7 @@ def segment_solids(scene, program, profile, through, gate):
 def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, checkpoint=None,
                      seconds=3, candidate_seconds=1, solver_calls=8, python_executable=None, cancel_event=None,
                      partial_corridor=False, required_landing=None, scope=None, on_progress=None, retry_unresolved=True, first_witness=False,
-                     guide_objective=None, solve_policy=None, climb_families=False):
+                     guide_objective=None, solve_policy=None, climb_families=False, final_route=None):
     timings={}
     marked=time.monotonic()
     def mark(name):
@@ -164,10 +165,16 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         segment_solids=segment_solids(scene, program, profiles[0], scope['through'], service), checks=checks, gates=scoped_adapter.gates, signature=signature,
         state=saved_repair.get('constraintGeneration') if saved_policy==policy else None, deadline=scoped.deadline, reference=reference,
         owners=owners, budget=scoped.check, cancel_event=cancel_event,
+        objective=route.get('guideObjective', route['objective']),
         route_guards=scoped_adapter.constraint_guards(program['profile'],envelopes,scope,scoped.deadline)
         if hasattr(scoped_adapter,'constraint_guards') else None)
     mark('eligibilityAndVariantConstruction')
-    result = solve_contact_branches(route, profiles, checks,
+    dispatch = None
+    if policy['numerical'] == 'relaxed':
+        from parkour_solver.numerics.disk import RelaxedDispatch
+        dispatch = RelaxedDispatch(gate=service)
+    # Finalization re-solves a relaxed witness's own branch route with IPOPT.
+    result = solve_contact_branches(route if final_route is None else final_route, profiles, checks,
         compiler, seconds=seconds, candidate_seconds=candidate_seconds, retries=0,
         improve=True, rank_equal_cost=policy['rankEqualCost'], optimize_goal=True,
         stop_on_feasible=policy['stopOnFeasible'], oracle_rejection=policy['oracleRejection'], climb_families=climb_families,
@@ -175,15 +182,16 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         motion_bound=motion_bound, solid_blocks=owners, max_wall_hits=0,
         candidate_filter=candidate_filter, work=scoped, resume_state=program.get('repairState'),
         repair_scope=dict(solveIdentity=identity, scope=scope, solvePolicy=policy, assemblyVersion=13),
-        validation_scope=scope, initial_variants=variants, on_progress=on_progress, retry_unresolved=retry_unresolved)
+        validation_scope=scope, initial_variants=variants if final_route is None else None, on_progress=on_progress,
+        retry_unresolved=retry_unresolved, numerical=dispatch.solve if dispatch is not None else None)
     mark('physicalSearchAndValidation')
     diagnostics=[d for a in result.get('attempts',[]) for d in a.get('diagnostics',[])]
     parent_work=work
     while not hasattr(parent_work,'counts'):
         parent_work=parent_work.parent
+    counts=numerical_counts(diagnostics)
     for counter in (parent_work.counts,scoped.local.counts):
-        counter['workerLaunches']+=sum(d.get('workerLaunched') is True for d in diagnostics)
-        counter['feasibleSeedReturns']+=sum(d.get('workerLaunched') is False and d.get('status')=='feasible' for d in diagnostics)
+        counter.update(counts)
     result['timings']=dict(timings,**variants.state['timings'])
     if result['best'] is not None:
         if checkpoint is not None and scope['purpose'] == 'complete':
@@ -203,6 +211,26 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
     if result['best'] is not None:
         result['best']['validationScope'] = scope
     return result
+
+
+def numerical_counts(diagnostics):
+    """Work counters for numerical requests; a Clarabel answer is never a worker or a seed."""
+    counts = Counter()
+    for d in diagnostics:
+        ipopt = d.get('backend', 'ipopt') == 'ipopt'
+        counts['workerLaunches'] += d.get('workerLaunched') is True
+        confirmation = d.get('confirmation')
+        counts['feasibleSeedReturns'] += (ipopt and confirmation is None and d.get('workerLaunched') is False
+                                          and d.get('status') == 'feasible')
+        counts['conicCandidates'] += not ipopt and d.get('status') == 'feasible'
+        if confirmation is not None:
+            counts['confirmations'] += 1
+            counts['confirmationIpoptCalls'] += not confirmation['cached']
+            counts['materialGaps'] += confirmation['material']
+        if d.get('fallback'):
+            counts['relaxedFallbacks'] += 1
+            counts['relaxedFallback:'+d['fallback']] += 1
+    return counts
 
 
 def _key(program):

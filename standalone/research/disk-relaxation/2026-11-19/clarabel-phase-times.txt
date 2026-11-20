@@ -1,0 +1,4 @@
+disk._solve phases on 334 distinct p5 extended-course requests (ea33c191)
+assemblySeconds median 0.0004 s, p90 0.0005 s, total 0.142 s
+setupSeconds median 0.0004 s, p90 0.0005 s, total 0.142 s
+solveSeconds median 0.0028 s, p90 0.0039 s, total 1.029 s

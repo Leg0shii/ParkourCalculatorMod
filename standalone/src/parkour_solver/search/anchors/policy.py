@@ -11,7 +11,7 @@ HARD_JUMP_POLICY_VERSION = 3
 
 def settings(value, scene):
     result = dict(version=1, anchors=[], turnaround=dict(degrees=110., spatialMargin=.3),
-                  solveEveryDecisionLevels=1, feasibilityPolicy='ipopt_oracle', observability=True)
+                  solveEveryDecisionLevels=1, feasibilityPolicy='numerical_oracle', observability=True)
     if not isinstance(value, dict) or set(value)-set(result):
         raise ValueError('Unsupported anchorSearch fields')
     result.update(copy.deepcopy(value))
@@ -22,8 +22,8 @@ def settings(value, scene):
         raise ValueError('Anchors must be ordered unique scene blocks')
     if scene['startBlock'] in anchors or scene['goalBlock'] in anchors:
         raise ValueError('Initial and terminal supports are implicit endpoints')
-    if result['version'] != 1 or result['feasibilityPolicy'] != 'ipopt_oracle':
-        raise ValueError('Unsupported anchor policy')
+    if result['version'] != 1 or result['feasibilityPolicy'] != 'numerical_oracle':
+        raise ValueError("Unsupported anchor policy: version must be 1 and feasibilityPolicy 'numerical_oracle'")
     if type(result['solveEveryDecisionLevels']) is not int or result['solveEveryDecisionLevels'] < 1:
         raise ValueError('Decision solve interval must be positive')
     if type(result['observability']) is not bool:

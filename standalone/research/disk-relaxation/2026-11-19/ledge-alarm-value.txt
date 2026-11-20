@@ -1,0 +1,3 @@
+requests by truth: {'none': 607, 'gap': 119, 'infeasible': 32}
+caught by jump tick > 10% short: {'none': 103, 'gap': 93, 'infeasible': 32}
+alarmed ONLY by the thin-ledge ground rule (jump alarm at 10% silent): {}

@@ -9,7 +9,8 @@ from parkour_solver.movement.ladder.episodes import compose_ladder_episodes
 from parkour_solver.movement.ladder.contacts import with_contacts as compose_ladder_contacts
 from parkour_solver.search.engine import find_checkpoint_route
 from parkour_solver.validation.witness import replay_witness
-from parkour_solver.numerics import prepare, solve, validate, attach_capture
+from parkour_solver.numerics import prepare, solve, validate
+from parkour_solver.io.capture import attach_capture
 
 from parkour_solver.search.application import run as solve_task
 from parkour_solver.bridge.python_compiler import PythonCompiler

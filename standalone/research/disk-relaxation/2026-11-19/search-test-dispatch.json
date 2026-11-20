@@ -1,0 +1,34 @@
+{
+ "tests.integration.test_integration": {
+  "tests": 22,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ },
+ "tests.unit.search.test_semantic_search": {
+  "requests": 2,
+  "backend:clarabel": 2,
+  "tests": 9,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ },
+ "tests.unit.search.test_event_search": {
+  "tests": 6,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ },
+ "tests.unit.search.test_anchor_search": {
+  "requests": 5,
+  "backend:clarabel": 4,
+  "backend:ipopt": 1,
+  "confirmations": 1,
+  "confirmationIpoptCalls": 1,
+  "materialGaps": 0,
+  "tests": 14,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ }
+}

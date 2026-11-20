@@ -1,5 +1,6 @@
 """Allocate one existing movement DFS over lazy contact/guide requests."""
 
+import collections
 import copy
 import time
 
@@ -14,6 +15,11 @@ from parkour_solver.search.events.adapter import EventGuideAdapter
 from parkour_solver.bridge.counting import CountingCompiler
 from parkour_solver.search.work import SearchWork
 from parkour_solver.search.compat.corridor_queue import collision_request
+
+
+# Per-session work counters the event report sums across allocation sessions.
+NUMERICAL_COUNTS = ('workerLaunches', 'feasibleSeedReturns', 'conicCandidates', 'relaxedFallbacks',
+                    'confirmations', 'confirmationIpoptCalls', 'materialGaps')
 
 
 def discovery_settings(settings=None):
@@ -33,6 +39,8 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
     from parkour_solver.search.engine import motion_bound
     from parkour_solver.search.dfs import search_goals
     started=time.monotonic(); deadline=started+options['seconds']
+    # Traversal stops early enough for the one IPOPT finalization of its relaxed finish.
+    search_deadline=deadline-min(5.,.25*options['seconds'])
     limits=discovery_settings(discovery)
     if any(options.get(k) for k in ('checkpoints','opportunities','spatial_goals')) or options.get('terminal_checkpoint') is not None:
         raise ValueError('Automatic event discovery derives its own contact/finish goals')
@@ -54,7 +62,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
     scene['movementSearch']=cfg
     context=digest(dict(policy=4 if anchor_policy else 3,comparisonPolicy=COMPARISON_POLICY_VERSION,
         **(dict(anchorPolicy=semantic_settings(anchor_policy)) if anchor_policy else {}),
-        constraintPolicy=14,scene={k:v for k,v in scene.items() if k!='movementSearch'},
+        constraintPolicy=15,numericalPolicy=1,scene={k:v for k,v in scene.items() if k!='movementSearch'},
         task=task,roots=roots,filter=getattr(policy,'checkpoint_identity',None),
         minimumRuns=options['minimum_run_pruning'],
         domain={k:v for k,v in cfg.items() if k not in
@@ -96,7 +104,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
                               candidate_seconds=options['candidate_seconds'])
         state['anchorPolicy']=anchor_policy
         state['guidePlan']=adapter.guide_plan
-    calls=0; expanded=0; allocations=[]; worker_calls=0; seed_returns=0
+    calls=0; expanded=0; allocations=[]; numerical=collections.Counter()
     used=dict(expansions=0,materializations=0)
     termination='exhausted'
     last=None
@@ -110,7 +118,21 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
                 for name,field in (('maxTotalRunTicks','runs'),('maxJumps','jumps'))):
             return False
         return policy is None or policy(program)
-    while time.monotonic()<deadline and calls<options['max_solver_calls'] and expanded<cfg['maxPrefixes']:
+    def search(work, deadline, **extra):
+        return search_goals(scene,counted,adapter,work,motion,
+            cfg=dict(cfg,maxPrefixes=cfg['maxPrefixes']-expanded),plans=[],goals=None,default_goal=task,terminal_plan=None,
+            accepted_program=accepted_program,program_filter=policy,roots=roots,
+            resume_state=state['dfs'],retry_unknown=options['retry_unknown'],deadline=deadline,started=started,
+            candidate_seconds=options['candidate_seconds'],
+            score_seconds=options['seconds'] if anchor_policy is not None else options['score_seconds'],
+            score_calls=None if anchor_policy is not None else options['score_call_limit'],
+            final_calls=None if anchor_policy is not None else options['final_call_limit'],batch_size=options['max_candidates'],
+            python_executable=options.get('python_executable'),cancel_event=options.get('cancel_event'),
+            on_window=options.get('on_window'),time_margin=options['time_margin'],
+            progress_margin=options['progress_margin'] if options['progress_margin'] is not None else .25,
+            route_report=None,window_plan=None,comparison_policy=options['comparison_policy'],
+            minimum_run_pruning=options['minimum_run_pruning'],numerical_backend='relaxed',_owned_state=True,**extra)
+    while time.monotonic()<search_deadline and calls<options['max_solver_calls'] and expanded<cfg['maxPrefixes']:
         if options.get('cancel_event') is not None and options['cancel_event'].is_set():
             termination='cancelled';break
         adapter.discovery_settings=dict(limits,
@@ -118,7 +140,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
             maxGuideMaterializations=max(0,limits['maxGuideMaterializations']-used['materializations']))
         # Anchor DFS owns its traversal until the run budget ends. It does not
         # rotate stalled branches, so service slices only interrupt that work.
-        local_deadline=deadline if anchor_policy is not None else min(deadline,time.monotonic()+options['score_seconds'])
+        local_deadline=search_deadline if anchor_policy is not None else min(search_deadline,time.monotonic()+options['score_seconds'])
         remaining_calls=options['max_solver_calls']-calls
         work=SearchWork(remaining_calls if anchor_policy is not None else min(options['score_call_limit'],remaining_calls),
                         deadline=local_deadline)
@@ -141,24 +163,12 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
             else:publish(value)
         publish.begin_repair=begin_repair
         publish.repair_progress=repair_progress
-        last=search_goals(scene,counted,adapter,work,motion,
-            cfg=dict(cfg,maxPrefixes=cfg['maxPrefixes']-expanded),plans=[],goals=None,default_goal=task,terminal_plan=None,
-            accepted_program=accepted_program,program_filter=policy,roots=roots,
-            resume_state=dfs,retry_unknown=options['retry_unknown'],deadline=local_deadline,started=started,
-            candidate_seconds=options['candidate_seconds'],
-            score_seconds=options['seconds'] if anchor_policy is not None else options['score_seconds'],
-            score_calls=None if anchor_policy is not None else options['score_call_limit'],
-            final_calls=None if anchor_policy is not None else options['final_call_limit'],batch_size=options['max_candidates'],
-            python_executable=options.get('python_executable'),cancel_event=options.get('cancel_event'),
-            on_progress=publish,on_window=options.get('on_window'),time_margin=options['time_margin'],
-            progress_margin=options['progress_margin'] if options['progress_margin'] is not None else .25,
-            route_report=None,window_plan=None,comparison_policy=options['comparison_policy'],
-            minimum_run_pruning=options['minimum_run_pruning'],_owned_state=True)
+        last=search(work,local_deadline,on_progress=publish)
         state['dfs']=last['searchState']; state['best']=last['best']
         dfs=state['dfs']
         for k in used:used[k]+=dfs['discoveryWork'][k]
         calls+=last['work'].get('solverCalls',0);expanded+=last['expandedPrefixes']
-        worker_calls+=last['work'].get('workerLaunches',0);seed_returns+=last['work'].get('feasibleSeedReturns',0)
+        numerical.update({k:v for k,v in last['work'].items() if k in NUMERICAL_COUNTS or k.startswith('relaxedFallback:')})
         after_depth=max((f['index'] for f in dfs['stack']),default=-1)
         advanced=after_depth>before_depth
         allocation=dict(calls=last['work'].get('solverCalls',0),expanded=last['expandedPrefixes'],
@@ -180,13 +190,36 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
             break
         if not last['work'].get('solverCalls',0) and not last['expandedPrefixes'] and dfs['nextFrame']==before_frames and not active:
             break
-    if time.monotonic()>=deadline:termination='deadline'
+    if time.monotonic()>=search_deadline:termination='deadline'
     elif calls>=options['max_solver_calls']:termination='numerical_call_limit'
     elif expanded>=cfg['maxPrefixes']:termination='prefix_limit'
+    finalization=None
+    if state['dfs'] is not None and state['dfs']['best'] is not None and termination not in ('error','cancelled'):
+        def publish_final(value):
+            state['dfs']=value
+            if options.get('on_progress'):
+                options['on_progress'](state)
+        final=search(SearchWork(None,deadline=deadline),deadline,on_progress=publish_final,finalize=True)
+        finalization=final['searchState']['finalization']
+        numerical['finalizationIpoptCalls']+=final['work'].get('workerLaunches',0)
     report=dict(last or {})
-    report.update(status='feasible' if state['best'] else 'cancelled' if termination=='cancelled' else 'unknown',
-        termination=termination,best=state['best'],searchState=state,effectiveRequest=request,taskGoal=task,
-        work=dict(solverCalls=calls,workerLaunches=worker_calls,feasibleSeedReturns=seed_returns,
+    best=state['best']
+    # The search keeps its relaxed incumbent; only a physical witness is published,
+    # so a cancelled or failed run without a finalization publishes no relaxed one.
+    if finalization is not None:
+        best=finalization['best']
+        report['finalization']={k:v for k,v in finalization.items() if k!='best'}
+        if best is None:
+            # Only a cancellation leaves the finalization running.
+            termination='cancelled' if finalization['stage']=='running' else 'finalization_failed'
+    elif best is not None and 'model' in best['candidate']:
+        best=None
+    if state['best'] is not None and (best is None or best['candidate']['positions']!=state['best']['candidate']['positions']):
+        report['provisionalBest']=dict(ticks=state['best']['plan']['ticks'],objective=state['best']['candidate']['objective'],
+                                       model=state['best']['candidate'].get('model'))
+    report.update(status='feasible' if best else 'cancelled' if termination=='cancelled' else 'unknown',
+        termination=termination,best=best,searchState=state,effectiveRequest=request,taskGoal=task,
+        work=dict(dict.fromkeys(NUMERICAL_COUNTS+('finalizationIpoptCalls',),0),**numerical,solverCalls=calls,
                   maxSolverCalls=options['max_solver_calls']),expandedPrefixes=expanded,
         elapsedSeconds=time.monotonic()-started,compiler=counted.summary(),backend='event_goals_v1',
         routeGeneration=dict(backend='event_goals_v1',events=len(state['graph']['events']),**used,

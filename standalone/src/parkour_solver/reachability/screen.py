@@ -3,7 +3,7 @@ import copy
 from parkour_solver.reachability.intervals import reachable_envelopes, interaction_reachability
 
 
-def condition_envelopes(envelopes, extra_rows=(), *, refine=True):
+def condition_envelopes(envelopes, extra_rows=(), *, refine=True, objective=None):
     """Return the conservative branch bounds as well as its exclusion verdict.
 
     The input is immutable. Reuse the compiled model, including its named-probe
@@ -35,7 +35,8 @@ def condition_envelopes(envelopes, extra_rows=(), *, refine=True):
         # The old phase boxes remain a conservative superset when no motion
         # model is supplied. Do not invent a second phase propagator here.
     return dict(envelopes=tightened,
-                proof=proof if proof['ruledOut'] else interaction_reachability(tightened, {}, refine=refine))
+                proof=proof if proof['ruledOut'] else interaction_reachability(tightened, {}, refine=refine,
+                                                                               objective=objective))
 
 
 def contradiction(problem, extra_rows=()):

@@ -33,8 +33,9 @@ python3.12 -m venv ../.venv-guidance
 ```
 
 The parent API uses the standard library. CasADi/NumPy run in the numerical
-worker; SciPy supplies optional LP reachability. Clarabel and plotting are
-optional research/tool dependencies. Nothing installs at runtime. Keep the venv
+worker. The `reachability` extra supplies Clarabel, NumPy and SciPy (sparse
+matrices) for the disk relaxation in `numerics.disk`. Plotting is an optional
+tool dependency. Nothing installs at runtime. Keep the venv
 executable path rather than resolving its symlink to a system interpreter.
 Install `parkour_solver` into each interpreter when parent and worker differ.
 Installed API and CLI/worker launch work outside the repository cwd; task,

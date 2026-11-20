@@ -9,9 +9,16 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
 - Base branch: the fork's `main`. It contains the Real11 extension work: extended
   geometry and bounds, the six-direction [face catalog](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
   (not yet consumed by any generator) and the [longer Real11 task](../research/real11-long-solve/README.md).
-- Active: `feat/jvm-free-orchestrator`, draft PR into `main`. It makes search
-  JVM-free: the in-process Python movement bridge is the default and the Java
-  bridge an explicit oracle ([evidence](../research/jvm-free-bridge/README.md)).
+- Open as a draft PR: `feat/disk-interim-solver`. Automatic discovery runs on the
+  Clarabel [disk relaxation](reference/NUMERICAL_SOLVER.md#disk-relaxation): the
+  HiGHS LP screen is gone, interim candidates are relaxed, an acceleration-shortfall
+  alarm on jump ticks confirms with IPOPT, and one IPOPT finalization
+  publishes the physical route ([execution](ANCHOR_SEARCH_EXECUTION_REFERENCE.md#numerical-backend-and-finalization)).
+  Real11 keeps the replayed T64 with 0 interim IPOPT workers and 1 finalization call,
+  median search 3.6 s against 7.5 s on `c9deef42` ([evidence](../research/disk-relaxation/README.md)).
+- Merged as PR #4 (`feat/jvm-free-orchestrator`): search is JVM-free. The
+  in-process Python movement bridge is the default and the Java bridge an explicit
+  oracle ([evidence](../research/jvm-free-bridge/README.md)).
 - Merged as PR #3 (`perf/early-passage-screen`): it adds
   [geometry-driven avoidance passages](design/AVOIDANCE_PASSAGES.md) on obstacle
   clusters (touching blocks are one obstacle; [evidence](../research/obstacle-clusters/README.md)), screening of
@@ -34,7 +41,7 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
    `constraints/encounters.py` and `constraints/variants.py`.
 2. [Generation relevance](design/GENERATION_RELEVANCE_PLAN.md): one shared eligibility
    gate; required versus unwanted interactions; screen the whole proposal before truncation.
-3. [Obstacle relevance](design/OBSTACLE_RELEVANCE.md): interval and LP reachability screens.
+3. [Obstacle relevance](design/OBSTACLE_RELEVANCE.md): interval and disk-relaxation reachability screens.
 4. [Obstacles and blockages](design/OBSTACLES_AND_BLOCKAGES.md): Y-X-Z overlap, blockage
    timing templates, wall-hit sprint loss, run-off sources.
 5. [Generic route discovery research](research/GENERIC_ROUTE_DISCOVERY_RESEARCH.md),

@@ -4,7 +4,7 @@ from parkour_solver.scene.geometry import expanded_box
 from parkour_solver.reachability.intervals import interaction_reachability, reachable_envelopes
 
 
-PROOF_POLICY = 2
+PROOF_POLICY = 3
 
 
 def interaction_context_key(context):
@@ -123,8 +123,8 @@ class InteractionGate:
         self.metrics = {}
         self.checked = 0
         self.exclusions = []
-        from parkour_solver.reachability.linear import STATS
-        self.linear_start = {kind: collections.Counter(counts) for kind, counts in STATS.items()}
+        from parkour_solver.numerics.disk import STATS
+        self.relaxation_start = {kind: collections.Counter(counts) for kind, counts in STATS.items()}
         self.block_table, self.jump_traces = {}, {}
         self.approaches = {}
 
@@ -253,7 +253,7 @@ class InteractionGate:
                 input=context['program']['profile']['airtime'],cases=choice['profile'].get('caseEvents',[])))
         return proof
 
-    def check_program(self, program):
+    def check_program(self, program, objective=None):
         # This guard is a distinct physical requirement, not an interval bound.
         p=program['profile']
         if p['airtime'] and p['position'][1]<self.scene['initial']['position'][1]-1e-7:
@@ -263,19 +263,22 @@ class InteractionGate:
                 return dict(reason='unselected_initial_floor')
         analysis=self.analyze(program)
         if analysis is None:return dict(reason='vertical_schedule')
+        from parkour_solver.search.identity import digest
+        objective=self.scene['objective'] if objective is None else objective
+        key=('screen',analysis['key'],digest(objective))
         undecided=False
         def build():
             nonlocal undecided
             proof=self.required(program)
             if proof:return proof
             if self.scene.get('maxWallHits',0):return None
-            self.metrics['linearChecks']=self.metrics.get('linearChecks',0)+1
-            checked=interaction_reachability(analysis['envelopes'],{},refine=True)
-            undecided=checked['reason']=='linear_undecided'
+            self.metrics['relaxationChecks']=self.metrics.get('relaxationChecks',0)+1
+            checked=interaction_reachability(analysis['envelopes'],{},refine=True,objective=objective)
+            undecided=checked['reason']=='relaxation_undecided'
             return {k:v for k,v in checked.items() if k!='ruledOut'} if checked['ruledOut'] else None
-        result=self._cached(('screen',analysis['key']),build,'screen')
+        result=self._cached(key,build,'screen')
         if undecided:
-            self.cache.pop(('screen',analysis['key']))
+            self.cache.pop(key)
         return result
 
     def query(self, context, bounds, tick, *, label, jumping=False, phases=('Y', 'X', 'Z')):
@@ -350,6 +353,6 @@ class InteractionGate:
         context['interactionGate'] = self
 
     def summary(self):
-        from parkour_solver.reachability.linear import STATS
+        from parkour_solver.numerics.disk import STATS
         return dict(checked=self.checked,excluded=len(self.exclusions),exclusions=self.exclusions,metrics=dict(self.metrics),
-                    linear={kind: dict(counts-self.linear_start[kind]) for kind, counts in STATS.items()})
+                    relaxation={kind: dict(counts-self.relaxation_start[kind]) for kind, counts in STATS.items()})

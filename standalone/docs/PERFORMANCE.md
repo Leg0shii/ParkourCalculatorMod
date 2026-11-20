@@ -35,6 +35,7 @@ production code.
 | `e266785c` | geometry-driven avoidance passages | 64 | -1093.2381026602418 | 53 / 49 | 37 | 47/47 | [geometry passages](../research/geometry-passages/README.md) |
 | `b2977e0f` + step 2 | avoidance on obstacle clusters | 64 | -1093.2381026602416 | 25 / 21 | 37 | 20/20 | [obstacle clusters](../research/obstacle-clusters/README.md) |
 | `6b964cb0` + step 4 | legs optimize, switch-tick climb, close fallbacks | 64 | -1093.2381026602416 | 18 / 17 | 37 | 10/10 | [switch climb](../research/switch-climb/README.md) |
+| `4375cd96` | disk relaxation; one IPOPT finalization (stock `c9deef42` paired: 18 / 17, 7.54 s) | 64 | -1093.2381026602418 | 14 / 0 + 1 finalization | 37 | 10/10 | [disk relaxation](../research/disk-relaxation/README.md) |
 | `db7f8f61` + avoidance table | block table for generators and avoidance | 64 | -1093.2381026602416 | 18 / 17 | 37 | 10/10 | [block table](../research/block-table/README.md) |
 
 The switch-climb run finds T64 at 6.1 s and stops at 10.0 s with
@@ -96,6 +97,13 @@ work. Verify digest call counts and call sites before attributing cost; the cold
 profiler writes its shared store only after search, so durable checkpoint IO
 needs a separate control.
 
+On the Real11 extended control (300 s, deadline-bound) at `ea33c191` the relaxed
+backend leaves generation as the cost: `program.program_physics_key` 81.3 s over
+111,967 calls, `preparation.analyze_model` 45.4 s, `preparation.prepare` 37.4 s,
+`numerical.evaluate` 33.2 s, `reachability.screen` 20.6 s and `solver.invoke` 6.8 s
+([comparison with stock and encounter groups](../research/disk-relaxation/2026-11-19/extended-profile-compare.txt),
+[analysis](../research/disk-relaxation/README.md#extended-course-and-the-encounter-groups-requests)).
+
 Constraint enumeration after `86c06e39` runs 2.93x to 3.56x faster on captured
 B6/B7 catalogues, with 94.1% to 94.7% fewer iteration checks and identical
 ordered options. That is targeted enumeration work, not a whole-solver speedup.
@@ -111,7 +119,7 @@ ordered options. That is targeted enumeration work, not a whole-solver speedup.
   final solves optimize ([feasibility mode](IPOPT_FEASIBILITY_MODE.md)).
 - Content-addressed manifest plus SQLite checkpoints
   ([checkpoint storage](CHECKPOINT_STORAGE.md)).
-- Shared interaction screens before any solve: interval and LP reachability
+- Shared interaction screens before any solve: interval and disk-relaxation reachability
   ([obstacle relevance](design/OBSTACLE_RELEVANCE.md)), and accumulated passage
   rows screened before each extension ([avoidance passages](design/AVOIDANCE_PASSAGES.md)).
 - Bounded accelerator caches: interaction gate 512 entries

@@ -1,0 +1,205 @@
+{
+ "requests": 882,
+ "sortedOutcomes": {
+  "feasible": 658,
+  "infeasible": 31,
+  "undecided": 2,
+  "unsupported": 191
+ },
+ "verdictFlips": [
+  [
+   "8bea76bb",
+   {
+    "sorted": [
+     "undecided",
+     "MaxIterations",
+     false
+    ],
+    "reversed": [
+     "undecided",
+     "NumericalError",
+     false
+    ],
+    "shuffle0": [
+     "infeasible",
+     "PrimalInfeasible",
+     true
+    ],
+    "shuffle1": [
+     "infeasible",
+     "PrimalInfeasible",
+     false
+    ],
+    "shuffle2": [
+     "infeasible",
+     "AlmostPrimalInfeasible",
+     false
+    ]
+   }
+  ],
+  [
+   "c4063dd3",
+   {
+    "sorted": [
+     "infeasible",
+     "PrimalInfeasible",
+     false
+    ],
+    "reversed": [
+     "infeasible",
+     "PrimalInfeasible",
+     false
+    ],
+    "shuffle0": [
+     "undecided",
+     "NumericalError",
+     false
+    ],
+    "shuffle1": [
+     "infeasible",
+     "PrimalInfeasible",
+     false
+    ],
+    "shuffle2": [
+     "infeasible",
+     "PrimalInfeasible",
+     false
+    ]
+   }
+  ],
+  [
+   "d218b085",
+   {
+    "sorted": [
+     "undecided",
+     "NumericalError",
+     false
+    ],
+    "reversed": [
+     "infeasible",
+     "AlmostPrimalInfeasible",
+     false
+    ],
+    "shuffle0": [
+     "infeasible",
+     "AlmostPrimalInfeasible",
+     false
+    ],
+    "shuffle1": [
+     "infeasible",
+     "AlmostPrimalInfeasible",
+     false
+    ],
+    "shuffle2": [
+     "infeasible",
+     "PrimalInfeasible",
+     true
+    ]
+   }
+  ],
+  [
+   "0d1a5d33",
+   {
+    "sorted": [
+     "infeasible",
+     "PrimalInfeasible",
+     false
+    ],
+    "reversed": [
+     "infeasible",
+     "PrimalInfeasible",
+     true
+    ],
+    "shuffle0": [
+     "undecided",
+     "MaxIterations",
+     false
+    ],
+    "shuffle1": [
+     "infeasible",
+     "PrimalInfeasible",
+     false
+    ],
+    "shuffle2": [
+     "infeasible",
+     "PrimalInfeasible",
+     false
+    ]
+   }
+  ],
+  [
+   "d7b5a07a",
+   {
+    "sorted": [
+     "infeasible",
+     "PrimalInfeasible",
+     false
+    ],
+    "reversed": [
+     "undecided",
+     "NumericalError",
+     false
+    ],
+    "shuffle0": [
+     "undecided",
+     "MaxIterations",
+     false
+    ],
+    "shuffle1": [
+     "infeasible",
+     "PrimalInfeasible",
+     true
+    ],
+    "shuffle2": [
+     "undecided",
+     "MaxIterations",
+     false
+    ]
+   }
+  ]
+ ],
+ "maxObjectiveSpread": [
+  [
+   3.7266433992044767e-06,
+   "250356d5"
+  ],
+  [
+   5.535455329663819e-07,
+   "894a117a"
+  ],
+  [
+   2.5070825859785373e-08,
+   "568a3187"
+  ],
+  [
+   4.649336915463209e-09,
+   "25ec412e"
+  ],
+  [
+   3.3558649192855228e-09,
+   "de47b9de"
+  ],
+  [
+   2.8901467885589227e-09,
+   "c042a80d"
+  ],
+  [
+   2.6287239052180666e-09,
+   "c2c31f38"
+  ],
+  [
+   1.5640466699551325e-09,
+   "e66ff7c5"
+  ],
+  [
+   1.4492798072751611e-09,
+   "c5f8492c"
+  ],
+  [
+   1.3336007853581577e-09,
+   "2d8cfd20"
+  ]
+ ],
+ "spreadOver1e6": 1,
+ "spreadOver1e4": 0
+}

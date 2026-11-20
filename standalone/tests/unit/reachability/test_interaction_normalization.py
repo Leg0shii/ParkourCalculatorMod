@@ -69,11 +69,11 @@ class InteractionNormalizationTests(unittest.TestCase):
 
     def test_unknown_relaxation_does_not_exclude_prefix(self):
         # Individually broad bounds admit these rows; exact acceleration coupling
-        # would reject them. A missing/unknown linear check must retain the work.
+        # would reject them. A missing/unknown relaxation check must retain the work.
         rows=[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=1.),
               dict(leg=0,offset=2,mode='X',cmp='LE',rhs=0.)]
         owner=self.staged([rows],[dict(leg=0,offset=1,mode='Z',cmp='GE',rhs=-.1)])
-        with patch('parkour_solver.reachability.linear.linear_exclusion',return_value=None):
+        with patch('parkour_solver.numerics.disk.screen',return_value=None):
             self.assertFalse(owner._screen(rows)['ruledOut'])
             self.assertEqual(len(list(owner)),1)
 

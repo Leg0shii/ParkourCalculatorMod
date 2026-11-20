@@ -1,0 +1,53 @@
+keys ['base', 'contacts', 'fallbackYaw', 'friction', 'magnitude', 'maxIterations', 'model', 'movement', 'objective', 'objectiveMode', 'position', 'seconds', 'startYaw', 'stopOnFeasible', 'threshold', 'ticks', 'velocity', 'version', 'vertical', 'walls', 'yaw']
+ticks 66 objective {'axis': 'X', 'sense': 'MAX', 'customYaw': -41.42366582432724, 'tick': 66, 'type': 'POSITION', 'smoothLambda': 0.0} threshold 0.0 seconds 20
+position [746.5, -1104.5] velocity [0, 0] startYaw 0.0
+movement keys ['airSprinting', 'compiler', 'ground', 'horizontalCollision', 'moveForward', 'moveStrafe', 'profile', 'sprinting'] vertical keys ['contacts', 'jumpVelocity', 'onGround', 'position', 'previousHorizontalCollision', 'profile', 'referencePosition', 'referenceVelocity', 'sneak', 'threshold', 'velocity']
+ground [0, 1, 2, 3, 4, 5, 6, 7, 8, 17, 18, 19, 28, 29, 30, 40, 41, 42, 43, 44, 59, 60] jumps [8, 19, 30, 44, 60]
+contacts []
+relaxed objective -337.4362958055242
+state 44: pos [733.9481, -1099.1844] vel [-0.1188, 0.1128] | input 44: JUMP m=0.3274 f=0.5460 a=(-0.2153,0.2465) used 100.0%
+     rows [] []
+state 45: pos [733.6141, -1098.8251] vel [-0.1824, 0.1962] | input 45: air m=0.0260 f=0.9100 a=(-0.0167,0.0198) used 99.7%
+     rows [] []
+state 46: pos [733.415, -1098.6091] vel [-0.1812, 0.1966] | input 46: air m=0.0260 f=0.9100 a=(-0.0165,0.0200) used 99.7%
+     rows [] []
+state 47: pos [733.2173, -1098.3925] vel [-0.1799, 0.1971] | input 47: air m=0.0260 f=0.9100 a=(-0.0162,0.0203) used 99.7%
+     rows [] []
+state 48: pos [733.0213, -1098.1751] vel [-0.1784, 0.1978] | input 48: air m=0.0260 f=0.9100 a=(-0.0158,0.0205) used 99.7%
+     rows [] []
+state 49: pos [732.827, -1097.9567] vel [-0.1767, 0.1987] | input 49: air m=0.0260 f=0.9100 a=(-0.0154,0.0209) used 99.7%
+     rows [] []
+state 50: pos [732.6349, -1097.7372] vel [-0.1748, 0.1998] | input 50: air m=0.0260 f=0.9100 a=(-0.0148,0.0213) used 99.7%
+     rows [] []
+state 51: pos [732.4453, -1097.5161] vel [-0.1725, 0.2012] | input 51: air m=0.0260 f=0.9100 a=(-0.0140,0.0218) used 99.6%
+     rows [] []
+state 52: pos [732.2587, -1097.2931] vel [-0.1698, 0.2029] | input 52: air m=0.0260 f=0.9100 a=(-0.0129,0.0224) used 99.6%
+     rows [] []
+state 53: pos [732.076, -1097.0678] vel [-0.1663, 0.2051] | input 53: air m=0.0260 f=0.9100 a=(-0.0114,0.0232) used 99.6%
+     rows [('Z', 'LE', -1095.3)] []
+state 54: pos [731.8984, -1096.8395] vel [-0.1617, 0.2077] | input 54: air m=0.0260 f=0.9100 a=(-0.0091,0.0242) used 99.5%
+     rows [('Z', 'LE', -1095.3)] []
+state 55: pos [731.7276, -1096.6075] vel [-0.1554, 0.2111] | input 55: air m=0.0260 f=0.9100 a=(-0.0054,0.0253) used 99.6%
+     rows [('Z', 'LE', -1095.3)] []
+state 56: pos [731.5668, -1096.3711] vel [-0.1463, 0.2151] | input 56: air m=0.0260 f=0.9100 a=(0.0009,0.0259) used 99.5%
+     rows [('Z', 'LE', -1095.3)] []
+state 57: pos [731.4213, -1096.1301] vel [-0.1323, 0.2193] | input 57: air m=0.0260 f=0.9100 a=(0.0102,0.0236) used 99.1%
+     rows [('Z', 'LE', -1095.3)] []
+state 58: pos [731.2992, -1095.8872] vel [-0.1111, 0.2211] | input 58: air m=0.0260 f=0.9100 a=(0.0200,0.0161) used 98.7%
+     rows [('X', 'GE', 729.7), ('X', 'LE', 731.3), ('Z', 'GE', -1096.3), ('Z', 'LE', -1095.3)] []
+state 59: pos [731.2081, -1095.6499] vel [-0.0829, 0.2159] | input 59: ground m=0.1300 f=0.5460 a=(0.1018,0.0801) used 99.6%
+     rows [('X', 'GE', 729.7), ('X', 'LE', 731.3), ('Z', 'GE', -1096.3), ('Z', 'LE', -1095.3)] []
+state 60: pos [731.227, -1095.354] vel [0.0103, 0.1616] | input 60: JUMP m=0.3274 f=0.5460 a=(0.0641,-0.1067) used 38.0%
+     rows [('Z', 'LE', -1095.3)] []
+state 61: pos [731.3014, -1095.2992] vel [0.0406, 0.03] | input 61: air m=0.0260 f=0.9100 a=(-0.0199,-0.0162) used 98.6%
+     rows [('X', 'GE', 731.3), ('X', 'LE', 734.3), ('Z', 'GE', -1095.3), ('Z', 'LE', -1093.7)] []
+state 62: pos [731.3222, -1095.2854] vel [0.0189, 0.0125] | input 62: air m=0.0260 f=0.9100 a=(-0.0198,-0.0155) used 96.8%
+     rows [('X', 'GE', 731.3)] []
+state 63: pos [731.3212, -1095.2883] vel [-0.0009, -0.0027] | input 63: air m=0.0260 f=0.9100 a=(-0.0203,-0.0130) used 92.8%
+     rows [('X', 'GE', 731.3)] []
+state 64: pos [731.3, -1095.304] vel [-0.0193, -0.0143] | input 64: air m=0.0260 f=0.9100 a=(0.0193,0.0164) used 97.3%
+     rows [('X', 'GE', 731.3), ('Z', 'LE', -1095.3)] []
+state 65: pos [731.3, -1095.3019] vel [-0.0, 0.0019] | input 65: air m=0.0260 f=0.9100 a=(0.0260,0.0000) used 100.0%
+     rows [('X', 'GE', 729.7), ('X', 'LE', 731.3), ('Z', 'GE', -1096.3), ('Z', 'LE', -1095.3)] []
+state 66: pos [731.326, -1095.3] vel [0.0237, 0.0017]
+     rows [('Z', 'LE', -1095.3)] []

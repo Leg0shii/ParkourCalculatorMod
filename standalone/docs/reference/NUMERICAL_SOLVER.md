@@ -94,7 +94,7 @@ if result["feasible"]:
 
 `solve` also accepts `stop_on_feasible`, a `threading.Event` as `cancel_event`, and an `on_incumbent(candidate)` callback. The callback receives a copy; keep it short. It is called for valid objective improvements, allowing a caller to save incumbents while a solve continues. Invalid API requests raise `ValueError` before starting a process. Caller orchestration chooses input patterns, stores multiple candidates and splices selected spans.
 
-`from parkour_solver.numerics import attach_capture` provides the same capture attachment through `attach_capture(request, capture, start=None)`. It returns a prepared copy without changing either input.
+`from parkour_solver.io.capture import attach_capture` (also `parkour_solver.api.attach_capture`) provides the same capture attachment through `attach_capture(request, capture, start=None)`. It returns a prepared copy without changing either input.
 
 ## Problem format, version 1
 
@@ -166,6 +166,63 @@ See [MOVEMENT_PORT.md](MOVEMENT_PORT.md) for the current limitations and coeffic
 The parent validator uses standard-library scalar arithmetic in world coordinates. It reconstructs the path from returned facings, including actual automatic inertia and conditional wall clipping, and checks every requested row. The CasADi worker uses separate sparse state variables and relative positions. Returned positions or success flags are not trusted for acceptance.
 
 These are local optimizations and prescribed-contact continuous trajectories. They are not global optimality or infeasibility certificates, general collision detection, or byte-exact Minecraft validation. Small authored constraints can disagree with the continuous coefficients: the original full real11 route has a recorded mismatch near states 651/652. The solver keeps its tolerances and reports the failed search. Prefer the intended shorter spans and validate realized game behavior separately.
+
+## Disk relaxation
+
+`numerics.disk` solves the convex relaxation of a threshold-0 request with
+Clarabel (`reachability` extra): each tick's acceleration `|a[t]| == magnitude[t]`
+becomes `|a[t]| <= magnitude[t] + 1e-9`. Every other row is the worker's, with
+retained position/velocity/acceleration states: exact dynamics, fixed or interval
+starts, contact resets with the `1e-7` reach row, and X/Z walls. Equalities go in
+Clarabel's zero cone and each tick's disk in a 3-dimensional second-order cone.
+Settings are QDLDL, one thread, 200 iterations, a 0.1 s cap and `1e-9`
+feasibility/gap tolerances (`1e-8` infeasibility). Requests with an inertia
+threshold, ladder ticks, an inertia pattern or non-X/Z rows have no spec.
+
+`Solved`/`AlmostSolved` give a relaxed point, `PrimalInfeasible`/
+`AlmostPrimalInfeasible` exclude the full request (the disk contains the circle),
+and any other status is undecided. An undecided spec with an objective is solved
+once more with zero cost (`retried: true` on a result it decides): infeasibility
+does not depend on the cost, and some infeasible requests end `NumericalError`
+only under their objective. A feasible retry is not the optimum, so the request
+stays undecided. Decided results are cached process-wide by the canonical spec
+(1024 entries). `validation.numerical.validate_controls`
+replays the returned acceleration vectors through the same scalar checks as
+`validate` (which converts facings to full-strength vectors first) and also
+rejects a vector outside its disk by more than `1e-7`. `deficits` reports each
+tick's relative acceleration shortfall.
+
+`RelaxedDispatch(gate=...).solve` has `solve`'s signature and result
+shape and is what automatic discovery hands `find_route`. A feasible relaxed point
+that passes `validate_controls` returns `status: feasible` with the candidate
+(`model: relaxed_disk`, `controls`, derived facings as a seed), `backend:
+clarabel`, `termination: disk_finished` and `workerLaunched: false`; an infeasible
+request returns `unknown` with the Clarabel status in `workerStatus`. IPOPT
+answers, with `backend: ipopt` and a `fallback` reason, requests with no spec
+(`unsupported`), requests the relaxation leaves undecided (`relaxed_undecided`)
+and relaxed points
+the validator rejects (`rejected_relaxed_point`). A relaxed optimum of an optimization request
+(`stop_on_feasible=False`) with a relative acceleration shortfall above 10% on a
+jump tick (`vertical.jumpVelocity`; `alarm_ticks`, listed in `disk.alarmTicks`; a
+request without that schedule never alarms) is confirmed. A jump input always
+applies its whole sprint-jump push, so a relaxed optimum that brakes it can be
+impossible at full strength.
+IPOPT re-solves the same request once and its result replaces the relaxed one.
+Every tick is seeded with its disk direction turned by `SEED_TILT` (`1e-4` rad,
+`ipopt_seed`), as the finalization is; the request's fallback facing stays. The
+turn breaks mirror symmetry: on a symmetric request Clarabel returns the
+symmetric optimum, whose short-tick direction lies exactly between the two
+full-strength completions, and IPOPT started on that line stops at a local
+infeasibility. The seed is an assumption resting on a measurement
+([seed benchmark](../../research/disk-relaxation/README.md#confirmation-seed)):
+of the single-attempt seeds tried it had no false infeasibilities and the fewest
+worse optima at the same cost; revisit it if confirmations start rejecting
+feasible requests. The result carries `confirmation`: the shortfall peak and
+tick, both objectives, `gap = sense*(disk - ipopt)` and `material` (`gap > 1e-4`).
+A gap describes only its own request. Decided
+confirmations are cached per run in the interaction gate's cache by problem
+fingerprint. Search's use of it is in the
+[execution reference](../ANCHOR_SEARCH_EXECUTION_REFERENCE.md#numerical-backend-and-finalization).
 
 ## Tests
 

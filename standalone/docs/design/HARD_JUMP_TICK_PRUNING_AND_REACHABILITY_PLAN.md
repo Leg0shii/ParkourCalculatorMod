@@ -409,13 +409,13 @@ reopen a globally latched multi-transfer topology.
 
 | Layer / file | Work currently performed | Refactor |
 | --- | --- | --- |
-| [`reachability.intervals.py`](../../src/parkour_solver/reachability/intervals.py) | Interval state/velocity bounds; Y/X/Z movement phases; norm-distance checks; required rows/regions; optional LP refinement. | Keep as the low-level math, with model-conditioning support if needed. |
-| [`reachability.linear.py`](../../src/parkour_solver/reachability/linear.py) | Cached optimistic control LP; supports zero threshold/non-ladder contexts; returns no proof when unsupported. | Reuse; do not recreate a second LP. |
+| [`reachability.intervals.py`](../../src/parkour_solver/reachability/intervals.py) | Interval state/velocity bounds; Y/X/Z movement phases; norm-distance checks; required rows/regions; disk-relaxation refinement. | Keep as the low-level math, with model-conditioning support if needed. |
+| [`numerics.disk`](../../src/parkour_solver/numerics/disk.py) `screen` | Cached disk control relaxation (Clarabel); supports zero threshold/non-ladder contexts; returns no proof when unsupported. | Reuse; do not recreate a second relaxation. |
 | [`reachability.service.py`](../../src/parkour_solver/reachability/service.py) | Role/window query/cache, absence normalization, broad free-approach gate, fixed-program envelope compilation and required-event checks. | Make this the shared analysis/query service and sequence-prerequisite API. |
 | [`movement.normal.py`](../../src/parkour_solver/movement/normal.py) | Early single landing check before ordinary profile construction. | Use the same prerequisite API and preserve normal landing phase. |
 | [`movement.stepping.py`](../../src/parkour_solver/movement/stepping.py) | Early separate lower/higher checks, then 8 wall or 4 corner branches; duplicated profile/open case construction. | Condition the approach on the lower prerequisite before testing the higher; share prerequisite descriptors/builders across supported modes. |
 | [`movement.ceiling_generation.py`](../../src/parkour_solver/movement/ceiling_generation.py) | Early ceiling/launch-grind checks for open generation; separate profile construction. | Use the same service and event prerequisite descriptions. |
-| [`search.movement.py`](../../src/parkour_solver/search/movement.py) | `screen_program` repeats route compilation, vertical validation, coefficient compilation and interval/LP preparation done by `InteractionGate.envelopes`. | Delegate to shared fixed-program analysis and cache. |
+| [`search.movement.py`](../../src/parkour_solver/search/movement.py) | `screen_program` repeats route compilation, vertical validation, coefficient compilation and interval/relaxation preparation done by `InteractionGate.envelopes`. | Delegate to shared fixed-program analysis and cache. |
 | [`search.frontier.py`](../../src/parkour_solver/search/frontier.py) and legacy iterator | Full proposal is screened, optionally projected, then screened again even when unchanged. | Compose/check once through a shared proposal wrapper; recheck only a genuinely different resulting program. |
 | [`depth_first.py`](../../src/parkour_solver/search/dfs.py) | Time/hard/run policies, scalar first-floor viability, `gate.required`, `screen_program` orchestration. | Obtain tick decisions from the shared comparison helper and reachability from the shared analysis service; no local reimplementation of either. |
 | [`checkpoint_search.py`](../../src/parkour_solver/search/engine.py) | Rebuilds fixed-program envelopes before constraint generation. | Reuse the shared prepared analysis only for an identical effective model/scope. |
@@ -448,7 +448,7 @@ friction, grounded flags or horizontal-impulse behavior.
 
 Use the existing `compile_program`, `validate_vertical_schedule`, Java compiler,
 `reachable_envelopes`, `interaction_reachability`, `query_interaction` and
-`linear_exclusion`. Keep a single implementation of removal of synthetic open
+`numerics.disk.screen`. Keep a single implementation of removal of synthetic open
 terminal-support rows. Preserve `screen_program`'s initial-floor guard rather
 than losing it during deduplication.
 
@@ -476,7 +476,7 @@ and the context needed to recompute them.
 
 Statuses remain `absent`, `not_ruled_out`, `unknown`. Only `absent` excludes a
 required proposal or omits unwanted-interaction alternatives. An absent unwanted
-contact never rejects the route. Unsupported LP conditions or missing probe
+contact never rejects the route. Unsupported relaxation conditions or missing probe
 bounds retain the candidate as unknown. Transient budget/timeout/cancellation
 pauses the exact descriptor/query without advancing its cursor; it is not an
 absence proof or a reason to emit a different fallback choice on this slice.
@@ -506,7 +506,7 @@ is a conjunction. Do not model it by concatenating windows, or by independently
 checking every region in the unconditioned envelope. Enforce preceding state
 requirements in the model before checking the next prerequisite. If a swept
 phase condition cannot safely become a state row, keep its uncertainty and use
-the existing joint proposal/LP check rather than inventing an exact endpoint.
+the existing joint proposal/relaxation check rather than inventing an exact endpoint.
 
 Named stepping/grind phases intentionally have unknown Y and conservative
 intended X/Z probe extents in `reachable_envelopes`. Retain those semantics.
@@ -908,7 +908,7 @@ Record the same comparison decision that controlled the search:
   cursor and restored lineage. Incumbent updates must trigger zero queue scans.
 - Descriptor counts, joint prerequisites excluded before fan-out, side/corner
   programs constructed, shared analysis hits/misses, coefficient compiles,
-  interval/LP work and changed-context checks, unknown/suspended preparation.
+  interval/relaxation work and changed-context checks, unknown/suspended preparation.
 - Exact numerical request fingerprint and solve policy at invocation, including
   successful internal nodes; wrappers/workers/seed shortcuts and timings.
 - Prefix expansions, bookkeeping time, first full finish, best T/Z, accepted

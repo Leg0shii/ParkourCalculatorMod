@@ -186,7 +186,7 @@
       "spatialMargin": 0.3
     },
     "solveEveryDecisionLevels": 1,
-    "feasibilityPolicy": "ipopt_oracle",
+    "feasibilityPolicy": "numerical_oracle",
     "observability": true
   }
 }

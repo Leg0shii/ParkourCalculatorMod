@@ -56,8 +56,9 @@ Use module or console entrypoints, rather than executing `src/.../*.py` by filen
 1. Schema, physics and scene primitives do not depend on search or research. Search
    composes movement, spatial, constraint, reachability and numerical services; the
    numerical worker does not import the DFS.
-2. Ordinary import stays light: CasADi belongs to the numerical worker, plotting and
-   Clarabel are optional. SciPy backs the optional runtime LP screen.
+2. Ordinary import stays light: CasADi belongs to the numerical worker and plotting
+   is optional. Clarabel, NumPy and SciPy (`reachability` extra) load only when a
+   disk-relaxation screen or solve runs; search requires them.
 3. The generic CLI takes task and config paths; the solver never locates Real11 or a
    benchmark through `Path(__file__).parents[...]`. Install the package for both the
    parent and the worker interpreter.
