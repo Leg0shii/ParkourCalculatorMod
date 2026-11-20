@@ -91,7 +91,7 @@ relaxation-infeasible request counts as oracle-rejected (`termination
 semantics, requests outside the supported class (threshold, ladder, non-X/Z rows),
 requests the relaxation leaves undecided even after its zero-cost retry, and
 relaxed points the scalar validator rejects. An anchor or terminal optimization
-whose relaxed optimum leaves more than 1% of a jump or thin-ledge ground tick's
+whose relaxed optimum leaves more than 10% of a jump tick's
 acceleration unused is confirmed by IPOPT before its score is used (`work`:
 `confirmations`, `confirmationIpoptCalls`, `materialGaps`); a gap affects only its
 own request, and descendants are solved relaxed and alarm on their own.

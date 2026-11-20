@@ -88,6 +88,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/decision-windows/RESULTS.md](../research/decision-windows/RESULTS.md) | Frozen source-era evidence; use research guide for reproduction: Joint windows: what survives later comparison |
 | [research/dfs-interactions/CALLS.md](../research/dfs-interactions/CALLS.md) | Frozen source-era evidence; use research guide for reproduction: DFS cold/resume worker calls |
 | [research/dfs-interactions/README.md](../research/dfs-interactions/README.md) | Frozen source-era evidence; use research guide for reproduction: Goal-aware DFS and early interaction eligibility |
+| [research/disk-relaxation/2026-11-19/infeasible-5e10cd17/report.md](../research/disk-relaxation/2026-11-19/infeasible-5e10cd17/report.md) | Frozen source-era evidence; use research guide for reproduction: Why request `5e10cd17` is relaxation-feasible but IPOPT-infeasible |
 | [research/disk-relaxation/2026-11-19/real11-disk-report.md](../research/disk-relaxation/2026-11-19/real11-disk-report.md) | Frozen source-era evidence; use research guide for reproduction: Solve report |
 | [research/disk-relaxation/2026-11-19/real11-stock-report.md](../research/disk-relaxation/2026-11-19/real11-stock-report.md) | Frozen source-era evidence; use research guide for reproduction: Solve report |
 | [research/disk-relaxation/README.md](../research/disk-relaxation/README.md) | Frozen source-era evidence; use research guide for reproduction: Disk relaxation in automatic discovery |

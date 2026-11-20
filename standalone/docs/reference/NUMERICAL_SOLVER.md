@@ -202,10 +202,11 @@ answers, with `backend: ipopt` and a `fallback` reason, requests with no spec
 (`unsupported`), requests the relaxation leaves undecided (`relaxed_undecided`)
 and relaxed points
 the validator rejects (`rejected_relaxed_point`). A relaxed optimum of an optimization request
-(`stop_on_feasible=False`) with a relative acceleration shortfall above 1% on a
-jump tick (`vertical.jumpVelocity`) or on a ground tick (`movement.ground`) whose
-start or end state has at most 0.25 of X or Z room (`alarm_ticks`, listed in
-`disk.alarmTicks`; a request without those schedules never alarms) is confirmed:
+(`stop_on_feasible=False`) with a relative acceleration shortfall above 10% on a
+jump tick (`vertical.jumpVelocity`; `alarm_ticks`, listed in `disk.alarmTicks`; a
+request without that schedule never alarms) is confirmed. A jump input always
+applies its whole sprint-jump push, so a relaxed optimum that brakes it can be
+impossible at full strength.
 IPOPT re-solves the same request once and its result replaces the relaxed one.
 Every tick is seeded with its disk direction turned by `SEED_TILT` (`1e-4` rad,
 `ipopt_seed`), as the finalization is; the request's fallback facing stays. The

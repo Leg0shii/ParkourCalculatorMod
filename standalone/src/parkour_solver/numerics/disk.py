@@ -18,8 +18,7 @@ CAP = 0.1
 MAX_ITER = 200
 TOL = 1e-9
 INFEASIBILITY_TOL = 1e-8
-ALARM_FRACTION = 0.01
-LEDGE = 0.25
+ALARM_FRACTION = 0.1
 SEED_TILT = 1e-4
 MATERIAL_GAP = 1e-4
 
@@ -119,29 +118,14 @@ def ipopt_seed(yaw):
 
 
 def alarm_ticks(problem, shortfall):
-    """Ticks short by more than ALARM_FRACTION where a material gap can open.
+    """Jump ticks short by more than ALARM_FRACTION, where the relaxation can brake a push the full model must make.
 
-    Material gaps have been seen only on jump ticks and on ground ticks along a
-    thin ledge, where at most LEDGE of X or Z room is left between the support
-    edge and a wall (research/disk-relaxation/README.md). Jumps and ground come
-    from the program's vertical and movement schedules.
+    A jump input applies its whole sprint-jump push, so a relaxed optimum that uses only part of it can be
+    impossible at full strength; every full-model infeasibility measured had a jump tick at least 28% short
+    (research/disk-relaxation/README.md). Jumps come from the program's vertical schedule.
     """
-    n = problem['ticks']
-    jumps = (problem.get('vertical') or {}).get('jumpVelocity') or [None]*n
-    ground = (problem.get('movement') or {}).get('ground') or [False]*n
-    room = {}
-    for r in problem.get('walls', []):
-        if r.get('mode') in ('X', 'Z') and r.get('t2') is None:
-            lo, hi = room.get((r['mode'], r['t1']), (-math.inf, math.inf))
-            if r['cmp'] in ('GE', 'EQ'):
-                lo = max(lo, r['rhs'])
-            if r['cmp'] in ('LE', 'EQ'):
-                hi = min(hi, r['rhs'])
-            room[(r['mode'], r['t1'])] = lo, hi
-    def thin(t):
-        return any(hi-lo <= LEDGE for (_, state), (lo, hi) in room.items() if state in (t, t+1))
-    return [t for t, s in enumerate(shortfall)
-            if s > ALARM_FRACTION and (jumps[t] is not None or ground[t] and thin(t))]
+    jumps = (problem.get('vertical') or {}).get('jumpVelocity') or [None]*problem['ticks']
+    return [t for t, s in enumerate(shortfall) if s > ALARM_FRACTION and jumps[t] is not None]
 
 
 class RelaxedDispatch:
@@ -150,8 +134,8 @@ class RelaxedDispatch:
     IPOPT runs, with stock semantics, on requests outside the supported class,
     requests the relaxation leaves undecided, and relaxed points the scalar
     validator rejects. Every other request is solved relaxed; an optimization
-    request whose relaxed optimum leaves more than ALARM_FRACTION of a jump or
-    thin-ledge tick's acceleration unused (alarm_ticks) is confirmed by IPOPT.
+    request whose relaxed optimum leaves more than ALARM_FRACTION of a jump
+    tick's acceleration unused (alarm_ticks) is confirmed by IPOPT.
     """
     def __init__(self, *, gate):
         self.gate = gate

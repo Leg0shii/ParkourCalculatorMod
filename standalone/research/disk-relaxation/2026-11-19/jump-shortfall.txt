@@ -1,0 +1,9 @@
+requests 758 infeasible 32
+infeasible jump shortfalls [0.285, 0.445, 0.524, 0.53, 0.549, 0.584, 0.585, 0.592, 0.592, 0.601, 0.603, 0.604, 0.609, 0.614, 0.617, 0.617, 0.62, 0.63, 0.631, 0.645, 0.648, 0.652, 0.655, 0.659, 0.663, 0.669, 0.671, 0.692, 0.694, 0.702, 0.717, 0.758]
+jump tick > 1% short: alarms 281; infeasible caught 32/32; feasible alarmed 249 {'heldout': 23, 'nativeRelaxed': 15, 'real11': 90, 'p5': 121}
+jump tick > 10% short: alarms 228; infeasible caught 32/32; feasible alarmed 196 {'heldout': 15, 'nativeRelaxed': 9, 'real11': 69, 'p5': 103}
+jump tick > 20% short: alarms 208; infeasible caught 32/32; feasible alarmed 176 {'heldout': 15, 'nativeRelaxed': 9, 'real11': 56, 'p5': 96}
+jump tick > 25% short: alarms 203; infeasible caught 32/32; feasible alarmed 171 {'heldout': 14, 'nativeRelaxed': 9, 'real11': 55, 'p5': 93}
+jump tick > 28% short: alarms 197; infeasible caught 32/32; feasible alarmed 165 {'heldout': 14, 'nativeRelaxed': 9, 'real11': 53, 'p5': 89}
+jump tick > 30% short: alarms 185; infeasible caught 31/32; feasible alarmed 154 {'heldout': 14, 'nativeRelaxed': 9, 'real11': 52, 'p5': 79}
+jump tick > 40% short: alarms 155; infeasible caught 31/32; feasible alarmed 124 {'heldout': 14, 'nativeRelaxed': 9, 'real11': 43, 'p5': 58}

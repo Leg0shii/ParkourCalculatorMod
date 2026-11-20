@@ -89,6 +89,21 @@ observation of where real gaps occur). On the native suite re-run with every
 vertical and movement schedules had 6 material gaps, all still alarmed, and 18
 false alarms, 9 dropped.
 
+Later the alarm was narrowed to what can make the relaxation wrong about
+feasibility, not merely about the objective: a jump tick more than 10% short. On
+758 relaxation-feasible requests with IPOPT truth (held-out, native relaxed, Real11
+extended and the encounter-groups p5 requests), 32 have no IPOPT point and every
+one has a jump tick at least 28.5% short, so the 10% jump alarm catches all 32
+while flagging 103 requests with no material gap and 93 with one
+([shortfalls](2026-11-19/jump-shortfall.txt), [ground alarm value](2026-11-19/ledge-alarm-value.txt)).
+With it in place the thin-ledge ground rule would alarm no further request.
+Landing room on the final block does not predict infeasibility: the 32 land with
+0.33 to 1.0 blocks of room before the near edge. In the one examined
+([report](2026-11-19/infeasible-5e10cd17/report.md)) the leg asks for a sprint jump from
+B5 that loops around the corner shared with the B6 pillar and the B22 slab to hit
+the head on B22 and land on B5 again; the relaxation brakes the jump's push to 38%,
+and IPOPT solves the request only with that push scaled to 60% or less.
+
 ## Confirmation seed
 
 Confirmations are one IPOPT optimization per alarmed request; in production they

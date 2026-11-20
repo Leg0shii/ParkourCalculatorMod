@@ -1,0 +1,57 @@
+named X/Z rows by state (t1 >= 53):
+   (53, 'Z', 'LE', -1095.3, 'avoidance')
+   (54, 'Z', 'LE', -1095.3, 'avoidance')
+   (55, 'Z', 'LE', -1095.3, 'avoidance')
+   (56, 'Z', 'LE', -1095.3, 'avoidance')
+   (57, 'Z', 'LE', -1095.3, 'avoidance')
+   (58, 'X', 'GE', 729.7, 'contact:region')
+   (58, 'X', 'LE', 731.3, 'contact:region')
+   (58, 'Z', 'GE', -1096.3, 'contact:region')
+   (58, 'Z', 'LE', -1095.3, 'avoidance')
+   (58, 'Z', 'LE', -1095.3, 'contact:region')
+   (59, 'X', 'GE', 729.7, 'contact:region')
+   (59, 'X', 'LE', 731.3, 'contact:region')
+   (59, 'Z', 'GE', -1096.3, 'contact:region')
+   (59, 'Z', 'LE', -1095.3, 'avoidance')
+   (59, 'Z', 'LE', -1095.3, 'contact:region')
+   (60, 'Z', 'LE', -1095.3, 'avoidance')
+   (61, 'X', 'GE', 731.3, 'avoidance')
+   (61, 'X', 'GE', 731.3, 'contact:region')
+   (61, 'X', 'LE', 734.3, 'contact:region')
+   (61, 'Z', 'GE', -1095.3, 'contact:region')
+   (61, 'Z', 'LE', -1093.7, 'contact:region')
+   (62, 'X', 'GE', 731.3, 'avoidance')
+   (63, 'X', 'GE', 731.3, 'avoidance')
+   (64, 'X', 'GE', 731.3, 'avoidance')
+   (64, 'Z', 'LE', -1095.3, 'avoidance')
+   (65, 'X', 'GE', 729.7, 'contact:region')
+   (65, 'X', 'LE', 731.3, 'contact:region')
+   (65, 'Z', 'GE', -1096.3, 'contact:region')
+   (65, 'Z', 'LE', -1095.3, 'avoidance')
+   (65, 'Z', 'LE', -1095.3, 'contact:region')
+   (66, 'Z', 'LE', -1095.3, 'avoidance')
+vertical position (feet Y) states 56..66: 5
+vertical onGround 56..66: True
+as captured: 0/4 IPOPT runs feasible; statuses ['Infeasible_Problem_Detected', 'Infeasible_Problem_Detected', 'Infeasible_Problem_Detected', 'Infeasible_Problem_Detected']
+without the rows at states [61]: 4/4 IPOPT runs feasible; statuses ['Solve_Succeeded', 'Solve_Succeeded', 'Solve_Succeeded', 'Solve_Succeeded']; best objective -337.4363
+   positions 59..66: [[731.184, -1096.153], [731.182, -1096.17], [731.284, -1095.869], [731.317, -1095.716], [731.321, -1095.584], [731.3, -1095.468], [731.3, -1095.38], [731.326, -1095.3]]
+without the rows at states [62, 63, 64]: 0/4 IPOPT runs feasible; statuses ['Infeasible_Problem_Detected', 'Infeasible_Problem_Detected', 'Infeasible_Problem_Detected', 'Infeasible_Problem_Detected']
+without the rows at states [61, 62, 63, 64]: 4/4 IPOPT runs feasible; statuses ['Solve_Succeeded', 'Solve_Succeeded', 'Solve_Succeeded', 'Solve_Succeeded']; best objective -337.3209
+   positions 59..66: [[730.5, -1096.127], [730.35, -1095.854], [730.595, -1095.687], [730.755, -1095.595], [730.926, -1095.511], [731.108, -1095.434], [731.3, -1095.364], [731.5, -1095.3]]
+without the rows at states [65]: 4/4 IPOPT runs feasible; statuses ['Solve_Succeeded', 'Solve_Succeeded', 'Solve_Succeeded', 'Solve_Succeeded']; best objective -336.5365
+   positions 59..66: [[731.216, -1095.609], [731.265, -1095.358], [731.609, -1095.3], [731.816, -1095.286], [732.025, -1095.288], [732.24, -1095.3], [732.46, -1095.304], [732.686, -1095.3]]
+without the rows at states [64, 65, 66]: 4/4 IPOPT runs feasible; statuses ['Solve_Succeeded', 'Solve_Succeeded', 'Solve_Succeeded', 'Solve_Succeeded']; best objective -335.6453
+   positions 59..66: [[731.215, -1095.618], [731.224, -1095.3], [731.446, -1094.881], [731.584, -1094.633], [731.727, -1094.387], [731.875, -1094.145], [732.026, -1093.904], [732.181, -1093.666]]
+jump input 60: magnitude 0.3274, friction 0.5460; ground input 59: magnitude 0.1300; air inputs 61..65: magnitude 0.0260, friction 0.9100
+vertical contacts (states 55..66): [{'state': 59, 'direction': -1, 'plane': 6}, {'state': 60, 'direction': -1, 'plane': 6}, {'state': 62, 'plane': 6.700000047683716, 'direction': 1}, {'state': 66, 'direction': -1, 'plane': 6}]
+jumpVelocity[60]: 0.41999998688697815 vertical profile keys: <class 'str'>
+referencePosition [7.176, 6.662, 6.08, 6, 6, 6.42, 6.7, 6.622, 6.466, 6.236, 6]
+jump-input acceleration scaled (full model must use |a| = scaled magnitude):
+  1.00 x 0.3274 = 0.3274: IPOPT feasible 0/4
+  0.80 x 0.3274 = 0.2619: IPOPT feasible 0/4
+  0.60 x 0.3274 = 0.1964: IPOPT feasible 4/4 | positions 60..66 [[731.207, -1095.305], [731.302, -1095.298], [731.328, -1095.3], [731.327, -1095.308], [731.3, -1095.311], [731.3, -1095.305], [731.326, -1095.3]]
+  0.50 x 0.3274 = 0.1637: IPOPT feasible 4/4 | positions 60..66 [[731.218, -1095.321], [731.303, -1095.296], [731.328, -1095.296], [731.326, -1095.308], [731.3, -1095.312], [731.3, -1095.306], [731.326, -1095.3]]
+  0.45 x 0.3274 = 0.1473: IPOPT feasible 4/4 | positions 60..66 [[731.217, -1095.341], [731.302, -1095.298], [731.326, -1095.287], [731.323, -1095.287], [731.3, -1095.302], [731.3, -1095.301], [731.326, -1095.3]]
+  0.40 x 0.3274 = 0.1310: IPOPT feasible 4/4 | positions 60..66 [[731.229, -1095.341], [731.303, -1095.296], [731.325, -1095.29], [731.326, -1095.301], [731.3, -1095.309], [731.3, -1095.304], [731.326, -1095.3]]
+  0.38 x 0.3274 = 0.1244: IPOPT feasible 4/4 | positions 60..66 [[731.227, -1095.353], [731.303, -1095.298], [731.324, -1095.284], [731.32, -1095.283], [731.3, -1095.302], [731.3, -1095.301], [731.326, -1095.3]]
+  0.30 x 0.3274 = 0.0982: IPOPT feasible 4/4 | positions 60..66 [[731.244, -1095.358], [731.304, -1095.297], [731.322, -1095.285], [731.324, -1095.296], [731.3, -1095.307], [731.3, -1095.303], [731.326, -1095.3]]
