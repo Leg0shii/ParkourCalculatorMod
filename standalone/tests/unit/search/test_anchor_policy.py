@@ -140,6 +140,32 @@ class AnchorPolicyTests(unittest.TestCase):
         self.assertAlmostEqual(objective['customYaw'],math.degrees(math.atan2(-(n[0]-e[0]),n[2]-e[2])) )
         json.dumps(guides,allow_nan=False)
 
+    def test_decision_objective_aims_from_the_last_block_toward_the_next_required_anchor(self):
+        from parkour_solver.spatial.checkpoints import Checkpoint
+        s=scene();data=build_route_domain(s,dict(kind='landing',block='goal')).to_dict()
+        def view(anchors):
+            return AnchorAdapter(data,build_event_graph(data),settings(dict(anchors=anchors),s))
+        def aim(point,target):
+            return Checkpoint(1,-1,(target[0]-point[0],target[2]-point[2]),(),(),()).objective
+        adapter=view(['mid']);points=adapter.guide_plan['points']
+        # The start's guide point is the initial position.
+        self.assertEqual(adapter.program_objective(history(s,['start'])),aim(points[0],points[1]))
+        # Landing on the group's last anchor aims as the group end does.
+        landed=history(s,['start','mid'])
+        self.assertEqual(adapter.program_objective(landed),onward_objective(adapter.guide_plan,0,s['objective']))
+        # Ending airborne aims from the block it took off from.
+        airborne=history(s,['start','mid']);airborne['terminalSupport']=None;airborne['profile']['grounded'][-1]=False
+        self.assertEqual(adapter.program_objective(airborne),adapter.program_objective(landed))
+        # Inside the next anchor's turnaround a program aims past it.
+        self.assertTrue(classify(adapter.guide_plan,0,[6.5,2,.5])['isTurnaround'])
+        self.assertEqual(adapter.program_objective(history(s,['start','optional'])),aim([6.5,2,.5],points[2]))
+        # The finish keeps the scene objective.
+        self.assertEqual(adapter.program_objective(history(s,['start','mid','goal'])),s['objective'])
+        # A block that is not an anchor aims from its top-face centre.
+        adapter=view(['optional']);points=adapter.guide_plan['points']
+        self.assertFalse(classify(adapter.guide_plan,0,[4.5,2,.5])['isTurnaround'])
+        self.assertEqual(adapter.program_objective(history(s,['start','mid'])),aim([4.5,2,.5],points[1]))
+
     def test_nearest_preserves_disconnected_cover_and_stable_ties(self):
         boxes=[[0,1,0,1,1,1],[3,1,0,4,1,1]]
         self.assertEqual(nearest(boxes,[2,1,.5]),(1,1,.5))
@@ -182,7 +208,7 @@ class AnchorPolicyTests(unittest.TestCase):
         self.assertEqual({r['goal']['block'] for r in requests},{'mid'})
         view=adapter.for_goal(requests[0],cursor)
         p=history(s,['start'])
-        node=view.for_node(0).bind_program(p)
+        node=view.for_node(p).bind_program(p)
         self.assertFalse(hasattr(node,'contact_regions'))
         self.assertTrue(node.candidate({},dict(positions=[[.5,.5]]*2),{})['accepted'])
         self.assertFalse(view.bind_program(p).candidate({},dict(positions=[[.5,.5]]*2),{})['accepted'])

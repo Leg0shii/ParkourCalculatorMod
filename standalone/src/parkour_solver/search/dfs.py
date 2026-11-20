@@ -411,7 +411,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
         # Check the full proposal, including events beyond a diagnostic projection.
         return screen_program(scene,program,compiler,
             max(.001,min(candidate_seconds,deadline-time.monotonic())),gate=gate,
-            objective=guide_objective(f) if f is not None else None)
+            objective=None if f is None else stage_adapter(f).program_objective(program) if anchor_route else guide_objective(f))
 
     def numerical_pending(record):
         repair = record.get('program', {}).get('repairState', {})
@@ -453,7 +453,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
             program['repairState']=repair
             entry['repairState']=repair
             repair_progress()
-        node_view=active.for_node(span)
+        node_view=active.for_node(program)
         result=evaluate_program(scene,program,compiler,node_view,work,motion,
             seconds=max(.001,min(score_seconds,deadline-time.monotonic())),candidate_seconds=candidate_seconds,
             solver_calls=score_calls,python_executable=python_executable,cancel_event=cancel_event,

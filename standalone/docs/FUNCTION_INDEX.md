@@ -518,13 +518,15 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `ipopt_seed` | [108](../src/parkour_solver/numerics/disk.py#L108) | function |
 | `alarm_ticks` | [120](../src/parkour_solver/numerics/disk.py#L120) | function |
 | `RelaxedDispatch` | [131](../src/parkour_solver/numerics/disk.py#L131) | class |
-| `RelaxedDispatch.__init__` | [140](../src/parkour_solver/numerics/disk.py#L140) | function |
-| `RelaxedDispatch.solve` | [143](../src/parkour_solver/numerics/disk.py#L143) | function |
-| `RelaxedDispatch.confirm` | [180](../src/parkour_solver/numerics/disk.py#L180) | function |
-| `_result` | [207](../src/parkour_solver/numerics/disk.py#L207) | function |
-| `_attempt` | [223](../src/parkour_solver/numerics/disk.py#L223) | function |
-| `_solve` | [231](../src/parkour_solver/numerics/disk.py#L231) | function |
-| `_cost` | [331](../src/parkour_solver/numerics/disk.py#L331) | function |
+| `RelaxedDispatch.__init__` | [143](../src/parkour_solver/numerics/disk.py#L143) | function |
+| `RelaxedDispatch.solve` | [146](../src/parkour_solver/numerics/disk.py#L146) | function |
+| `RelaxedDispatch.confirmed` | [149](../src/parkour_solver/numerics/disk.py#L149) | function |
+| `RelaxedDispatch._dispatch` | [152](../src/parkour_solver/numerics/disk.py#L152) | function |
+| `RelaxedDispatch.confirm` | [189](../src/parkour_solver/numerics/disk.py#L189) | function |
+| `_result` | [216](../src/parkour_solver/numerics/disk.py#L216) | function |
+| `_attempt` | [232](../src/parkour_solver/numerics/disk.py#L232) | function |
+| `_solve` | [240](../src/parkour_solver/numerics/disk.py#L240) | function |
+| `_cost` | [340](../src/parkour_solver/numerics/disk.py#L340) | function |
 
 ## numerics/model.py
 
@@ -747,11 +749,13 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `AnchorAdapter.next_goals` | [32](../src/parkour_solver/search/anchors/adapter.py#L32) | function |
 | `AnchorAdapter.for_goal` | [56](../src/parkour_solver/search/anchors/adapter.py#L56) | function |
 | `AnchorAdapter.for_node` | [70](../src/parkour_solver/search/anchors/adapter.py#L70) | function |
-| `AnchorAdapter.advance` | [76](../src/parkour_solver/search/anchors/adapter.py#L76) | function |
-| `AnchorAdapter.context` | [83](../src/parkour_solver/search/anchors/adapter.py#L83) | function |
-| `AnchorAdapter.program_allowed` | [92](../src/parkour_solver/search/anchors/adapter.py#L92) | function |
-| `AnchorAdapter.candidate` | [99](../src/parkour_solver/search/anchors/adapter.py#L99) | function |
-| `AnchorAdapter.summary` | [111](../src/parkour_solver/search/anchors/adapter.py#L111) | function |
+| `AnchorAdapter.decision_point` | [76](../src/parkour_solver/search/anchors/adapter.py#L76) | function |
+| `AnchorAdapter.program_objective` | [90](../src/parkour_solver/search/anchors/adapter.py#L90) | function |
+| `AnchorAdapter.advance` | [95](../src/parkour_solver/search/anchors/adapter.py#L95) | function |
+| `AnchorAdapter.context` | [102](../src/parkour_solver/search/anchors/adapter.py#L102) | function |
+| `AnchorAdapter.program_allowed` | [111](../src/parkour_solver/search/anchors/adapter.py#L111) | function |
+| `AnchorAdapter.candidate` | [118](../src/parkour_solver/search/anchors/adapter.py#L118) | function |
+| `AnchorAdapter.summary` | [130](../src/parkour_solver/search/anchors/adapter.py#L130) | function |
 
 ## search/anchors/policy.py
 
@@ -925,9 +929,9 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `ScopedWork.accepted` | [51](../src/parkour_solver/search/engine.py#L51) | function |
 | `segment_solids` | [55](../src/parkour_solver/search/engine.py#L55) | function |
 | `evaluate_program` | [69](../src/parkour_solver/search/engine.py#L69) | function |
-| `numerical_counts` | [216](../src/parkour_solver/search/engine.py#L216) | function |
-| `_key` | [236](../src/parkour_solver/search/engine.py#L236) | function |
-| `find_checkpoint_route` | [240](../src/parkour_solver/search/engine.py#L240) | function |
+| `numerical_counts` | [217](../src/parkour_solver/search/engine.py#L217) | function |
+| `_key` | [237](../src/parkour_solver/search/engine.py#L237) | function |
+| `find_checkpoint_route` | [241](../src/parkour_solver/search/engine.py#L241) | function |
 
 ## search/entry.py
 
@@ -1042,9 +1046,11 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `node_alternatives` | [20](../src/parkour_solver/search/repair.py#L20) | function |
-| `branch_meta` | [41](../src/parkour_solver/search/repair.py#L41) | function |
-| `solve_contact_branches` | [46](../src/parkour_solver/search/repair.py#L46) | function |
+| `usable` | [23](../src/parkour_solver/search/repair.py#L23) | function |
+| `node_alternatives` | [29](../src/parkour_solver/search/repair.py#L29) | function |
+| `alarmed` | [50](../src/parkour_solver/search/repair.py#L50) | function |
+| `branch_meta` | [61](../src/parkour_solver/search/repair.py#L61) | function |
+| `solve_contact_branches` | [66](../src/parkour_solver/search/repair.py#L66) | function |
 
 ## search/repair_state.py
 
@@ -1100,7 +1106,8 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 | `unit` | [40](../src/parkour_solver/spatial/anchor_guides.py#L40) | function |
 | `build_guides` | [45](../src/parkour_solver/spatial/anchor_guides.py#L45) | function |
 | `classify` | [79](../src/parkour_solver/spatial/anchor_guides.py#L79) | function |
-| `onward_objective` | [91](../src/parkour_solver/spatial/anchor_guides.py#L91) | function |
+| `decision_objective` | [91](../src/parkour_solver/spatial/anchor_guides.py#L91) | function |
+| `onward_objective` | [110](../src/parkour_solver/spatial/anchor_guides.py#L110) | function |
 
 ## spatial/cells.py
 

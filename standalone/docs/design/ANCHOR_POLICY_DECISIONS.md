@@ -97,6 +97,16 @@ objective_E = maximize(d.x * X[T_E] + d.z * Z[T_E])
 
 Reuse [`Checkpoint.objective`](../../src/parkour_solver/spatial/checkpoints.py) and existing POSITION/customYaw. Physical landing constraints remain independent. No waypoint equality, progress-based pruning, slack work or constant FEASIBILITY objective is introduced.
 
+A decision check, and the relaxation screen of a child when it is created, optimize the program's own
+decision objective (`AnchorAdapter.program_objective`, `anchor_guides.decision_objective`; user,
+2026-11-20). The program ends on block X: the block its last movement landed on, or the block it took
+off from when it ends airborne (a ceiling contact). X's point is its guide point when X is the start, an
+anchor or the task, otherwise its top-face centre. The objective aims from that point toward the next
+required anchor's guide point. When X's point is inside that anchor's turnaround boundary, it aims at the
+anchor after it instead. Landing on a group's last anchor therefore aims like that group's end, and
+landing on the task keeps the scene objective. Guide points are a deferred improvement
+([P14](../DEFERRED_WORK.md)). `searchPolicyVersion` 11.
+
 **Settled design evidence:** the user reports a measurement of approximately equal speed for this objective with early stop. Adopt that as the design input; this session did not reproduce or inspect the other agent's measurement. No further approval or constant-objective comparison is required to proceed with this direction. Implementation/regression/cold acceptance is recorded in the current evidence linked above.
 
 Use stop-on-feasible and no intermediate polishing/equal-cost variant drain. Keep native scene/anchor acceptance, repair, feasible-yaw seeds and original-state re-solves. A warm seed may already be feasible and return without improvement; it remains a valid early-stop result. Final actual landing uses real MAXZ optimization.

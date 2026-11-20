@@ -4,8 +4,8 @@ import copy
 
 from parkour_solver.search.identity import digest
 from parkour_solver.search.events.adapter import EventGuideAdapter, EventReference
-from parkour_solver.search.anchors.policy import audit, encounter_groups, owner, visit_state, semantic_settings
-from parkour_solver.spatial.anchor_guides import build_guides, onward_objective
+from parkour_solver.search.anchors.policy import audit, encounter_groups, owner, visit_state, visits, semantic_settings
+from parkour_solver.spatial.anchor_guides import build_guides, decision_objective, onward_objective
 
 
 class AnchorAdapter(EventGuideAdapter):
@@ -67,11 +67,30 @@ class AnchorAdapter(EventGuideAdapter):
         result.program=None
         return result
 
-    def for_node(self, pair):
-        """A decision check inside pair `pair` aims onward from that pair's target, not the group's end."""
+    def for_node(self, program):
+        """A decision check optimizes its program's own decision objective."""
         result=copy.copy(self);result.node_query=True
-        result.objective=onward_objective(self.guide_plan,pair,self.scene['objective'])
+        result.objective=self.program_objective(program)
         return result
+
+    def decision_point(self, program):
+        """The block a program's last movement landed on or, ending airborne, took off from: its guide point
+        when it is the start, an anchor or the task, else its top-face centre."""
+        name=visits(self.scene,program)[-1][1]
+        names=self.guide_plan['anchors']
+        k=next((k for k,a in enumerate(names) if owner(self.scene,a)==name),None)
+        if k is not None:
+            return self.guide_plan['points'][k]
+        solids=[self.scene['collisionScene']['solids'][b['solidIndex']] for b in self.scene['blocks']
+                if owner(self.scene,b['id'])==name]
+        top=max(s[4] for s in solids)
+        tops=[s for s in solids if s[4]==top]
+        return [(min(s[0] for s in tops)+max(s[3] for s in tops))/2,top,(min(s[2] for s in tops)+max(s[5] for s in tops))/2]
+
+    def program_objective(self, program):
+        """A decision's objective: progress from where its program ends toward the next required anchor."""
+        reached=audit(self.scene,program,self.anchor_policy['anchors'])['reached']
+        return decision_objective(self.guide_plan,reached,self.decision_point(program),self.scene['objective'])
 
     def advance(self, cursor, child, observed, request):
         result=super().advance(cursor,child,observed,request)
