@@ -2,6 +2,7 @@ import copy
 import math
 import time
 
+from parkour_solver.numerics.disk import ipopt_seed
 from parkour_solver.reachability.service import InteractionGate
 from parkour_solver.movement.program import boundary_state, empty_program, program_physics_key, program_search_key, truncate_program
 from parkour_solver.movement.generation import generate_choices, propose_choices
@@ -658,7 +659,7 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 result = evaluate_program(args.pop('scene'),program,compiler,args.pop('adapter'),work,motion,
                     seconds=max(.001,deadline-time.monotonic()),candidate_seconds=candidate_seconds,
                     python_executable=python_executable,cancel_event=cancel_event,retry_unresolved=retry_unknown,
-                    final_route=dict(witness['route'],warmYaw=witness['candidate']['yaw']),**args)
+                    final_route=dict(witness['route'],warmYaw=ipopt_seed(witness['candidate']['yaw'])),**args)
                 best = result['best']
                 if best is not None and (not result.get('fullSceneValidated') or f['goal'] and f['goal']['kind']==KIND
                         and not satisfied(program,best['candidate'],f['goal'],scene.get('supportClearance',1e-6))):

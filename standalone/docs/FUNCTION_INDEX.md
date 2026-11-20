@@ -508,18 +508,20 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `spec` | [31](../src/parkour_solver/numerics/disk.py#L31) | function |
-| `solve` | [60](../src/parkour_solver/numerics/disk.py#L60) | function |
-| `screen` | [85](../src/parkour_solver/numerics/disk.py#L85) | function |
-| `deficits` | [100](../src/parkour_solver/numerics/disk.py#L100) | function |
-| `RelaxedDispatch` | [107](../src/parkour_solver/numerics/disk.py#L107) | class |
-| `RelaxedDispatch.__init__` | [116](../src/parkour_solver/numerics/disk.py#L116) | function |
-| `RelaxedDispatch.solve` | [120](../src/parkour_solver/numerics/disk.py#L120) | function |
-| `RelaxedDispatch.confirm` | [158](../src/parkour_solver/numerics/disk.py#L158) | function |
-| `_result` | [193](../src/parkour_solver/numerics/disk.py#L193) | function |
-| `_attempt` | [209](../src/parkour_solver/numerics/disk.py#L209) | function |
-| `_solve` | [217](../src/parkour_solver/numerics/disk.py#L217) | function |
-| `_cost` | [317](../src/parkour_solver/numerics/disk.py#L317) | function |
+| `spec` | [33](../src/parkour_solver/numerics/disk.py#L33) | function |
+| `solve` | [62](../src/parkour_solver/numerics/disk.py#L62) | function |
+| `screen` | [87](../src/parkour_solver/numerics/disk.py#L87) | function |
+| `deficits` | [102](../src/parkour_solver/numerics/disk.py#L102) | function |
+| `ipopt_seed` | [109](../src/parkour_solver/numerics/disk.py#L109) | function |
+| `alarm_ticks` | [121](../src/parkour_solver/numerics/disk.py#L121) | function |
+| `RelaxedDispatch` | [147](../src/parkour_solver/numerics/disk.py#L147) | class |
+| `RelaxedDispatch.__init__` | [157](../src/parkour_solver/numerics/disk.py#L157) | function |
+| `RelaxedDispatch.solve` | [161](../src/parkour_solver/numerics/disk.py#L161) | function |
+| `RelaxedDispatch.confirm` | [200](../src/parkour_solver/numerics/disk.py#L200) | function |
+| `_result` | [231](../src/parkour_solver/numerics/disk.py#L231) | function |
+| `_attempt` | [247](../src/parkour_solver/numerics/disk.py#L247) | function |
+| `_solve` | [255](../src/parkour_solver/numerics/disk.py#L255) | function |
+| `_cost` | [355](../src/parkour_solver/numerics/disk.py#L355) | function |
 
 ## numerics/model.py
 
@@ -899,11 +901,11 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `candidate_key` | [20](../src/parkour_solver/search/dfs.py#L20) | function |
-| `arrival_key` | [25](../src/parkour_solver/search/dfs.py#L25) | function |
-| `decision_family` | [29](../src/parkour_solver/search/dfs.py#L29) | function |
-| `commit_arrival` | [40](../src/parkour_solver/search/dfs.py#L40) | function |
-| `search_goals` | [65](../src/parkour_solver/search/dfs.py#L65) | function |
+| `candidate_key` | [21](../src/parkour_solver/search/dfs.py#L21) | function |
+| `arrival_key` | [26](../src/parkour_solver/search/dfs.py#L26) | function |
+| `decision_family` | [30](../src/parkour_solver/search/dfs.py#L30) | function |
+| `commit_arrival` | [41](../src/parkour_solver/search/dfs.py#L41) | function |
+| `search_goals` | [66](../src/parkour_solver/search/dfs.py#L66) | function |
 
 ## search/domain.py
 

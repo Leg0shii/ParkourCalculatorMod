@@ -19,6 +19,8 @@ MAX_ITER = 200
 TOL = 1e-9
 INFEASIBILITY_TOL = 1e-8
 ALARM_FRACTION = 0.01
+LEDGE = 0.25
+SEED_TILT = 1e-4
 MATERIAL_GAP = 1e-4
 
 FEASIBLE = ('Solved', 'AlmostSolved')
@@ -104,13 +106,52 @@ def deficits(problem, controls):
     return peak, values, values.index(peak) if values else None
 
 
+def ipopt_seed(yaw):
+    """IPOPT facings from a relaxed point's disk directions, all turned by SEED_TILT radians.
+
+    On a mirror-symmetric request Clarabel returns the symmetric optimum, so a
+    short tick points exactly between its two full-strength completions. IPOPT
+    iterates from a symmetric start stay symmetric and stop at a local
+    infeasibility; a uniform turn breaks every mirror symmetry while staying in
+    the same basin (research/disk-relaxation/README.md#confirmation-seed).
+    """
+    return [y+math.degrees(SEED_TILT) for y in yaw]
+
+
+def alarm_ticks(problem, shortfall):
+    """Ticks short by more than ALARM_FRACTION where a material gap can open.
+
+    Material gaps have been seen only on jump ticks and on ground ticks along a
+    thin ledge, where at most LEDGE of X or Z room is left between the support
+    edge and a wall (research/disk-relaxation/README.md). Jumps and ground come
+    from the program's vertical and movement schedules.
+    """
+    n = problem['ticks']
+    jumps = (problem.get('vertical') or {}).get('jumpVelocity') or [None]*n
+    ground = (problem.get('movement') or {}).get('ground') or [False]*n
+    room = {}
+    for r in problem.get('walls', []):
+        if r.get('mode') in ('X', 'Z') and r.get('t2') is None:
+            lo, hi = room.get((r['mode'], r['t1']), (-math.inf, math.inf))
+            if r['cmp'] in ('GE', 'EQ'):
+                lo = max(lo, r['rhs'])
+            if r['cmp'] in ('LE', 'EQ'):
+                hi = min(hi, r['rhs'])
+            room[(r['mode'], r['t1'])] = lo, hi
+    def thin(t):
+        return any(hi-lo <= LEDGE for (_, state), (lo, hi) in room.items() if state in (t, t+1))
+    return [t for t, s in enumerate(shortfall)
+            if s > ALARM_FRACTION and (jumps[t] is not None or ground[t] and thin(t))]
+
+
 class RelaxedDispatch:
     """`find_route`'s numerical callable: Clarabel unless IPOPT must decide.
 
     IPOPT runs, with stock semantics, on requests outside the supported class,
     optimization requests of a promoted lineage, requests the relaxation leaves
-    undecided, and relaxed points the scalar validator rejects. An optimization request whose relaxed optimum leaves more
-    than ALARM_FRACTION of some tick's acceleration unused is confirmed by IPOPT;
+    undecided, and relaxed points the scalar validator rejects. An optimization
+    request whose relaxed optimum leaves more than ALARM_FRACTION of a jump or
+    thin-ledge tick's acceleration unused (alarm_ticks) is confirmed by IPOPT;
     a confirmed score gap above MATERIAL_GAP promotes the lineage.
     """
     def __init__(self, *, promoted, gate):
@@ -145,10 +186,11 @@ class RelaxedDispatch:
         candidate = validate_controls(problem, solved['controls'])
         if not candidate['feasible']:
             return full('rejected_relaxed_point')
-        peak, _, tick = deficits(problem, solved['controls'])
-        relaxed.update(peakRelativeDeficit=peak, peakTick=tick)
+        peak, shortfall, tick = deficits(problem, solved['controls'])
+        alarmed = alarm_ticks(problem, shortfall)
+        relaxed.update(peakRelativeDeficit=peak, peakTick=tick, alarmTicks=alarmed)
         candidate['model'] = 'relaxed_disk'
-        if peak > ALARM_FRACTION and not stop_on_feasible:
+        if alarmed and not stop_on_feasible:
             return self.confirm(problem, candidate, relaxed, seconds=seconds, python_executable=python_executable,
                                 cancel_event=cancel_event, on_incumbent=on_incumbent)
         if on_incumbent is not None:
@@ -164,15 +206,11 @@ class RelaxedDispatch:
         if cached:
             result = dict(self.gate.cache[key], workerLaunched=False)
         else:
-            # Disk directions seed the facings where the relaxed point uses (nearly)
-            # full strength; a short tick's direction is arbitrary (undefined at a
-            # zero vector) and can steer IPOPT to a false local infeasibility, so it
-            # keeps the request's own facing. The request's fallback stays.
-            _, shortfall, _ = deficits(problem, relaxed_candidate['controls'])
-            seed = [own if short > ALARM_FRACTION else disk for own, disk, short
-                    in zip(problem['yaw'], relaxed_candidate['yaw'], shortfall)]
-            result = full_solve(dict(problem, yaw=seed), seconds=seconds, stop_on_feasible=False,
-                                python_executable=python_executable, cancel_event=cancel_event)
+            # Assumption (measured, research/disk-relaxation/README.md): the disk
+            # directions are the most accurate single-attempt seed. The request's
+            # fallback stays.
+            result = full_solve(dict(problem, yaw=ipopt_seed(relaxed_candidate['yaw'])), seconds=seconds,
+                                stop_on_feasible=False, python_executable=python_executable, cancel_event=cancel_event)
             if result['status'] == 'feasible' or result['status'] == 'unknown' and result['termination'] == 'worker_finished':
                 self.gate.cache[key] = result
         confirmation = dict(peak=relaxed['peakRelativeDeficit'], tick=relaxed['peakTick'], cached=cached,

@@ -1,0 +1,96 @@
+{
+ "feasible": {
+  "requests": 164,
+  "full": {
+   "feasible:Infeasible_Problem_Detected": 5,
+   "feasible:Solve_Succeeded": 159,
+   "shortOfBest>1e-4": 4,
+   "withinBest1e-6": 160,
+   "cpuTotal": 32.375,
+   "cpuMedian": 0.1938,
+   "cpuP90": 0.2172,
+   "cpuMax": 0.335
+  },
+  "partial": {
+   "falseInfeasibleDetected": 5,
+   "falseNoPoint": 5,
+   "feasible:Solve_Succeeded": 159,
+   "shortOfBest>1e-4": 9,
+   "unknown:Infeasible_Problem_Detected": 5,
+   "withinBest1e-6": 150,
+   "cpuTotal": 32.947,
+   "cpuMedian": 0.1961,
+   "cpuP90": 0.2132,
+   "cpuMax": 0.44
+  },
+  "none": {
+   "falseInfeasibleDetected": 5,
+   "falseNoPoint": 5,
+   "feasible:Solve_Succeeded": 159,
+   "shortOfBest>1e-4": 13,
+   "unknown:Infeasible_Problem_Detected": 5,
+   "withinBest1e-6": 146,
+   "cpuTotal": 33.539,
+   "cpuMedian": 0.198,
+   "cpuP90": 0.2173,
+   "cpuMax": 0.58
+  },
+  "cold": {
+   "feasible:Infeasible_Problem_Detected": 5,
+   "feasible:Solve_Succeeded": 159,
+   "shortOfBest>1e-4": 11,
+   "withinBest1e-6": 153,
+   "cpuTotal": 36.836,
+   "cpuMedian": 0.2207,
+   "cpuP90": 0.2493,
+   "cpuMax": 0.362
+  }
+ },
+ "all": {
+  "requests": 164,
+  "full": {
+   "feasible:Infeasible_Problem_Detected": 5,
+   "feasible:Solve_Succeeded": 159,
+   "shortOfBest>1e-4": 4,
+   "withinBest1e-6": 160,
+   "cpuTotal": 32.375,
+   "cpuMedian": 0.1938,
+   "cpuP90": 0.2172,
+   "cpuMax": 0.335
+  },
+  "partial": {
+   "falseInfeasibleDetected": 5,
+   "falseNoPoint": 5,
+   "feasible:Solve_Succeeded": 159,
+   "shortOfBest>1e-4": 9,
+   "unknown:Infeasible_Problem_Detected": 5,
+   "withinBest1e-6": 150,
+   "cpuTotal": 32.947,
+   "cpuMedian": 0.1961,
+   "cpuP90": 0.2132,
+   "cpuMax": 0.44
+  },
+  "none": {
+   "falseInfeasibleDetected": 5,
+   "falseNoPoint": 5,
+   "feasible:Solve_Succeeded": 159,
+   "shortOfBest>1e-4": 13,
+   "unknown:Infeasible_Problem_Detected": 5,
+   "withinBest1e-6": 146,
+   "cpuTotal": 33.539,
+   "cpuMedian": 0.198,
+   "cpuP90": 0.2173,
+   "cpuMax": 0.58
+  },
+  "cold": {
+   "feasible:Infeasible_Problem_Detected": 5,
+   "feasible:Solve_Succeeded": 159,
+   "shortOfBest>1e-4": 11,
+   "withinBest1e-6": 153,
+   "cpuTotal": 36.836,
+   "cpuMedian": 0.2207,
+   "cpuP90": 0.2493,
+   "cpuMax": 0.362
+  }
+ }
+}

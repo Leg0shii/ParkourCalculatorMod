@@ -202,13 +202,21 @@ answers, with `backend: ipopt` and a `fallback` reason, requests with no spec
 (`unsupported`), optimization requests of a promoted lineage (`promoted`),
 requests the relaxation leaves undecided (`relaxed_undecided`) and relaxed points
 the validator rejects (`rejected_relaxed_point`). A relaxed optimum of an optimization request
-(`stop_on_feasible=False`) with some tick's relative acceleration shortfall above
-1% is confirmed: IPOPT re-solves the same request and its result replaces the
-relaxed one. The seed takes the disk direction on ticks where the relaxed point
-uses at least 99% of the acceleration and the request's own facing elsewhere (a
-short tick's direction is arbitrary, undefined at a zero vector, and steered IPOPT
-to a false local infeasibility on the analytic false-alarm case); the request's
-fallback facing stays. The result carries `confirmation`: the shortfall peak and
+(`stop_on_feasible=False`) with a relative acceleration shortfall above 1% on a
+jump tick (`vertical.jumpVelocity`) or on a ground tick (`movement.ground`) whose
+start or end state has at most 0.25 of X or Z room (`alarm_ticks`, listed in
+`disk.alarmTicks`; a request without those schedules never alarms) is confirmed:
+IPOPT re-solves the same request once and its result replaces the relaxed one.
+Every tick is seeded with its disk direction turned by `SEED_TILT` (`1e-4` rad,
+`ipopt_seed`), as the finalization is; the request's fallback facing stays. The
+turn breaks mirror symmetry: on a symmetric request Clarabel returns the
+symmetric optimum, whose short-tick direction lies exactly between the two
+full-strength completions, and IPOPT started on that line stops at a local
+infeasibility. The seed is an assumption resting on a measurement
+([seed benchmark](../../research/disk-relaxation/README.md#confirmation-seed)):
+of the single-attempt seeds tried it had no false infeasibilities and the fewest
+worse optima at the same cost; revisit it if confirmations start rejecting
+feasible requests. The result carries `confirmation`: the shortfall peak and
 tick, both objectives, `gap = sense*(disk - ipopt)` and `material` (`gap > 1e-4`).
 A material gap sets the dispatch's `promoted` and records the promotion. Decided
 confirmations are cached per run in the interaction gate's cache by problem

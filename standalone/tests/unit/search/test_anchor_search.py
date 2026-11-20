@@ -276,11 +276,11 @@ class RelaxedAutomaticSearchTests(unittest.TestCase):
              patch.object(disk, 'ALARM_FRACTION', 1.):
             _, result, _ = self.search()
         relaxed = result['searchState']['dfs']['best']
-        # Finalization repairs the relaxed witness's own branch, warm-started from its facings.
+        # Finalization repairs the relaxed witness's own branch, warm-started from its turned facings.
         (route, variants, policy), = [r for r in repairs if r[2]['numerical'] == 'ipopt']
         self.assertIsNone(variants)
         self.assertEqual(policy['rankEqualCost'], False)
-        self.assertEqual(route, dict(relaxed['route'], warmYaw=relaxed['candidate']['yaw']))
+        self.assertEqual(route, dict(relaxed['route'], warmYaw=disk.ipopt_seed(relaxed['candidate']['yaw'])))
         self.assertEqual(relaxed['candidate']['model'], 'relaxed_disk')
         self.assertNotIn('model', result['best']['candidate'])
         self.assertEqual(result['work']['workerLaunches'], 0)

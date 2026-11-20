@@ -5,6 +5,7 @@ import time
 import unittest
 from unittest.mock import patch
 
+from parkour_solver.numerics.disk import ipopt_seed
 from parkour_solver.search.engine import find_checkpoint_route, ScopedWork
 from parkour_solver.search.feasibility import solve_due
 from tests.support.anchor_policy import scene, history
@@ -333,7 +334,7 @@ class AnchorDFSTests(unittest.TestCase):
         self.assertEqual(len(calls),1)
         self.assertEqual(policy,dict(purpose='terminal',stopOnFeasible=False,rankEqualCost=False,oracleRejection=True,
                                      numerical='ipopt'))
-        self.assertEqual(route,dict(source='relaxed',warmYaw=[0.]*20))
+        self.assertEqual(route,dict(source='relaxed',warmYaw=ipopt_seed([0.]*20)))
         self.assertEqual((result['status'],result['best']['candidate']['objective']),('feasible',-.5))
         self.assertNotIn('model',result['best']['candidate'])
         self.assertEqual(result['searchState']['dfs']['best']['candidate']['model'],'relaxed_disk')

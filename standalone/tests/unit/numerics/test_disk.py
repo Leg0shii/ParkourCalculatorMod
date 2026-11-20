@@ -230,20 +230,52 @@ class DispatchTests(unittest.TestCase):
         self.assertEqual((result['backend'], result['fallback'], calls), ('ipopt', 'rejected_relaxed_point', [False]))
 
 
+def grounded(problem):
+    """The program's movement schedule with every tick on the ground."""
+    n = problem['ticks']
+    return dict(problem, movement=dict(profile='minecraft-1.8.9', compiler='mod-input-state-v1',
+                                       horizontalCollision=[False]*(n+1), ground=[True]*n, sprinting=[False]*n,
+                                       airSprinting=[False]*n, moveForward=[1.]*n, moveStrafe=[0.]*n))
+
+
 def analytic(name):
-    """Detector controls with known answers (acceleration-detector study, c9deef4)."""
+    """Detector controls with known answers (acceleration-detector study, c9deef4), on a thin ledge."""
     base = dict(version=1, position=[0., 0.], velocity=[0., 0.], friction=[.91]*2, base=[0.]*2, threshold=0.,
                 contacts=[], stopOnFeasible=False, seconds=5., objective=dict(axis='X', tick=2, sense='MAX'))
     if name == 'true-gap':
         # Z is pinned and X capped at 0: the disk optimum stands still, full strength must move backwards.
-        return prepare(dict(base, ticks=1, magnitude=[1.], friction=[.91], base=[0.], yaw=[180.],
+        return prepare(grounded(dict(base, ticks=1, magnitude=[1.], friction=[.91], base=[0.], yaw=[180.],
             walls=[dict(mode='Z', t1=1, cmp='EQ', rhs=0.), dict(mode='X', t1=1, cmp='LE', rhs=0.)],
-            objective=dict(axis='X', tick=1, sense='MAX')))
+            objective=dict(axis='X', tick=1, sense='MAX'))))
     if name == 'false-alarm':
         # The first tick's X is pinned; any Z acceleration scores the same.
-        return prepare(dict(base, ticks=2, magnitude=[1., 1.], yaw=[90., 0.],
-                            walls=[dict(mode='X', t1=1, cmp='EQ', rhs=0.)]))
-    return prepare(dict(base, ticks=2, magnitude=[1., 1.], yaw=[0., 0.], walls=[]))
+        return prepare(grounded(dict(base, ticks=2, magnitude=[1., 1.], yaw=[90., 0.],
+                                     walls=[dict(mode='X', t1=1, cmp='EQ', rhs=0.)])))
+    return prepare(grounded(dict(base, ticks=2, magnitude=[1., 1.], yaw=[0., 0.], walls=[])))
+
+
+class AlarmTickTests(unittest.TestCase):
+    def ticks(self, walls=(), jumps=(None, None, None), ground=(False, False, False), shortfall=(.5, .5, .5)):
+        problem = dict(ticks=3, walls=list(walls), vertical=dict(jumpVelocity=list(jumps)),
+                       movement=dict(ground=list(ground)))
+        return disk.alarm_ticks(problem, list(shortfall))
+
+    def test_jump_ticks_alarm_anywhere(self):
+        self.assertEqual(self.ticks(jumps=(.42, None, None), ground=(True, False, False)), [0])
+
+    def test_ground_ticks_alarm_only_on_a_thin_ledge(self):
+        wide = [dict(mode='X', t1=1, cmp='GE', rhs=0.), dict(mode='X', t1=1, cmp='LE', rhs=1.6)]
+        thin = [dict(mode='Z', t1=2, cmp='GE', rhs=.5), dict(mode='Z', t1=2, cmp='LE', rhs=.75)]
+        self.assertEqual(self.ticks(wide, ground=(True, True, True)), [])
+        # A ledge bounds the states a ground tick starts or ends in.
+        self.assertEqual(self.ticks(wide+thin, ground=(True, True, True)), [1, 2])
+        self.assertEqual(self.ticks([dict(mode='X', t1=1, cmp='EQ', rhs=0.)], ground=(True, False, True)), [0])
+
+    def test_air_ticks_and_small_shortfalls_never_alarm(self):
+        thin = [dict(mode='X', t1=1, cmp='GE', rhs=0.), dict(mode='X', t1=1, cmp='LE', rhs=.1)]
+        self.assertEqual(self.ticks(thin), [])
+        self.assertEqual(self.ticks(thin, jumps=(.42, None, None), ground=(True, True, False),
+                                    shortfall=(disk.ALARM_FRACTION, .5, .5)), [1])
 
 
 @unittest.skipUnless(RUNTIME, 'Set PKC_IPOPT_PYTHON to confirm alarms with IPOPT')
@@ -284,6 +316,12 @@ class ConfirmationTests(unittest.TestCase):
     def test_full_strength_optima_and_feasibility_requests_never_call_ipopt(self):
         _, result, calls, _ = self.dispatch(analytic('no-alarm'))
         self.assertEqual((result['backend'], calls), ('clarabel', []))
+        # Off the ground the same shortfall is not an alarm.
+        airborne = analytic('true-gap')
+        airborne['movement']['ground'] = [False]
+        _, result, calls, _ = self.dispatch(airborne)
+        self.assertGreater(result['disk']['peakRelativeDeficit'], disk.ALARM_FRACTION)
+        self.assertEqual((result['backend'], result['disk']['alarmTicks'], calls), ('clarabel', [], []))
         dispatch, result, calls, _ = self.dispatch(analytic('true-gap'), stop_on_feasible=True)
         self.assertEqual((result['backend'], result['candidate']['model'], calls), ('clarabel', 'relaxed_disk', []))
         self.assertGreater(result['disk']['peakRelativeDeficit'], disk.ALARM_FRACTION)

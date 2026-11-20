@@ -92,7 +92,7 @@ semantics, requests outside the supported class (threshold, ladder, non-X/Z rows
 optimization requests of a promoted lineage (program key `numericalPromoted`,
 inherited by descendants), requests the relaxation leaves undecided even after its
 zero-cost retry, and relaxed points the scalar validator rejects. An anchor or terminal optimization whose relaxed optimum
-leaves more than 1% of some tick's acceleration unused is confirmed by IPOPT
+leaves more than 1% of a jump or thin-ledge ground tick's acceleration unused is confirmed by IPOPT
 before its score is used; a confirmed gap above `1e-4` sets `numericalPromoted` on
 the evaluated program, which its child, variants and later retries copy
 (`work`: `confirmations`, `confirmationIpoptCalls`, `materialGaps`, `promotions`).
@@ -103,7 +103,7 @@ statuses.
 Traversal stops `min(5 s, a quarter of the run)` before the run deadline. The
 run then makes one IPOPT finalization: the best-ranked final-frame witness is
 re-solved through the repair loop from its own branch route, warm-started from its
-relaxed facings, with `rankEqualCost=False` and oracle rejection; a geometry
+relaxed facings turned by `numerics.disk.ipopt_seed`, with `rankEqualCost=False` and oracle rejection; a geometry
 conflict on the exact trajectory is repaired by the usual avoidance sources. A
 witness that is already physical needs no call. On failure the next-ranked
 final-frame witness is tried; if none succeeds the run publishes no route
