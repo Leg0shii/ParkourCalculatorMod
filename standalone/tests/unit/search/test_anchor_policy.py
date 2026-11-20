@@ -7,7 +7,7 @@ import unittest
 
 from parkour_solver.scene.normalize import prepare_scene
 from parkour_solver.search.anchors.policy import audit, encounter_groups, local_counts, priority, settings, visit_state, within_caps, single_jump_structure, transfer_structure
-from parkour_solver.spatial.anchor_guides import build_guides, classify, nearest, onward_objective
+from parkour_solver.spatial.anchor_guides import build_guides, classify, decision_objective, nearest, onward_objective
 from parkour_solver.search.anchors.adapter import AnchorAdapter
 from parkour_solver.spatial.event_routes import build_route_domain, build_event_graph
 from parkour_solver.search.feasibility import node_identity, outcome, policy_spec
@@ -157,14 +157,19 @@ class AnchorPolicyTests(unittest.TestCase):
         airborne=history(s,['start','mid']);airborne['terminalSupport']=None;airborne['profile']['grounded'][-1]=False
         self.assertEqual(adapter.program_objective(airborne),adapter.program_objective(landed))
         # Inside the next anchor's turnaround a program aims past it.
-        self.assertTrue(classify(adapter.guide_plan,0,[6.5,2,.5])['isTurnaround'])
+        self.assertTrue(classify(adapter.guide_plan,0,[6.5,.5])['isTurnaround'])
         self.assertEqual(adapter.program_objective(history(s,['start','optional'])),aim([6.5,2,.5],points[2]))
         # The finish keeps the scene objective.
         self.assertEqual(adapter.program_objective(history(s,['start','mid','goal'])),s['objective'])
         # A block that is not an anchor aims from its top-face centre.
         adapter=view(['optional']);points=adapter.guide_plan['points']
-        self.assertFalse(classify(adapter.guide_plan,0,[4.5,2,.5])['isTurnaround'])
+        self.assertFalse(classify(adapter.guide_plan,0,[4.5,.5])['isTurnaround'])
         self.assertEqual(adapter.program_objective(history(s,['start','mid'])),aim([4.5,2,.5],points[1]))
+        # Turnaround membership reads the end point's X and Z, never its height.
+        g=dict(id='g',points=[[0,0,0],[5,0,0],[10,0,0],[0,0,10]],
+               turns=[dict(id='t',index=2,spans=[1,2],normal=[0.,1.],offset=0.,margin=.3)])
+        self.assertEqual(decision_objective(g,1,[3,5,-1],s['objective']),aim([3,5,-1],[10,0,0]))
+        self.assertEqual(decision_objective(g,1,[3,-5,1],s['objective']),aim([3,-5,1],[0,0,10]))
 
     def test_nearest_preserves_disconnected_cover_and_stable_ties(self):
         boxes=[[0,1,0,1,1,1],[3,1,0,4,1,1]]

@@ -91,12 +91,14 @@ def classify(guides, span, point):
 def decision_objective(guides, reached, point, fallback):
     """Progress from `point` (where a decision's program ends) toward the next required guide point.
 
-    `reached` anchors are visited, so the next required one is guide index reached+1 (index 0 is the
-    start, the last the task). From inside that anchor's turnaround the program aims at the one after it.
+    `point` is [x, y, z]; `reached` anchors are visited, so the next required one is guide index reached+1
+    (index 0 is the start, the last the task). From inside that anchor's turnaround the program aims at the
+    one after it.
     """
     i=reached+1
     turn=next((t for t in guides['turns'] if t['index']==i),None)
-    if turn is not None and any(d['boundary']==turn['id'] and d['inside'] for d in classify(guides,reached,point)['distances']):
+    inside=classify(guides,reached,[point[0],point[2]])['distances']
+    if turn is not None and any(d['boundary']==turn['id'] and d['inside'] for d in inside):
         i+=1
     if i>=len(guides['points']):
         return dict(fallback)
