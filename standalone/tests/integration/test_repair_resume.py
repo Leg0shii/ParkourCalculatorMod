@@ -258,7 +258,7 @@ class RepairResumeTests(RepairHarness, unittest.TestCase):
             result=value(family,tick)
             return dict(status='unknown',termination='done',attempts=[],best=None) if result is None else outcome(result)
         variants=kwargs.pop('variants',None) or iter([dict(rows=[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=100.*f+t)],
-            selectedPassages=[],family='family:'+str(f),switches=[t],score=i) for i,(f,t) in enumerate(order)])
+            selectedPassages=[],family='family:'+str(f),branchChoices=[],branchKey='',switches=[t],score=i) for i,(f,t) in enumerate(order)])
         kwargs.setdefault('climb_families',True)
         result=self.invoke(route(),solve,lambda *a:dict(accepted=True),initial_variants=variants,
                            work=SearchWork(solves),**kwargs)
@@ -299,17 +299,30 @@ class RepairResumeTests(RepairHarness, unittest.TestCase):
             found=value(family,0)
             return dict(status='feasible',termination='done',attempts=[],best=found) if isinstance(found,dict) else outcome(found)
         variants=iter([dict(rows=[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=100.*f)],selectedPassages=[],
-                            family='family:'+str(f),switches=[],score=f) for f in range(6)])
+                            family='family:'+str(f),branchChoices=[],branchKey='',switches=[],score=f) for f in range(6)])
         result=self.invoke(route(),solve,lambda *a:dict(accepted=True),initial_variants=variants,
                            work=SearchWork(100),climb_families=True)
         self.assertEqual(sorted(requests),list(range(6)))
         self.assertEqual(result['best']['candidate']['objective'],10)
         self.assertEqual([v['best']['candidate']['objective'] for v in result['repairState']['fallbackVariants']],[9.9,9.8])
 
+    def test_node_alternatives_keep_each_branch_choice_and_its_close_timings(self):
+        from parkour_solver.search.repair import node_alternatives
+        from parkour_solver.search.repair_state import branch_key
+        def variant(name, choice, value):
+            return dict(branch=name, best=dict(outcome(value)['best'], alternativeBranchKey=choice))
+        incumbent = dict(rows=[], passages=[], hits=[])
+        accepted = [variant(branch_key([], [], []), 'a', 10), variant('a1', 'a', 9.9), variant('a2', 'a', 9.8),
+                    variant('a3', 'a', 9.75), variant('b0', 'b', 9.95), variant('b1', 'b', 9.0),
+                    variant('b2', 'b', 9.9), variant('c0', 'c', 5.)]
+        held = node_alternatives(accepted, incumbent, route()['objective'])
+        # Choice a: the incumbent's two close timings; b: its best plus its one timing within 0.3; c: its best.
+        self.assertEqual([v['branch'] for v in held], ['b0', 'a1', 'b2', 'a2', 'c0'])
+
     def test_resumed_climb_solves_nothing_twice(self):
         order=[(0,t) for t in (2,1,3,4,5,6)]
         variants=iter([dict(rows=[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=100.*f+t)],selectedPassages=[],
-                            family='family:'+str(f),switches=[t],score=i) for i,(f,t) in enumerate(order)])
+                            family='family:'+str(f),branchChoices=[],branchKey='',switches=[t],score=i) for i,(f,t) in enumerate(order)])
         first,before=self.climb(order,lambda f,t:-(t-2)**2,solves=2,variants=variants)
         self.assertEqual(first['termination'],'numerical_call_limit')
         saved=json.loads(json.dumps(first['repairState']))

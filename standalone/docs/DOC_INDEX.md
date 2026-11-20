@@ -95,6 +95,7 @@ control work; inclusion here is not authorization to implement a historical plan
 | [research/early-passage-screen/B6_OPTIONS.md](../research/early-passage-screen/B6_OPTIONS.md) | Frozen source-era evidence; use research guide for reproduction: Every generated B6 option: logged replay |
 | [research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md](../research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md) | Frozen source-era evidence; use research guide for reproduction: B6 questions and answers |
 | [research/early-passage-screen/README.md](../research/early-passage-screen/README.md) | Frozen source-era evidence; use research guide for reproduction: Screen accumulated passage constraints before extension |
+| [research/encounter-groups/README.md](../research/encounter-groups/README.md) | Frozen source-era evidence; use research guide for reproduction: Encounter groups: Real11 controls |
 | [research/enumeration-attribution/README.md](../research/enumeration-attribution/README.md) | Frozen source-era evidence; use research guide for reproduction: Why collision-avoidance enumeration visits millions of entries |
 | [research/enumeration-reduction/README.md](../research/enumeration-reduction/README.md) | Frozen source-era evidence; use research guide for reproduction: Suppress already-visited constraint children before queueing |
 | [research/event-route-discovery/README.md](../research/event-route-discovery/README.md) | Frozen source-era evidence; use research guide for reproduction: Event route discovery implementation evidence |

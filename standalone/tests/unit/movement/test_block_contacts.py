@@ -234,6 +234,21 @@ class BlockTableTests(unittest.TestCase):
         self.assertEqual(table['blocks'], {'start', 'near'})
         self.assertEqual(table['solids'], {0, 1})
 
+    def test_real11_extended_table_kinds_for_b5(self):
+        import json
+        from tools.paths import STANDALONE_ROOT
+        from parkour_solver.reachability.service import InteractionGate
+        from parkour_solver.scene.normalize import prepare_scene
+        request = json.loads((STANDALONE_ROOT/'cases/real11/extended-anchors.json').read_text())['request']
+        scene = prepare_scene(request)
+        table = InteractionGate(scene, None).reachable_blocks('b5')
+        solid = {b['id']: b['solidIndex'] for b in scene['blocks']}
+        self.assertEqual(table['landing'], {'b5', 'b7', 'b11', 'b12', 'b13#0', 'b13#1', 'b18'})
+        self.assertEqual(table['stepping']-table['landing'], {'b19'})
+        self.assertEqual(table['ceilingSolids'], {solid[n] for n in ('b8', 'b9a', 'b9b', 'b10', 'b22')})
+        self.assertEqual(table['blocks'], {'b4', 'b5', 'b6', 'b7', 'b8', 'b9a', 'b9b', 'b10', 'b11', 'b12', 'b13#0',
+                                           'b13#1', 'b14', 'b18', 'b19', 'b20', 'b22'})
+
     def assert_table_keeps_every_choice(self, scene, roots):
         from tests.support.block_table import compiler, generated, nodes
         from parkour_solver.reachability.service import InteractionGate
@@ -277,6 +292,44 @@ class BlockTableTests(unittest.TestCase):
                 scene = prepare_scene(random_box_request(rng))
                 removed += self.assert_table_keeps_every_choice(scene, [empty_program(scene['initial'], threshold=0.)])
         self.assertGreater(removed, 0)
+
+class RunTickChoiceTests(unittest.TestCase):
+    def test_withheld_run_tick_choices_are_exactly_the_grounded_no_jump_ones(self):
+        from tests.support.block_table import compiler, nodes, real11_inputs
+        from tests.support.stepping_cases import FIXTURES, fixture
+        from parkour_solver.movement.generation import generate_choices
+        from parkour_solver.movement.program import boundary_state, empty_program
+        from parkour_solver.reachability.service import InteractionGate
+        from parkour_solver.scene.normalize import prepare_scene
+        cases = real11_inputs()+[(prepare_scene(fixture(name)['request']), None)
+                                 for name in sorted(p.stem for p in FIXTURES.glob('*.json'))]
+        withheld, airborne = set(), 0
+        with compiler() as java:
+            for scene, roots in cases:
+                gate = InteractionGate(scene, java, seconds=10)
+                for node in nodes(scene, roots or [empty_program(scene['initial'], threshold=0.)], gate):
+                    grounded = boundary_state(node)['onGround']
+                    airborne += not grounded
+                    for kind in ('normal', 'stepping', 'ceiling'):
+                        def choices(**flag):
+                            context = dict(mode='open', scene=scene, program=node, state=boundary_state(node),
+                                           maxInputs=40, threshold=0., interactionGate=gate, **flag)
+                            return [(c['profile'], c.get('terminalSupport')) for c in generate_choices(kind, context)]
+                        every = choices()
+                        kept = [c for c in every if not grounded or c[0]['jump'][0]]
+                        self.assertEqual(choices(runTickChoices=False), kept, (kind, node['profile']['airtime']))
+                        withheld |= {(kind, e['case']) for c in every if c not in kept
+                                     for e in c[0].get('caseEvents', [])} | {(kind, None) for c in every if c not in kept}
+        self.assertGreater(airborne, 0)
+        self.assertLessEqual({('normal', None), ('stepping', 'normal_step')}, withheld)
+
+    def test_advantageous_run_ticks_stop_before_a_flat_jump_could_land(self):
+        from parkour_solver.movement.normal import FLAT_JUMP_TICKS, MAX_ADVANTAGEOUS_RUN_TICKS, first_descent, replay
+        from parkour_solver.physics.vertical import REST_CARRY
+        rest = dict(position=0., velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
+        self.assertEqual(first_descent(replay(rest, 30, jumping=True, threshold=0.), 0.)+1, FLAT_JUMP_TICKS)
+        self.assertEqual((FLAT_JUMP_TICKS, MAX_ADVANTAGEOUS_RUN_TICKS), (12, 11))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -549,7 +549,8 @@
       "old": "autonomy/cell_routes/decision_windows.py",
       "new": "src/parkour_solver/search/compat/decision_windows.py",
       "originalSha256": "a48b15a241cc25b94abffed80dd1adea5c13ba68305c0c22a9ba3ecfbd65ee5b",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-19"
     },
     {
       "old": "autonomy/cell_routes/depth_first.py",
@@ -741,7 +742,8 @@
       "old": "autonomy/cell_routes/window_experiment.py",
       "new": "research/legacy_cell_routes/window_experiment.py",
       "originalSha256": "54868775caa04b1af244962da3e96bfcbbba2cd1d719d0b92254788457658e78",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-19"
     },
     {
       "old": "autonomy/checkpoint_store.py",
@@ -6610,7 +6612,8 @@
       "old": "autonomy/tests/test_decision_windows.py",
       "new": "tests/unit/search/test_decision_windows.py",
       "originalSha256": "cf509f75adb0b1522c71cea11f2c992dea036bad2f276a63002dbdd7db06c78f",
-      "immutable": false
+      "immutable": false,
+      "retired": "2026-11-19"
     },
     {
       "old": "autonomy/tests/test_depth_first.py",

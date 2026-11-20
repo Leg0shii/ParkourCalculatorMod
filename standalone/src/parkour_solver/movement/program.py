@@ -202,7 +202,7 @@ def append_choice(program, choice, *, max_inputs=200):
     result = dict(initial=copy.deepcopy(program['initial']), profile=profile, ladderEvents=events,
                   movementUnits=units, terminal='open', terminalSupport=choice.get('terminalSupport'),
                   interactions=program['interactions'] + int(choice.get('interaction', False)), trace=trace)
-    for key in ('threshold', 'guideSeedYaw', 'repairState', 'solveScope', 'committedThrough'):
+    for key in ('threshold', 'guideSeedYaw', 'repairState', 'solveScope', 'committedThrough', 'settledThrough'):
         if key in program:
             if key == 'repairState':
                 scope=program[key].get('context', {}).get('scope') or {}
@@ -258,6 +258,8 @@ def truncate_program(program, ticks):
                            onGround=profile['grounded'][-1], previousHorizontalCollision=trace['hit'][-1], onLadder=False)
     if 'guideSeedYaw' in result:
         result['guideSeedYaw'] = result['guideSeedYaw'][:ticks]
+    if 'settledThrough' in result:
+        result['settledThrough'] = min(result['settledThrough'], ticks)
     return result
 
 
@@ -272,7 +274,8 @@ def program_physics_key(program):
 
 def program_search_key(program):
     key = program_physics_key(program)
-    key += '|owners=' + json.dumps([program['profile'].get('constraintOwners', []), program.get('committedThrough', 0), program.get('interactions', 0), program.get('solveScope')])
+    key += '|owners=' + json.dumps([program['profile'].get('constraintOwners', []), program.get('committedThrough', 0), program.get('interactions', 0), program.get('solveScope'),
+                                    program.get('settledThrough', 0)])
     if program.get('repairState') is not None:
         key += '|repair=' + hashlib.sha256(json.dumps(program['repairState'],sort_keys=True).encode()).hexdigest()
     return key

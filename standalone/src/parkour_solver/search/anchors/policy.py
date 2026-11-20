@@ -6,7 +6,7 @@ from parkour_solver.search.identity import digest
 from parkour_solver.search.comparison import comparison_label, priority_key, POLICY_VERSION as COMPARISON_POLICY_VERSION
 
 
-HARD_JUMP_POLICY_VERSION = 3
+HARD_JUMP_POLICY_VERSION = 4
 
 
 def settings(value, scene):
@@ -43,7 +43,7 @@ def settings(value, scene):
 
 def semantic_settings(policy):
     return dict({k:v for k,v in policy.items() if k!='observability'},
-                hardJumpPolicyVersion=HARD_JUMP_POLICY_VERSION,searchPolicyVersion=5,comparisonPolicyVersion=COMPARISON_POLICY_VERSION)
+                hardJumpPolicyVersion=HARD_JUMP_POLICY_VERSION,searchPolicyVersion=10,comparisonPolicyVersion=COMPARISON_POLICY_VERSION)
 
 
 def owner(scene, block):
@@ -51,10 +51,13 @@ def owner(scene, block):
     return b.get('sourceBlock', b['id']) if b else block
 
 
+def box_owners(scene):
+    return {tuple(scene['collisionScene']['solids'][b['solidIndex']]): owner(scene,b['id']) for b in scene['blocks']}
+
+
 def visits(scene, program):
     """Read actual selected contacts, never profile height or transient air IDs."""
-    by_box = {tuple(scene['collisionScene']['solids'][b['solidIndex']]): owner(scene,b['id'])
-              for b in scene['blocks']}
+    by_box = box_owners(scene)
     events = [(e['offset'], 0, e) for e in program['profile'].get('contactEvents', [])
               if e['axis'] == 'Y' and e.get('direction') == -1]
     profile=program['profile']
@@ -89,8 +92,7 @@ FEET_CASES = frozenset(('normal_step', 'slab_boost', 'blip', 'blip_up', 'corner_
 
 
 def feet_touches(scene, program):
-    by_box = {tuple(scene['collisionScene']['solids'][b['solidIndex']]): owner(scene,b['id'])
-              for b in scene['blocks']}
+    by_box = box_owners(scene)
     result = []
     for e in program['profile'].get('caseEvents', []):
         if e.get('case') not in FEET_CASES:
@@ -124,21 +126,105 @@ def visit_state(scene, program):
 
 
 def audit(scene, program, anchors, *, reached=None):
+    """Required anchors reached in order (and their arrival ticks), even for a rejected program."""
     state = visit_state(scene,program)
-    if not state['valid']:
-        return dict(accepted=False, reason='departed_owner_return', visits=state)
     required = [owner(scene,a) for a in anchors]
     index = 0
     times = []
+    reason = None
     for tick, name in visits(scene,program):
         if name in required[index:]:
             if name != required[index]:
-                return dict(accepted=False, reason='required_anchor_order', visits=state)
+                reason = 'required_anchor_order'
+                break
             times.append(tick)
             index += 1
-    accepted = reached is None or index >= reached
-    return dict(accepted=accepted, reason=None if accepted else 'missing_prior_anchor',
-                visits=state, reached=index, ticks=times)
+    if not state['valid']:
+        reason = 'departed_owner_return'
+    elif reason is None and reached is not None and index < reached:
+        reason = 'missing_prior_anchor'
+    return dict(accepted=reason is None, reason=reason, visits=state, reached=index, ticks=times)
+
+
+def next_anchor(scene, program, anchors, task):
+    """Owner of the next required anchor (anchors are visited in order), or of the task block after the last."""
+    reached = audit(scene, program, anchors)['reached']
+    return owner(scene, anchors[reached] if reached < len(anchors) else task)
+
+
+ADVANTAGE_CASES = frozenset(('grind', 'slab_boost', 'corner_jump_cancel'))
+
+
+def advantageous_targets(scene, base, child, next_owner):
+    """Keys of the advantageous jumps made by the choice that turns base into child.
+
+    A jump (or a run-off/step-up, itself a run tick) is advantageous when it lands on the
+    next anchor; a jump also when it hits a ceiling or is a grind, slab boost or corner jump
+    cancel. Run ticks are generated only as the minimum that makes one of these possible.
+    """
+    p, start = child['profile'], base['profile']['airtime']
+    by_box = box_owners(scene)
+    def owners(boxes):
+        return '+'.join(sorted({by_box[tuple(b)] for b in boxes if tuple(b) in by_box}))
+    keys = set()
+    if p['grounded'][-1] and owner(scene, child.get('terminalSupport')) == next_owner:
+        keys.add(('anchor', next_owner))
+    if not p['jump'][start]:
+        return keys
+    keys |= {('ceiling', owners(e['boxes'])) for e in p.get('contactEvents', [])
+             if e.get('role') == 'ceiling' and e['offset'] >= start}
+    keys |= {(e['case'], owners(e['boxes'])) for e in p.get('caseEvents', [])
+             if e.get('case') in ADVANTAGE_CASES and e['input'] >= start}
+    return keys
+
+
+def encounter_groups(scene, names):
+    """Partition the pairs names[k] -> names[k+1] into groups searched as one frame.
+
+    From a group's first end block, follow touching solids (the obstacle-cluster
+    test) that some landing block of the chain can touch in one flight. Every such
+    solid joins and extends the chain; the block-table kinds only label members as
+    landings (blocks a landing block can land on) or hit/ceiling obstacles. The
+    group runs through the last later anchor among the landing blocks.
+    """
+    from parkour_solver.reachability.service import block_table
+    from parkour_solver.spatial.surfaces import scene_geometry
+    geometry = scene_geometry(scene['collisionScene'])
+    solid = {b['id']: b['solidIndex'] for b in scene['blocks']}
+    by_solid = {}
+    for b in scene['blocks']:
+        by_solid.setdefault(b['solidIndex'], []).append(b['id'])
+    traces, tables = {}, {}
+
+    def table(name):
+        key = owner(scene, name)
+        if key not in tables:
+            tables[key] = block_table(scene, key, traces)
+        return tables[key]
+
+    def neighbours(name):
+        return {n for i in geometry.touching(solid[name], by_solid) for n in by_solid[i]}
+
+    groups, first = [], 0
+    while first < len(names)-1:
+        members, landings = {names[first+1]}, {names[first+1]}
+        while True:
+            frontier = {n for m in members for n in neighbours(m)}-members
+            frontier = {c for c in frontier if any(c in table(l)['blocks'] for l in landings)}
+            if not frontier:
+                break
+            members |= frontier
+            grown = True
+            while grown:
+                added = {c for c in members-landings if any(c in table(l)['landing'] for l in landings)}
+                landings |= added
+                grown = bool(added)
+        owners = {owner(scene, l) for l in landings}
+        last = max(m for m in range(first+1, len(names)) if owner(scene, names[m]) in owners)-1
+        groups.append(dict(first=first, last=last, anchors=names[first+1:last+2], members=sorted(members),
+                           landings=sorted(landings)))
+        first = last+1
+    return groups
 
 
 def local_counts(program, start=0):
@@ -164,19 +250,24 @@ def within_caps(request, program):
     return True
 
 
-def transfer_structure(scene, program, start, source, target, *, complete=False):
+def transfer_structure(scene, program, start, source, target, *, complete=False, until_arrival=False):
     """Separate source-local momentum preparation from the transfer flight.
 
     Each actual return to the source closes a setup hop. The pending/complete
     flight after the last source contact has at most/exactly one requested
     jump. A source contact during the target's arrival input belongs to that
-    transfer's physical case, not an earlier setup boundary.
+    transfer's physical case, not an earlier setup boundary. With
+    `until_arrival`, history after the first target arrival belongs to later
+    pairs of the same encounter group and is ignored.
     """
     p=program['profile'];n=p['airtime']
     launches=[t for t in range(start,n) if p['grounded'][t] and p['jump'][t]]
     source,target=owner(scene,source),owner(scene,target)
     contacts=[(t,name) for t,name in visits(scene,program) if start<t<=n]
     arrival=min((t for t,name in contacts if name==target),default=None)
+    if until_arrival and arrival is not None:
+        contacts=[(t,name) for t,name in contacts if t<=arrival]
+        launches=[t for t in launches if t<arrival]
     boundary=max([start]+[t for t,name in contacts if name==source and (arrival is None or t<arrival)])
     preparation=[t for t in launches if t<boundary]
     transfer=[t for t in launches if t>=boundary and (arrival is None or t<arrival)]

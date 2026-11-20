@@ -149,14 +149,14 @@ def _sequence_allowed(context, initial, event, jumping, rows, support=None):
 def open_stepping_choices(context):
     from parkour_solver.reachability.service import candidate_blocks, interaction_allowed
     from parkour_solver.movement.program import scalar_initial
-    from parkour_solver.movement.normal import approaches, feet_allowed, first_descent, named_choice
+    from parkour_solver.movement.normal import choice_approaches, feet_allowed, first_descent, named_choice
     initial = scalar_initial(context['state'])
     scene = context['scene']
     y0 = initial['position']
     allowed = context.get('cases')
     def enabled(case):
         return allowed is None or case in allowed
-    blocks = candidate_blocks(context)
+    blocks = candidate_blocks(context, 'stepping')
     if initial['onGround']:
         for block in blocks:
             if not feet_allowed(context, block):
@@ -164,7 +164,8 @@ def open_stepping_choices(context):
             box = box_for(block, context)
             rise = block['top'] - y0
             for case, jumping in [('normal_step', False), ('slab_boost', True)]:
-                if not enabled(case) or not 0 < rise <= f32(.6) or jumping and rise <= f32(.42):
+                if (not enabled(case) or not 0 < rise <= f32(.6) or jumping and rise <= f32(.42) or
+                        not jumping and not context.get('runTickChoices', True)):
                     continue
                 if not interaction_allowed(context, box, 0, jumping=jumping, label=dict(owner=block['id'], role=case)):
                     continue
@@ -192,7 +193,7 @@ def open_stepping_choices(context):
                                               constraints=corner_rows(box, 0, 1, xdir, zdir))
                         if choice:
                             yield choice
-    for initial, jumping, trace in approaches(context):
+    for initial, jumping, trace in choice_approaches(context):
         for lower in blocks:
             if context.get('checkBudget'):
                 context['checkBudget']()

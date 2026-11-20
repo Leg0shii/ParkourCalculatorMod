@@ -17,7 +17,6 @@
     "tests.unit.movement.test_contact_combinations",
     "tests.unit.movement.test_contacts",
     "tests.unit.spatial.test_corridor_guards",
-    "tests.unit.search.test_decision_windows",
     "tests.unit.search.test_depth_first",
     "tests.research.test_failure_diagnostic",
     "tests.unit.search.test_fixed_clock_goal",

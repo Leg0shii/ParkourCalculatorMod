@@ -11,6 +11,7 @@ GRAVITY = 0.08
 Y_DRAG = f32(0.98)
 CLIMB_CARRY = (0.2 - GRAVITY) * Y_DRAG
 REST_CARRY = -GRAVITY * Y_DRAG
+STEP_HEIGHT = f32(0.6)
 
 
 def clamp(value):
@@ -59,18 +60,18 @@ def vertical_step(config, tick, position, velocity, on_ladder, grounded, toleran
             jumping = config['jumpVelocity'][tick] is not None
             valid = False
             if kind == 'normal_step':
-                valid = grounded and not jumping and 0 < delta <= f32(.6)+tolerance
+                valid = grounded and not jumping and 0 < delta <= STEP_HEIGHT+tolerance
             elif kind == 'slab_boost':
-                valid = grounded and jumping and movement < delta <= f32(.6)+tolerance
+                valid = grounded and jumping and movement < delta <= STEP_HEIGHT+tolerance
             elif kind in ('blip','blip_up','corner_blip_up'):
                 valid = not grounded and movement < 0 and position >= lower and proposed < lower
                 if kind == 'blip':
-                    valid = valid and 0 <= delta <= f32(.6)+tolerance
+                    valid = valid and 0 <= delta <= STEP_HEIGHT+tolerance
                 else:
                     valid = valid and plane == position
-                    valid = valid and (position > upper if kind=='blip_up' else 0 <= upper-position <= f32(.6)+tolerance)
+                    valid = valid and (position > upper if kind=='blip_up' else 0 <= upper-position <= STEP_HEIGHT+tolerance)
             elif kind == 'corner_jump_cancel':
-                valid = grounded and jumping and f32(.42) < upper-position <= f32(.6)+tolerance and plane==position
+                valid = grounded and jumping and f32(.42) < upper-position <= STEP_HEIGHT+tolerance and plane==position
             elif kind == 'grind':
                 valid = grounded and jumping and 0 <= contact.get('clearance',-1) < movement and plane==position
             if valid:
@@ -80,7 +81,7 @@ def vertical_step(config, tick, position, velocity, on_ladder, grounded, toleran
                 failures.append({'state':tick+1,'reason':'invalid_movement_case','case':kind})
         elif contact.get('step', False):
             valid = ((grounded or movement < 0) and movement < plane - position
-                     and 0 < plane - position <= f32(0.6) + tolerance)
+                     and 0 < plane - position <= STEP_HEIGHT + tolerance)
             if valid:
                 proposed, carry, ground = plane, 0.0, movement < 0
             else:

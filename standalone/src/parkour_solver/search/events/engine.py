@@ -42,7 +42,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
     # Traversal stops early enough for the one IPOPT finalization of its relaxed finish.
     search_deadline=deadline-min(5.,.25*options['seconds'])
     limits=discovery_settings(discovery)
-    if any(options.get(k) for k in ('checkpoints','opportunities','spatial_goals')) or options.get('terminal_checkpoint') is not None:
+    if any(options.get(k) for k in ('checkpoints','spatial_goals')) or options.get('terminal_checkpoint') is not None:
         raise ValueError('Automatic event discovery derives its own contact/finish goals')
     scene=prepare_scene(request)
     task=goal_spec(scene,task_goal if task_goal is not None else options.get('spatial_goal'))
@@ -130,7 +130,7 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
             python_executable=options.get('python_executable'),cancel_event=options.get('cancel_event'),
             on_window=options.get('on_window'),time_margin=options['time_margin'],
             progress_margin=options['progress_margin'] if options['progress_margin'] is not None else .25,
-            route_report=None,window_plan=None,comparison_policy=options['comparison_policy'],
+            route_report=None,comparison_policy=options['comparison_policy'],
             minimum_run_pruning=options['minimum_run_pruning'],numerical_backend='relaxed',_owned_state=True,**extra)
     while time.monotonic()<search_deadline and calls<options['max_solver_calls'] and expanded<cfg['maxPrefixes']:
         if options.get('cancel_event') is not None and options['cancel_event'].is_set():

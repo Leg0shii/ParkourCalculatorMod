@@ -30,11 +30,12 @@ def extend(s,parent,target,n,extra=False):
 class AnchorDFSTests(unittest.TestCase):
     def run_tree(self, *, logging=True, resume=None, calls=20, interval=1, setup=False, seconds=3,
                  on_progress=None,cancel_event=None,requests_per_evaluation=1,advance=None,node_probe=None,node_best=None,
-                 finishes=1,relaxed=False,final=None,**settings):
-        s=scene();s['maxTotalRunTicks']=60;s['maxRunTicksPerJump']=60;dispatched=[]
+                 finishes=1,relaxed=False,final=None,leg_best=None,goal=None,goal_choices=None,generated=None,**settings):
+        s=scene(goal) if goal else scene();s['maxTotalRunTicks']=60;s['maxRunTicksPerJump']=60;dispatched=[]
         def generate(target_scene,*,report,initial_programs,continuation=None,node_evaluator,**kwargs):
             saved=copy.deepcopy(continuation) if continuation else dict(expanded=1,cursor=0,exhausted=False)
             report['continuation']=saved
+            if generated is not None:generated.append((initial_programs,kwargs))
             parent=initial_programs[0];target=target_scene['goalBlock']
             if target=='mid':
                 choices=[extend(s,parent,'mid',10),extend(s,parent,'mid',11)]
@@ -45,6 +46,8 @@ class AnchorDFSTests(unittest.TestCase):
                     prepared['profile']['contactEvents'].insert(0,dict(offset=0,axis='Y',direction=-1,
                         boxes=[s['collisionScene']['solids'][start['solidIndex']]]))
                     choices.append(prepared)
+            elif goal_choices is not None:
+                choices=goal_choices(s,parent)
             else:
                 # Certifying subtree learns the global hard latch. A later
                 # incoming history must not reopen a two-jump local structure.
@@ -66,7 +69,7 @@ class AnchorDFSTests(unittest.TestCase):
             dispatched.append((p['terminalSupport'],p['profile']['airtime'],kwargs.get('solve_policy')))
             n=p['profile']['airtime']
             candidate=dict(yaw=[0.]*n,positions=[[.5,.5]]*(n+1),velocity=[[0.,0.]]*(n+1),objective=-float(sum(p['profile']['sneak'])))
-            best=dict(candidate=candidate,plan=dict(ticks=n,walls=[]),allocation=[0],cost=0,route=dict(source='relaxed'))
+            best=dict(candidate=candidate,plan=dict(ticks=n,walls=[]),allocation=[0],cost=0,route=dict(source='relaxed',objective=dict(axis='X',sense='MAX')))
             if kwargs.get('final_route') is not None:
                 work.counts['workerLaunches']+=1
                 physical=final(p,kwargs)
@@ -74,12 +77,16 @@ class AnchorDFSTests(unittest.TestCase):
                             work=dict(workerLaunches=1),fullSceneValidated=physical is not None)
             if relaxed and p['terminalSupport']=='goal':
                 candidate.update(model='relaxed_disk',controls=[[0.,0.]]*n)
-            if node_best is not None and (kwargs.get('solve_policy') or {}).get('purpose')=='node':
-                extra=node_best(n)
+            extra={}
+            node=(kwargs.get('solve_policy') or {}).get('purpose')=='node'
+            hook=node_best if node else leg_best
+            if hook is not None:
+                extra=hook(n)
                 best['plan'].update(walls=extra['walls'],events=extra['events'])
-                best['alternativeRows']=extra['alternativeRows']
+                best.update({k:v for k,v in extra.items() if k.startswith('alternative')})
             return dict(status='feasible',termination='done',best=best,work=dict(solverCalls=requests_per_evaluation),
-                        fullSceneValidated=True,nodeFeasibility=dict(status='feasible',model=str(n)))
+                        fullSceneValidated=True,nodeFeasibility=dict(status='feasible',model=str(n)),
+                        **({'repairState':extra['repairState']} if 'repairState' in extra else {}))
         with patch('parkour_solver.search.engine.motion_bound',return_value={}), \
              patch('parkour_solver.search.dfs.iter_movement_programs',side_effect=generate), \
              patch('parkour_solver.search.engine.evaluate_program',side_effect=evaluate), \
@@ -90,6 +97,30 @@ class AnchorDFSTests(unittest.TestCase):
                 solveEveryDecisionLevels=interval),minimum_run_pruning=False,
                 resume_state=resume,on_progress=on_progress,cancel_event=cancel_event,**options)
         return result,dispatched
+
+    def test_touching_goal_makes_one_group_without_an_anchor_solve(self):
+        # The goal is flush with mid, so start -> mid -> goal is one encounter group.
+        def goal_choices(s,parent):
+            return [extend(s,parent,'goal',15),extend(s,extend(s,parent,'mid',10),'goal',20)]
+        result,calls=self.run_tree(goal=(5,0,0,6,2,1),goal_choices=goal_choices)
+        groups=result['adapter']['guidePlan']['groups']
+        self.assertEqual([(g['first'],g['last']) for g in groups],[(0,1)])
+        purposes=[(b,t,(p or {}).get('purpose')) for b,t,p in calls]
+        self.assertNotIn('anchor',[p for _,_,p in purposes])
+        self.assertIn(('goal',20,'terminal'),purposes)
+        self.assertNotIn(15,[t for _,t,_ in purposes])
+        self.assertEqual(result['best']['movementProgram']['profile']['airtime'],20)
+
+    def test_anchor_frontier_gets_the_minimum_run_policy_for_ordinary_decisions(self):
+        generated=[]
+        self.run_tree(generated=generated)
+        (roots,options),*_=generated
+        policy=options['run_policy'];s=scene();root=roots[0]
+        self.assertIs(root['decisionTurnaround'],False)
+        self.assertTrue(policy['ordinary'](root))
+        self.assertFalse(policy['ordinary'](dict(root,decisionTurnaround=True)))
+        self.assertEqual(policy['targets'](root,extend(s,root,'mid',10)),{('anchor','mid')})
+        self.assertEqual(policy['targets'](root,extend(s,root,'goal',10)),set())
 
     def test_anchor_search_uses_run_budget_across_routes_and_constraint_requests(self):
         clock=[100.]
@@ -228,20 +259,85 @@ class AnchorDFSTests(unittest.TestCase):
         self.assertTrue(solve_due(dict(decisionDepth=1,lastSolvedDepth=0),4,forced=True))
         self.assertFalse(solve_due(dict(decisionDepth=1,lastSolvedDepth=1),1))
 
-    def test_decision_check_keeps_no_rows_of_its_chosen_alternative(self):
-        chosen=dict(leg=0,offset=3,mode='X',cmp='GE',rhs=.25,name='avoidance')
+    def test_decision_check_keeps_settled_rows_and_queues_sibling_choice(self):
+        settled=dict(leg=0,offset=3,mode='X',cmp='GE',rhs=.25,name='avoidance')
+        unsettled=dict(leg=0,offset=6,mode='Z',cmp='GE',rhs=.1,name='avoidance')
         kept=dict(mode='Z',t1=2,cmp='LE',rhs=.75,name='route:0')
+        choice=dict(kind='cluster',clusterId=0,begin=0,end=5,sides=[[['X',1,.25]]])
         checked=[]
         def probe(node_evaluator,p):
             p=copy.deepcopy(p);p['decisionNode']='node:'+str(p['profile']['airtime'])
-            checked.append(node_evaluator(p,{},None)['program'])
+            # A ground touch at 5 closes the stretch before it; the prefix ends airborne, so 5 onward is open.
+            p['profile']['grounded']=[True]+[False]*4+[True]+[False]*5
+            p['profile']['regionChoices']=[dict(surface='s',owner='mid',offset=t,options=[[]]) for t in (3,7)]
+            checked.append(node_evaluator(p,{},None))
         def node_best(n):
-            return dict(walls=[dict(mode='X',t1=3,cmp='GE',rhs=.25,name='avoidance'),kept],
-                        events=[dict(jump=0,landed=0,landing=n,runTicks=0)],alternativeRows=[chosen])
+            return dict(walls=[dict(mode='X',t1=3,cmp='GE',rhs=.25,name='avoidance'),
+                               dict(mode='Z',t1=6,cmp='GE',rhs=.1,name='avoidance'),kept],
+                        events=[dict(jump=0,landed=0,landing=n,runTicks=0)],alternativeRows=[settled,unsettled],
+                        alternativeBranchChoices=[choice],alternativeBranchKey='choice:a')
         self.run_tree(node_probe=probe,node_best=node_best)
-        walls=[{k:r[k] for k in ('mode','t1','cmp','rhs')} for r in checked[0]['profile']['positionConstraints']]
+        result=checked[0]
+        walls=[{k:r[k] for k in ('mode','t1','cmp','rhs')} for r in result['program']['profile']['positionConstraints']]
         self.assertIn(dict(mode='Z',t1=2,cmp='LE',rhs=.75),walls)
-        self.assertNotIn(dict(mode='X',t1=3,cmp='GE',rhs=.25),walls)
+        self.assertIn(dict(mode='X',t1=3,cmp='GE',rhs=.25),walls)
+        self.assertNotIn(dict(mode='Z',t1=6,cmp='GE',rhs=.1),walls)
+        self.assertEqual(result['program']['settledThrough'],5)
+        self.assertEqual([c['offset'] for c in result['program']['profile']['regionChoices']],[7])
+        self.assertEqual(result['alternatives'],[])
+
+    def test_decision_check_holds_other_branch_choices_as_alternatives(self):
+        from parkour_solver.search.repair_state import branch_key
+        checked=[]
+        def probe(node_evaluator,p):
+            p=copy.deepcopy(p);p['decisionNode']='node:'+str(p['profile']['airtime'])
+            checked.append(node_evaluator(p,{},None))
+        def choice(n,rhs,key,value):
+            row=dict(leg=0,offset=3,mode='X',cmp='GE',rhs=rhs,name='avoidance')
+            return dict(candidate=dict(yaw=[0.]*n,positions=[[.5,.5]]*(n+1),velocity=[[0.,0.]]*(n+1),objective=value),
+                        plan=dict(ticks=n,walls=[dict(row,t1=3)],events=[dict(jump=0,landed=0,landing=n,runTicks=0)]),
+                        allocation=[0],cost=0,route=dict(objective=dict(axis='X',sense='MAX')),
+                        alternativeRows=[row],alternativeBranchKey=key)
+        def node_best(n):
+            winner,other=choice(n,.25,'a',1.),choice(n,.5,'b',.5)
+            return dict(walls=winner['plan']['walls'],events=winner['plan']['events'],alternativeRows=winner['alternativeRows'],
+                        alternativeBranchKey='a',repairState=dict(incumbent=dict(rows=[],passages=[],hits=[]),
+                            acceptedVariants=[dict(branch=branch_key([],[],[]),best=winner),dict(branch='other',best=other)]))
+        self.run_tree(node_probe=probe,node_best=node_best)
+        result=checked[0]
+        held,=result['alternatives']
+        rows=[{k:r[k] for k in ('mode','t1','cmp','rhs')} for r in held['profile']['positionConstraints']]
+        self.assertIn(dict(mode='X',t1=3,cmp='GE',rhs=.5),rows)
+        self.assertNotIn(dict(mode='X',t1=3,cmp='GE',rhs=.25),rows)
+        self.assertEqual(held['alternativeOf'],'node:10')
+        self.assertNotIn(held['decisionNode'],('node:10',result['program']['decisionNode']))
+        self.assertEqual(held.get('decisionParent'),result['program'].get('decisionParent'))
+        self.assertNotIn('needsNodeSolve',held)
+
+    def test_interrupted_node_climb_is_suspended_not_decided(self):
+        checked=[]
+        def probe(node_evaluator,p):
+            p=copy.deepcopy(p);p['decisionNode']='node:'+str(p['profile']['airtime'])
+            checked.append(node_evaluator(p,{},None))
+        def node_best(n):
+            # The climb found a best but still has a queued branch: a cancelled or out-of-time check.
+            return dict(walls=[],events=[dict(jump=0,landed=0,landing=n,runTicks=0)],
+                        repairState=dict(pending=[dict(rows=[],passages=[],hits=[],score=0.)],completed=[]))
+        self.run_tree(node_probe=probe,node_best=node_best)
+        result=checked[0]
+        self.assertEqual(result['status'],'suspended')
+        self.assertEqual(result['alternatives'],[])
+        self.assertNotIn('settledThrough',result['program'])
+        self.assertEqual(result['program']['repairState']['pending'],[dict(rows=[],passages=[],hits=[],score=0.)])
+
+    def test_group_end_arrival_keeps_avoidance_rows_and_settles_through_arrival(self):
+        def leg_best(n):
+            return dict(walls=[dict(mode='X',t1=n-2,cmp='GE',rhs=.25,name='avoidance')],
+                        events=[dict(jump=0,landed=0,landing=n,runTicks=0)])
+        result,_=self.run_tree(leg_best=leg_best)
+        program=result['best']['movementProgram']
+        self.assertIn(dict(mode='X',t1=18,cmp='GE',rhs=.25,name='avoidance'),program['profile']['positionConstraints'])
+        self.assertEqual(program['settledThrough'],20)
 
     def run_recovery_tree(self, reject_first=True, oracle=True, include_setup=False, finish_tick=30,
                           fallbacks=False, reject_all=False):

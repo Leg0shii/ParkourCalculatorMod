@@ -98,21 +98,86 @@ def bounds_allowed(context, bounds, tick, *, label, jumping=False, phases=('Y', 
     return gate is None or not gate.query(context, bounds, tick, label=label, jumping=jumping, phases=phases)['ruledOut']
 
 
-def candidate_blocks(context):
+def candidate_blocks(context, kind='blocks'):
     blocks = context['scene']['blocks']
     owner = context.get('launchOwner')
     if owner is None or context['interactionGate'] is None:
         return blocks
-    kept = context['interactionGate'].reachable_blocks(owner)['blocks']
+    kept = context['interactionGate'].reachable_blocks(owner)[kind]
     return [b for b in blocks if b['id'] in kept]
 
 
-def candidate_option(context, option):
+def candidate_option(context, option, kind='solids'):
     owner = context.get('launchOwner')
     if owner is None or context['interactionGate'] is None:
         return True
-    solids = context['interactionGate'].reachable_blocks(owner)['solids']
+    solids = context['interactionGate'].reachable_blocks(owner)[kind]
     return any(i in solids for i in option.members)
+
+
+def block_table(scene, owner, traces):
+    """Blocks one flight from `owner` can touch, by kind (generous: no route, as-given speed limits).
+
+    Heights are relative to the launch piece's top (feet): any block whose raw
+    bottom is within head reach can be hit; `landing` tops are within the game's
+    jump rise; `ceiling` bottoms lie between head height and head reach.
+    `stepping` adds blip secondaries, touched one (air) tick after a landing-block
+    primary. `traces` caches threshold-0 jump traces by top height.
+    """
+    import math
+    from parkour_solver.movement.normal import JUMP_RISE, first_descent, replay
+    from parkour_solver.physics.vertical import REST_CARRY, STEP_HEIGHT
+    from parkour_solver.scene.geometry import BODY_HEIGHT
+    from parkour_solver.spatial.surfaces import scene_geometry
+    blocks = scene['blocks']
+    geometry = scene_geometry(scene['collisionScene'])
+    lowest = min(b['top'] for b in blocks)
+    by_solid = {}
+    for b in blocks:
+        by_solid.setdefault(b['solidIndex'], []).append(b['id'])
+    tops = {b['id']: b['top'] for b in blocks}
+    solid_of = {b['id']: b['solidIndex'] for b in blocks}
+    kept, landing, ceiling, primaries, ticks = set(), set(), set(), [], None
+
+    def near(box, radius):
+        foot = [box[0], box[2], box[3], box[5]]
+        for i in geometry.near([foot[0]-radius, foot[1]-radius, foot[2]+radius, foot[3]+radius]):
+            other = geometry.boxes[i]
+            dx = max(0., other[0]-foot[2], foot[0]-other[3])
+            dz = max(0., other[2]-foot[3], foot[1]-other[5])
+            if math.hypot(dx, dz) <= radius:
+                yield i, other
+
+    for block in blocks:
+        if block.get('sourceBlock', block['id']) != owner:
+            continue
+        kept.add(block['id'])
+        if block['top'] not in traces:
+            state = dict(position=block['top'], velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
+            traces[block['top']] = replay(state, 200, jumping=True, threshold=0.)
+        descent = first_descent(traces[block['top']], lowest)
+        flight = 200 if descent is None else descent+1
+        ticks = flight if ticks is None else min(ticks, flight)
+        feet = block['top']
+        for i, box in near(geometry.boxes[block['solidIndex']], .4+.7+.4*(flight-1)):
+            bottom = box[1]+BODY_HEIGHT
+            if bottom > feet+BODY_HEIGHT+JUMP_RISE:
+                continue
+            names = by_solid.get(i, ())
+            kept.update(names)
+            if feet+BODY_HEIGHT <= bottom:
+                ceiling.update(names)
+            for name in names:
+                if tops[name] <= feet+JUMP_RISE:
+                    landing.add(name)
+                    primaries.append((name, feet+JUMP_RISE))
+    stepping = set(landing)
+    for name, peak in primaries:
+        for i, _ in near(geometry.boxes[solid_of[name]], .4):
+            stepping.update(n for n in by_solid.get(i, ()) if tops[n] <= peak+STEP_HEIGHT)
+    solids = lambda names: frozenset(solid_of[n] for n in names)
+    return dict(blocks=frozenset(kept), solids=solids(kept), ticks=ticks, landing=frozenset(landing),
+                stepping=frozenset(stepping), ceiling=frozenset(ceiling), ceilingSolids=solids(ceiling))
 
 
 class InteractionGate:
@@ -131,45 +196,9 @@ class InteractionGate:
     def reachable_blocks(self, owner):
         if owner in self.block_table:
             return self.block_table[owner]
-        import math
         import time
-        from parkour_solver.movement.normal import first_descent, replay
-        from parkour_solver.physics.vertical import REST_CARRY
-        from parkour_solver.scene.geometry import BODY_HEIGHT
-        from parkour_solver.spatial.surfaces import scene_geometry
         started = time.process_time()
-        blocks = self.scene['blocks']
-        geometry = scene_geometry(self.scene['collisionScene'])
-        lowest = min(b['top'] for b in blocks)
-        by_solid = {}
-        for b in blocks:
-            by_solid.setdefault(b['solidIndex'], []).append(b['id'])
-        kept, ticks = set(), None
-        for block in blocks:
-            if block.get('sourceBlock', block['id']) != owner:
-                continue
-            kept.add(block['id'])
-            if block['top'] not in self.jump_traces:
-                state = dict(position=block['top'], velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
-                self.jump_traces[block['top']] = replay(state, 200, jumping=True, threshold=0.)
-            trace = self.jump_traces[block['top']]
-            descent = first_descent(trace, lowest)
-            flight = 200 if descent is None else descent+1
-            ticks = flight if ticks is None else min(ticks, flight)
-            radius = .4+.7+.4*(flight-1)
-            ceiling = max(trace['position'])+.6+BODY_HEIGHT
-            own = geometry.boxes[block['solidIndex']]
-            foot = [own[0], own[2], own[3], own[5]]
-            for i in geometry.near([foot[0]-radius, foot[1]-radius, foot[2]+radius, foot[3]+radius]):
-                box = geometry.boxes[i]
-                if box[1] > ceiling:
-                    continue
-                dx = max(0., box[0]-foot[2], foot[0]-box[3])
-                dz = max(0., box[2]-foot[3], foot[1]-box[5])
-                if math.hypot(dx, dz) <= radius:
-                    kept.update(by_solid.get(i, ()))
-        solids = frozenset(b['solidIndex'] for b in blocks if b['id'] in kept)
-        self.block_table[owner] = dict(blocks=frozenset(kept), solids=solids, ticks=ticks)
+        self.block_table[owner] = block_table(self.scene, owner, self.jump_traces)
         self.metrics['blockTableBuilds'] = self.metrics.get('blockTableBuilds', 0)+1
         self.metrics['blockTableSeconds'] = self.metrics.get('blockTableSeconds', 0.)+time.process_time()-started
         return self.block_table[owner]

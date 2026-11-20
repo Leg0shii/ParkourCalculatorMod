@@ -12,7 +12,7 @@ solver-branch constant-zero default was replaced.
 
 | Purpose | `objectiveMode` | `stopOnFeasible` | Result / worker behavior |
 | --- | --- | --- | --- |
-| Selected internal completed decision | `configured` | `true` | Exact-node guided feasibility from original state, preserving earlier free facings; pending end-anchor predicate is absent. Valid seed can return without a worker. Prunes only: its alternative's rows are not committed. |
+| Selected internal completed decision | `configured` | `false` | Exact-node guided optimization of the pair's onward objective from the original state, preserving earlier free facings; pending end-anchor predicate is absent. Climbs every side family; the best is the branch's [intermediate choice](design/AVOIDANCE_PASSAGES.md#side-families-in-search-branches) (exact rows of the stretches settled at the node), the other choices are held alternatives. |
 | Required-anchor arrival | `configured` | `false` | Optimize the onward E→N direction over the alternatives the switch-tick climb visits, rank them, keep the best plus up to two close fallbacks, with physical validation. |
 | Final physical landing | `configured` | `false` | Optimize real configured terminal objective for candidate T. Outer ranking minimizes actual T then maximizes objective at equal T. |
 | Explicit optional constant-zero control | `constant_zero` | `true` | Retained API mode: minimize0 under the same fixed movement/contact constraints. It is not the current anchor default. |

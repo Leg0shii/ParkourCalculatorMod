@@ -12,7 +12,6 @@ from parkour_solver.movement.settings import movement_settings
 from parkour_solver.scene.route import supports
 from parkour_solver.schema import integer, number
 from parkour_solver.spatial.checkpoints import checkpoint
-from parkour_solver.search.compat.decision_windows import DecisionPolicy, plan_windows
 from parkour_solver.spatial.cells import decompose
 from parkour_solver.validation.scoped_scene import CorridorAdapter
 from parkour_solver.bridge.counting import CountingCompiler; from parkour_solver.search.work import SearchWork
@@ -164,6 +163,7 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
     variants = ConstraintVariants(route, profiles[0], plan, scene['collisionScene'], envelopes, scope,
         segment_solids=segment_solids(scene, program, profiles[0], scope['through'], service), checks=checks, gates=scoped_adapter.gates, signature=signature,
         state=saved_repair.get('constraintGeneration') if saved_policy==policy else None, deadline=scoped.deadline, reference=reference,
+        settled=program.get('settledThrough', 0),
         owners=owners, budget=scoped.check, cancel_event=cancel_event,
         objective=route.get('guideObjective', route['objective']),
         route_guards=scoped_adapter.constraint_guards(program['profile'],envelopes,scope,scoped.deadline)
@@ -241,7 +241,7 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
                           candidate_seconds=1, score_seconds=3, max_solver_calls=128,
                           max_candidates=24, beam_width=4, unknown_slots=1, score_call_limit=8,
                           final_call_limit=24, order='guided', python_executable=None, cancel_event=None,
-                          opportunities=None, cluster_gap=2, objective_gap=None,
+                          objective_gap=None,
                           initial_programs=None, comparison_policy='time_progress', spatial_goal=None,
                           spatial_seconds=1.5, spatial_calls=4, spatial_candidates=4, spatial_prefixes=64,
                           time_margin=1, progress_margin=None, rescue_passes=1, terminal_checkpoint=None, program_filter=None,
@@ -274,8 +274,6 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
         raise ValueError('Ordering must be guided or generation')
     if objective_gap is not None and number(objective_gap,'objective_gap') < 0:
         raise ValueError('objective_gap must be nonnegative')
-    if opportunities is not None and checkpoints is not None:
-        raise ValueError('Supply opportunities or checkpoint ticks, not both')
     if request.get('maxWallHits', 0):
         raise ValueError('Intentional wall-hit experiments are excluded')
     scene = prepare_scene(dict(request, maxWallHits=0))
@@ -323,17 +321,14 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
         last = spatial_points[-1]
         if terminal_checkpoint is None and not (spatial_goals and spatial_goals[-1]['kind']=='landing_height_region') and (abs(last[1]-goal['top']) > 1e-7 or not supports(goal,last[0],last[2])):
             raise ValueError('The spatial guide must end in the goal landing region')
-    window_plan = plan_windows(opportunities,gap=cluster_gap,max_inputs=cfg['maxInputs']) if opportunities is not None else None
-    policy = DecisionPolicy(window_plan,scene) if window_plan is not None else None
     def accepted_program(program):
         from parkour_solver.search.identity import motion_record
         movement = motion_record(program)
         if movement is not None and any(name in request and movement[field] > request[name]
                 for name, field in [('maxTotalRunTicks', 'runs'), ('maxJumps', 'jumps')]):
             return False
-        return (policy is None or policy(program)) and (program_filter is None or program_filter(program))
-    specs = window_plan['checkpoints'] if window_plan is not None else checkpoints or []
-    plans = [checkpoint(corridor, gates, spec) for spec in specs]
+        return program_filter is None or program_filter(program)
+    plans = [checkpoint(corridor, gates, spec) for spec in checkpoints or []]
     terminal_plan=checkpoint(corridor,gates,terminal_checkpoint) if terminal_checkpoint is not None else None
     if terminal_plan is not None and (terminal_plan.tick>cfg['maxInputs'] or any(p.tick>=terminal_plan.tick for p in plans)):
         raise ValueError('Terminal clock must follow every comparison checkpoint and fit the movement horizon')
@@ -360,4 +355,4 @@ def find_checkpoint_route(request, compiler, *, checkpoints=None, corridor=None,
         final_calls=final_call_limit, batch_size=max_candidates, python_executable=python_executable,
         cancel_event=cancel_event, on_progress=on_progress, on_window=on_window,
         time_margin=time_margin, progress_margin=progress_margin, route_report=route_report,
-        window_plan=window_plan, comparison_policy=comparison_policy)
+        comparison_policy=comparison_policy)

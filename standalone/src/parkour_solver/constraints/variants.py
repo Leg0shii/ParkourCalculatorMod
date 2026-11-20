@@ -1,5 +1,6 @@
 """Conditioned joint avoidance alternatives and their durable lazy frontier."""
 import copy
+import json
 import time
 
 from parkour_solver.constraints.avoidance import face_clearance
@@ -12,8 +13,8 @@ from parkour_solver.search.identity import digest
 from parkour_solver.spatial.surfaces import scene_geometry
 
 
-GENERATION_POLICY = 14
-STATE_VERSION = 9
+GENERATION_POLICY = 18
+STATE_VERSION = 11
 
 
 class ConstraintVariants:
@@ -48,7 +49,9 @@ class ConstraintVariants:
 
     def __init__(self, route, profile, plan, geometry, envelopes, scope, *, checks=(), gates=(), signature=(), state=None,
                  deadline=None, reference=None, route_guards=None, owners=None, budget=None, cancel_event=None,
-                 segment_solids=None, objective=None):
+                 segment_solids=None, objective=None, settled=0):
+        """`settled`: the branch keeps exact rows before this tick, so obstacle stretches ending by it
+        and contact checks before it get no item."""
         self.route, self.profile, self.plan = route, profile, plan
         # Relaxation screens optimize the configured progress objective at the plan horizon.
         self.objective = objective
@@ -59,7 +62,8 @@ class ConstraintVariants:
             profile=profile, scope=scope, gates=list(gates), signature=signature, checks=list(checks), geometry=geometry,
             envelope=interaction_context_key(envelopes), owners=owners,
             segmentSolids=None if segment_solids is None else sorted(segment_solids.items()),
-            routeGuards=route_guards.context if route_guards is not None else None))
+            routeGuards=route_guards.context if route_guards is not None else None,
+            settled=settled))
         if state is not None and (state.get('version') != STATE_VERSION or state.get('context') != context):
             raise ValueError('Incompatible constraint-generation continuation (policy%d/state%d)'
                              % (GENERATION_POLICY, STATE_VERSION))
@@ -75,7 +79,7 @@ class ConstraintVariants:
             self.route_rows.append(dict(leg=0, offset=self.through, mode='XYZ'[gate['axis']],
                 cmp='GE' if direction > 0 else 'LE', rhs=gate['plane'], name='route:crossing'))
         items = ([dict(routeGuard=True)] if route_guards is not None else [])
-        items.extend(dict(rows=c['options'], role='contact_region', surface=c['surface'], owner=c['owner'])
+        items.extend(dict(rows=c['options'], role='contact_region', surface=c['surface'], owner=c['owner'], offset=c['offset'])
                      for c in profile.get('regionChoices', []) if c['offset'] <= self.through)
         # Temporal order is a traversal preference. All items share the original
         # model; neither overlap nor scene order declares independent subproblems.
@@ -83,12 +87,19 @@ class ConstraintVariants:
         names = {i: owners[i] if owners is not None else 'solid:'+str(i) for i in scope['solidIndices']}
         reachable = segment_solids or {}
         for begin, end in landing_segments(profile, self.through):
-            items.extend(dict(clusterId=c.id, members=list(c.members), names=[names[i] for i in c.members],
-                              begin=begin, end=end, owner='+'.join(sorted({names[i] for i in c.members})))
-                         for c in self.geometry.clusters(self.scope_indices)
-                         if begin not in reachable or not set(c.members).isdisjoint(reachable[begin]))
-        items += [dict(contactCheck=check) for check in checks
-                  if check['block']['solidIndex'] in scope['solidIndices'] and check['offset'] <= self.through]
+            if end <= settled:
+                continue
+            # The obstacle is built from the solids this stretch can reach: an unreachable member's
+            # space is free for the stretch, and dropping it can split a touching cluster.
+            basis = (sorted(set(self.scope_indices) & set(reachable[begin])) if begin in reachable
+                     else list(self.scope_indices))
+            for c in self.geometry.clusters(basis):
+                item = dict(clusterId=c.id, basis=basis, members=list(c.members), names=[names[i] for i in c.members],
+                            begin=begin, end=end, owner='+'.join(sorted({names[i] for i in c.members})))
+                items.append(item)
+        items += [dict(contactCheck=check, identity=dict(solid=check['block']['solidIndex'], offset=check['offset']))
+                  for check in checks
+                  if check['block']['solidIndex'] in scope['solidIndices'] and settled <= check['offset'] <= self.through]
         self.state = copy.deepcopy(state) if state is not None else dict(
             version=STATE_VERSION, context=context, items=items, exclusions=[], screenExclusions=[],
             pending=[dict(item=0, rows=self.route_rows, passages=[], choices=[])], seen=[], partialSeen=[], emitted=0,
@@ -242,6 +253,22 @@ class ConstraintVariants:
         _, index, item = min(candidates, key=lambda v: v[0])
         node['chosenItem'], node['prepared'] = index, item
 
+    def branch_choice(self, item, option, choice):
+        """The intermediate choice a decision check makes for this item: a closed obstacle segment's
+        side family, or a contact region's or contact check's exact rows. Open segments stay undecided."""
+        if 'clusterId' in item:
+            ground = self.profile.get('grounded', [])
+            if item['end'] < self.through or self.through < len(ground) and ground[self.through]:
+                return dict(kind='cluster', clusterId=item['clusterId'], begin=item['begin'], end=item['end'],
+                            sides=choice.get('sides', []))
+            return None
+        rows = digest(canonical_rows(option['rows']))
+        if item.get('role') == 'contact_region':
+            return dict(kind='region', surface=item['surface'], offset=item['offset'], rows=rows)
+        if 'identity' in item:
+            return dict(kind='contact', **item['identity'], rows=rows)
+        return None
+
     def _next_variant(self):
         while self.state['pending']:
             self.check()
@@ -257,17 +284,21 @@ class ConstraintVariants:
                 rows = canonical_rows(node['rows'])
                 key = self.effective_key(rows)
                 self.state['pending'].pop()
+                ordered = sorted(node['choices'], key=lambda c: c['item'])
+                choices = sorted((c['branch'] for c in ordered if 'branch' in c),
+                                 key=lambda c: json.dumps(c, sort_keys=True))
+                choices_key = digest(choices)
                 if key in self.seen:
                     self.state['duplicateVariants'] += 1
                     continue
                 self.seen.add(key)
                 self.state['seen'].append(key)
                 self.state['emitted'] += 1
-                ordered = sorted(node['choices'], key=lambda c: c['item'])
                 return dict(rows=[{k: v for k, v in r.items() if k != 't1'} for r in rows], passages=[],
                     selectedPassages=node['passages'], semanticObservations=[dict(p, kind='passage') for p in node['passages']],
                     score=self.state['emitted'], family=digest([[c['item'], c.get('sides', c.get('key'))] for c in ordered]),
-                    switches=[t for c in ordered for t in c.get('switches', [])])
+                    switches=[t for c in ordered for t in c.get('switches', [])],
+                    branchChoices=choices, branchKey=choices_key)
             self.choose_item(node)
             item = node['prepared']
             if 'rows' in item and any(rows_entailed(analysis['envelopes'], [], rows) for rows in item['rows']):
@@ -284,16 +315,19 @@ class ConstraintVariants:
                     continue
                 node['selected'] = option
             option = node['selected']
+            passage = option.get('passage')
             rows = canonical_rows(node['rows']+option['rows'])
             child_analysis = self.analyze(rows)
             if child_analysis['proof']['ruledOut']:
                 self.excluded(rows, child_analysis['proof'], node['chosenItem'], option)
                 del node['selected']
                 continue
-            passage = option.get('passage')
             choice = (dict(item=node['chosenItem'], sides=[side['key'] for side in passage['faces']],
                            switches=[at//3 for at in passage['switchPhases']]) if passage is not None
                       else dict(item=node['chosenItem'], key=self.effective_key(option['rows'])))
+            branch = self.branch_choice(item, option, choice)
+            if branch is not None:
+                choice['branch'] = branch
             child = dict(item=0, remaining=[i for i in remaining if i != node['chosenItem']], rows=rows,
                          passages=node['passages']+([passage] if passage is not None else []),
                          choices=node['choices']+[choice])

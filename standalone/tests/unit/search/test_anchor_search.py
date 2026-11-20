@@ -26,7 +26,91 @@ class AnchorSearchTests(unittest.TestCase):
                 single_jump_structure(s,p,0,'start','goal',complete=p['terminalSupport']=='goal')),
             policy_context=dict(version=1,span=0),deadline=time.monotonic()+3,context_adapter=lambda c:c.update(interactionGate=None))
 
-    def test_multiple_same_block_jumps_generated_and_no_solve_for_run_hold(self):
+    def test_take_hashes_only_tied_programs_and_matches_full_key_order(self):
+        from parkour_solver.search.frontier import take_first
+        def key(p,identity):return (p['T'],-p['J'],identity)
+        identity=lambda p:p['id']
+        for items in ([dict(T=3,J=1,id='a'),dict(T=2,J=1,id='z'),dict(T=2,J=2,id='y'),dict(T=2,J=2,id='b')],
+                      [dict(T=5,J=0,id='q'),dict(T=4,J=0,id='p')],
+                      [dict(T=1,J=0,id='same'),dict(T=1,J=0,id='same',copy=True)]):
+            expected=min(items,key=lambda p:key(p,identity(p)))
+            hashed=[]
+            def counted(p):
+                hashed.append(p['id'])
+                return identity(p)
+            queue=list(items)
+            self.assertIs(take_first(queue,key,counted),expected)
+            self.assertEqual(len(queue),len(items)-1)
+            low=min(key(p,'')[:-1] for p in items)
+            tied=[p['id'] for p in items if key(p,'')[:-1]==low]
+            self.assertEqual(hashed,tied if len(tied)>1 else [])
+
+    def test_held_alternatives_restore_one_at_a_time_when_their_branch_dies(self):
+        from parkour_solver.search.frontier import restore_alternatives
+        def node(name):return dict(decisionNode=name)
+        def fresh(**fields):
+            state=dict(pending=[],ready=[],expansion=None,deferredNodes=[],nodeInFlight=None,succeededNodes=[],
+                decisionParents={'N':'P','c':'N','g':'c','a0':'P','a1':'P','x':'a0'},
+                alternatives={'N':dict(programs=[node('a0'),node('a1')],restored=[],next=0)})
+            state.update(fields)
+            return state
+        state=fresh(pending=[node('g')])
+        self.assertFalse(restore_alternatives(state))
+        self.assertFalse(restore_alternatives(fresh(),extra_live=[node('c')]))
+        self.assertFalse(restore_alternatives(fresh(succeededNodes=['N'])))
+        state['pending']=[]
+        self.assertTrue(restore_alternatives(state))
+        self.assertEqual(state['pending'],[node('a0')])
+        # The restored alternative's own subtree keeps the next one held, also across a saved resume.
+        state=json.loads(json.dumps(state))
+        state['pending']=[node('x')]
+        self.assertFalse(restore_alternatives(state))
+        state['pending']=[]
+        self.assertTrue(restore_alternatives(state))
+        self.assertEqual(state['pending'],[node('a1')])
+        state['pending']=[]
+        self.assertFalse(restore_alternatives(state))
+        self.assertEqual(state['alternatives']['N'],dict(programs=[node('a0'),node('a1')],restored=['a0','a1'],next=2))
+
+    def test_watched_alternatives_wait_for_every_watched_branch(self):
+        from parkour_solver.search.frontier import restore_alternatives
+        def node(name):return dict(decisionNode=name)
+        def fresh(**fields):
+            state=dict(pending=[],ready=[],expansion=None,deferredNodes=[],nodeInFlight=None,succeededNodes=[],
+                decisionParents={'R':'P','o1':'P','o2':'P','c':'o2'},
+                alternatives={'R':dict(programs=[node('R')],restored=[],next=0,watch=['o1','o2'])})
+            state.update(fields)
+            return state
+        self.assertFalse(restore_alternatives(fresh(pending=[node('o1')])))
+        self.assertFalse(restore_alternatives(fresh(ready=[node('c')])))
+        self.assertFalse(restore_alternatives(fresh(succeededNodes=['o2','P'])))
+        # The parent P staying alive through other children does not hold the reserve back.
+        state=fresh(pending=[node('P')])
+        self.assertTrue(restore_alternatives(state))
+        self.assertEqual(state['pending'],[node('P'),node('R')])
+
+    def test_frontier_restores_a_held_alternative_after_the_winner_subtree_is_rejected(self):
+        calls=[]
+        def evaluate(p,nodes,forced):
+            calls.append(p['decisionParent'])
+            if not calls[1:]:
+                held=copy.deepcopy(p);held.pop('needsNodeSolve',None)
+                # A held alternative differs from the winner in its retained rows.
+                held['profile']['positionConstraints'].append(dict(mode='X',t1=1,cmp='GE',rhs=-1e6,name='held'))
+                held['profile'].get('constraintOwners',[]).append(0)
+                held.update(decisionNode='held:0',alternativeOf=p['decisionNode'])
+                return dict(status='feasible',program=p,alternatives=[held])
+            return dict(status='oracle_rejected' if p['decisionParent']!='held:0' else 'feasible',program=p)
+        report={}
+        source=self.frontier(evaluate,report=report,limit=30)
+        try:list(source)
+        finally:source.close()
+        held=report['continuation']['alternatives']
+        winner,=held
+        self.assertEqual(held[winner]['restored'],['held:0'])
+        self.assertIn('held:0',calls)
+
+    def test_multiple_same_block_jumps_generated_and_no_solve_for_run_ticks(self):
         calls=[]
         def evaluate(p,nodes,forced):
             calls.append(copy.deepcopy(p))
@@ -37,7 +121,7 @@ class AnchorSearchTests(unittest.TestCase):
         finally:source.close()
         self.assertTrue(any(local_counts(p)['J']>=2 for p in calls))
         self.assertTrue(programs)
-        # Holds can construct longer preparations but never dispatch by themselves.
+        # Run ticks can construct longer preparations but never dispatch by themselves.
         self.assertTrue(all(local_counts(p)['J']>=1 for p in calls))
         self.assertTrue(all(p['decisionDepth']>=1 for p in calls))
 
@@ -207,6 +291,128 @@ class AnchorSearchTests(unittest.TestCase):
         self.assertEqual(p['profile']['airtime'],12)
         self.assertEqual(p['terminalSupport'],'goal')
         self.assertEqual(p['profile']['positionConstraints'],[])
+
+
+def step_scene():
+    # The goal is one block higher than the start: only a jump reaches it.
+    from parkour_solver.scene.normalize import prepare_scene
+    return prepare_scene(dict(version=1, sceneModel='collision_boxes', geometryBounds=[-10,-5,-10,20,12,10],
+        initial=dict(position=[.5,1,.5], velocity=[.25,-.0784000015258789,0], yaw=-90),
+        startBlock='start', goalBlock='goal', maxWallHits=0, maxContactCombinations=0,
+        blocks=[dict(id='start', boxes=[[-2,0,-2,3,1,2]]), dict(id='goal', boxes=[[5,1,-1,6,2,1]])],
+        movementSearch=dict(types=['normal'], maxInputs=40)))
+
+
+class MinimumRunTickTests(unittest.TestCase):
+    def frontier(self, *, screen=None, ordinary=True, continuation=None, live=(), report=None, scene=None,
+                 policy=True, keep_emitted=False):
+        from parkour_solver.movement.program import boundary_state
+        from parkour_solver.search.anchors.policy import advantageous_targets, next_anchor
+        s=scene or step_scene()
+        run_policy=dict(ordinary=lambda p:ordinary and boundary_state(p)['onGround'],
+                        targets=lambda b,c:advantageous_targets(s,b,c,next_anchor(s,b,[],'goal')))
+        report=report if report is not None else {}
+        source=persistent_programs(s,settings=dict(movement_settings(s),maxPrefixes=1),report=report,
+            continuation=continuation,threshold=0.,node_evaluator=lambda p,n,x:dict(status='feasible',program=p),
+            policy_context=dict(version=1,span=0),deadline=time.monotonic()+20,screen=screen,
+            context_adapter=lambda c:c.update(interactionGate=None),run_policy=run_policy if policy else None,
+            live_programs=lambda:list(live)+(emitted if keep_emitted else []))
+        emitted=[]
+        try:
+            for program in source:emitted.append(program)
+            return emitted,report['continuation']
+        finally:source.close()
+
+    @staticmethod
+    def runs(programs):
+        return sorted(local_counts(p)['R'] for p in programs)
+
+    @staticmethod
+    def reserves(state, node=None):
+        # Reserves registered for the root decision (its node is None).
+        return sorted((h['programs'][0]['minimumRunSearch']['target'],h['programs'][0]['minimumRunSearch']['start'])
+                      for h in state['alternatives'].values() if 'watch' in h and h['next']<len(h['programs'])
+                      and h['programs'][0]['minimumRunSearch']['node']==node)
+
+    @staticmethod
+    def late(minimum):
+        # A screen that rules out goal arrivals with fewer than `minimum` run ticks.
+        return lambda p:dict(reason='late') if p['terminalSupport']=='goal' and local_counts(p)['R']<minimum else None
+
+    def test_jump_now_reaching_the_next_anchor_queues_no_run_ticks(self):
+        emitted,state=self.frontier()
+        self.assertEqual((self.runs(emitted),self.runs(state['pending'])),([0],[0]))
+        self.assertEqual(self.reserves(state),[('["anchor", "goal"]',1)])
+        emitted,state=self.frontier(policy=False)
+        self.assertIn(1,self.runs(state['pending']))
+
+    def test_first_screened_run_count_is_queued_and_the_next_restored_when_it_dies(self):
+        emitted,state=self.frontier(screen=self.late(3))
+        self.assertEqual(self.runs(emitted),[3])
+        self.assertEqual(self.runs(state['pending']),[0])
+        self.assertEqual(self.reserves(state),[('["anchor", "goal"]',4)])
+        self.assertEqual([(r['target'],r['level']) for r in state['minimumRunLevels']],[('["anchor", "goal"]',3)])
+        saved=json.loads(json.dumps(state))
+        # While the 3-tick arrival is alive the reserve waits and the queued hop is expanded instead.
+        again,alive=self.frontier(screen=self.late(3),continuation=saved,live=emitted)
+        self.assertEqual([h['next'] for h in alive['alternatives'].values() if 'watch' in h and
+                          h['programs'][0]['minimumRunSearch']['node'] is None],[0])
+        self.assertTrue(again)
+        self.assertTrue(all(local_counts(p)['J']==2 for p in again))
+        again,state=self.frontier(screen=self.late(3),continuation=saved)
+        self.assertEqual(self.runs(again),[4])
+        self.assertEqual(self.reserves(state),[('["anchor", "goal"]',5)])
+
+    def test_no_run_option_or_reserve_past_the_cap(self):
+        from parkour_solver.movement.normal import MAX_ADVANTAGEOUS_RUN_TICKS
+        emitted,state=self.frontier(screen=self.late(MAX_ADVANTAGEOUS_RUN_TICKS+1))
+        self.assertEqual((emitted,self.runs(state['pending']),self.reserves(state)),([],[0],[]))
+        emitted,state=self.frontier(screen=self.late(MAX_ADVANTAGEOUS_RUN_TICKS))
+        self.assertEqual((self.runs(emitted),self.reserves(state)),([MAX_ADVANTAGEOUS_RUN_TICKS],[]))
+
+    def test_turnaround_decision_generates_run_ticks_as_before(self):
+        from parkour_solver.movement.program import program_search_key
+        keys=lambda programs:sorted(program_search_key(p) for p in programs)
+        turned,state=self.frontier(ordinary=False)
+        plain,before=self.frontier(policy=False)
+        self.assertEqual((keys(turned),keys(state['pending'])),(keys(plain),keys(before['pending'])))
+        self.assertEqual(state['alternatives'],{})
+
+    def test_runoff_under_a_ceiling_is_queued_and_a_plain_runoff_is_not(self):
+        from parkour_solver.scene.normalize import prepare_scene
+        # Run-offs from start (top 2): roof's underside is 2 above low (top 1.5), so a jump from low hits
+        # it; from plain (top -4) no jump reaches any underside or the goal. Heights alone decide here.
+        s=prepare_scene(dict(version=1, sceneModel='collision_boxes', geometryBounds=[-10,-8,-10,20,12,10],
+            initial=dict(position=[1,2,1], velocity=[0,-.0784000015258789,0], yaw=-90),
+            startBlock='start', goalBlock='goal', maxWallHits=0, maxContactCombinations=0,
+            blocks=[dict(id='start', boxes=[[0,1,0,2,2,2]]), dict(id='low', boxes=[[2,0,0,3,1.5,4]]),
+                    dict(id='roof', boxes=[[2,3.5,2,3,4.5,4]]), dict(id='plain', boxes=[[-1,-5,0,0,-4,2]]),
+                    dict(id='goal', boxes=[[6,2,0,7,3,2]])],
+            movementSearch=dict(types=['normal','ceiling'], maxInputs=40)))
+        emitted,state=self.frontier(scene=s)
+        runoffs={(p['terminalSupport'],local_counts(p)['J']) for p in state['pending'] if local_counts(p)['R']}
+        self.assertEqual(runoffs,{('low',0)})
+        self.assertIn(['["ceiling", "roof"]',1],[[r['target'],r['level']] for r in state['minimumRunLevels']])
+
+    def test_deadline_inside_the_minimum_run_step_redoes_it_on_resume(self):
+        from parkour_solver.movement.program import program_search_key
+        keys=lambda programs:sorted(program_search_key(p) for p in programs)
+        late=self.late(3)
+        whole,expected=self.frontier(screen=late)
+        def interrupted(p):
+            if local_counts(p)['R']>=2:raise TimeoutError('deadline')
+            return late(p)
+        report={}
+        emitted,state=self.frontier(screen=interrupted,report=report)
+        self.assertEqual((report['termination'],emitted,self.runs(state['pending']),self.reserves(state)),
+                         ('deadline',[],[0],[]))
+        self.assertIsNotNone(state['expansion'])
+        # The resumed call also expands one more queued program; arrivals stay alive so no reserve fires.
+        rest,state=self.frontier(screen=late,continuation=json.loads(json.dumps(state)),keep_emitted=True)
+        self.assertEqual(keys(p for p in rest if local_counts(p)['J']==1),keys(whole))
+        self.assertEqual(self.reserves(state),self.reserves(expected))
+        root=lambda levels:[r for r in levels if r['node'] is None]
+        self.assertEqual(root(state['minimumRunLevels']),root(expected['minimumRunLevels']))
 
 
 class AnchorNativeTests(unittest.TestCase):

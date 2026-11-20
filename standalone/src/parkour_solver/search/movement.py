@@ -15,7 +15,8 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
                            context_adapter=None, work=None, checkpoint_tick=None, initial_programs=None, threshold=.005,
                            program_filter=None, queue_policy='balanced', stop_on_goal=True, program_priority=None,
                            persistent=False, continuation=None, terminal_goal=None, stop_supports=None,
-                           node_evaluator=None, priority_key=None, policy_context=None):
+                           node_evaluator=None, priority_key=None, identity_key=None, policy_context=None,
+                           live_programs=None, run_policy=None):
     cfg = movement_settings(scene) if settings is None else settings
     if persistent:
         from parkour_solver.search.frontier import persistent_programs
@@ -23,7 +24,8 @@ def iter_movement_programs(scene, *, settings=None, deadline=None, cancel_event=
             continuation=continuation, deadline=deadline, cancel_event=cancel_event, work=work,
             initial_programs=initial_programs, checkpoint_tick=checkpoint_tick, threshold=threshold, screen=screen,
             context_adapter=context_adapter, program_filter=program_filter, stop_on_goal=stop_on_goal, terminal_goal=terminal_goal,
-            stop_supports=stop_supports,node_evaluator=node_evaluator,priority_key=priority_key,policy_context=policy_context)
+            stop_supports=stop_supports,node_evaluator=node_evaluator,priority_key=priority_key,identity_key=identity_key,
+            policy_context=policy_context,live_programs=live_programs,run_policy=run_policy)
         return
     if terminal_goal is not None:
         raise ValueError('Virtual terminal discovery requires the persistent movement source')

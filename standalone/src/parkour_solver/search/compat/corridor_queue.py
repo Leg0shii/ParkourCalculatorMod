@@ -42,7 +42,7 @@ def collision_request(request, compiler, seconds):
 def search_routes(request, compiler, *, task_goal=None, spatial_settings=None, **options):
     from parkour_solver.search.engine import find_checkpoint_route
     started=time.monotonic(); deadline=started+options['seconds']
-    if options.get('checkpoints') or options.get('opportunities') is not None or options.get('terminal_checkpoint') is not None or options.get('spatial_goals'):
+    if options.get('checkpoints') or options.get('terminal_checkpoint') is not None or options.get('spatial_goals'):
         raise ValueError('Automatic routes derive their own stages; use an explicit corridor for authored clocks/goals')
     spatial=dict(max_routes=50,max_expansions=5000,max_steps=64,max_visits=2)
     if spatial_settings:

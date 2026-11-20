@@ -121,11 +121,11 @@ A completed designated no-solution attempt is an operational rejection under the
 
 The default performs a guided feasibility solve after every **completed meaningful movement decision**, always at required anchors and the finish. This is a clear initial baseline: an impossible selected jump/contact is rejected before extending it, and rejection has an unambiguous exact-node owner. It also fits the existing stop-on-feasible/feasible-yaw warm-start machinery.
 
-A decision level here means a completed jump/landing or selected physical contact/case choice. It does **not** mean a simulation input or a raw one-input run-hold construction node. Consecutive ordinary ground-run inputs are preparation of a run-length choice and are included in the next completed movement decision's model. Do not add an IPOPT call merely because the generator extended an ordinary run from R2 to R3. If a whole run-duration action is exposed as a meaningful decision in a different generator, count that action once, not once per input.
+A decision level here means a completed jump/landing or selected physical contact/case choice. It does **not** mean a simulation input or a raw one-input run-tick construction node. Consecutive ordinary ground-run inputs are preparation of a run-length choice and are included in the next completed movement decision's model. Do not add an IPOPT call merely because the generator extended an ordinary run from R2 to R3. If a whole run-duration action is exposed as a meaningful decision in a different generator, count that action once, not once per input.
 
 For example, run3→jump→land on the same block is one completed movement decision including its run preparation. A second setup jump is another level. Required anchor arrival is always solved even if it occurs before the next scheduled level. Existing [`append_choice`](../../src/parkour_solver/movement/program.py), [`normal_choices`](../../src/parkour_solver/movement/normal.py) and named-choice boundaries provide the underlying actual choices; distinguish raw construction steps from this solve cadence explicitly.
 
-Each feasible node retains its selected physical/avoidance inequalities and a yaw seed; no fixed X/Z/velocity seam is created. `evaluate_node` calls `commit_arrival`, whose `retain_prefix` preserves those selected rows before the next movement extension. Later node/anchor solves still optimize all earlier facings jointly from the original state, within the retained constraints. This does not introduce optional-support **comparison goals**: actual time comparisons/promotion remain at required anchors/final task. An internal feasible node is not a new required anchor. The [avoidance follow-up plan](AVOIDANCE_PASSAGES.md) separately records the need to specify recoverable passage-alternative retention; continuous reoptimization alone does not reopen a selected discrete side.
+Each feasible node retains the selected physical inequalities and the exact avoidance/contact rows of every stretch it settled ([side families](AVOIDANCE_PASSAGES.md#side-families-in-search-branches)), plus a yaw seed; no fixed X/Z/velocity seam is created. `evaluate_node` calls `commit_arrival`, whose `retain_prefix` preserves those selected rows before the next movement extension. Later node/anchor solves still optimize all earlier facings jointly from the original state, within the retained constraints. This does not introduce optional-support **comparison goals**: actual time comparisons/promotion remain at required anchors/final task. An internal feasible node is not a new required anchor. The [avoidance follow-up plan](AVOIDANCE_PASSAGES.md) separately records the need to specify recoverable passage-alternative retention; continuous reoptimization alone does not reopen a selected discrete side.
 
 ### Alternative: every 2 or 4 decision levels
 
@@ -192,7 +192,7 @@ All J/R/A counts remain local to the current required-anchor span. There is no R
 
 The default solve cadence 1 supplies a validated node point before its next movement decision. If later benchmarking a larger cadence, explicitly define/log the deterministic seed/reference position used at an unsolved node; the classifier still accepts a point and returns one boolean. Do not substitute reachability-envelope membership or branch the heuristic into several possibilities.
 
-In turnaround mode, use T/−J/A and protect more J OR fewer A. Outside, use T/−J/R and protect more J OR fewer R. Local hard-arrival deferral applies in either mode only without the corresponding independent protections; raw extra R/A alone is not protection. Global hard topology stays single-jump wherever already latched. Do not split one run hold into differently ranked pieces.
+In turnaround mode, use T/−J/A and protect more J OR fewer A. Outside, use T/−J/R and protect more J OR fewer R. Local hard-arrival deferral applies in either mode only without the corresponding independent protections; raw extra R/A alone is not protection. Global hard topology stays single-jump wherever already latched. Do not split one run of ticks into differently ranked pieces.
 
 The initial margin is approximately0.3 blocks. The previously suggested1-input margin is an optional later tuning representation, not an automatic temporal dilation or an extra membership state in this initial edge-distance classifier. Any later change must remain a documented binary rule.
 
@@ -254,6 +254,62 @@ Global hard topology and regional mode are independent: a latched span still has
 one actual transfer after allowed source setup hops. Restore an unprotected slower
 candidate only on explicit failed-continuation recovery, with scoped bypass and
 all bounds/domain limits still enforced. No O7 design question remains.
+
+## O8 — Encounter groups
+
+**Settled (user, 2026-11-18):** consecutive anchor pairs whose encounters are
+near each other form one group. `encounter_groups(scene, names)`
+(`search/anchors/policy.py`, stored in `guide_plan['groups']`) starts at a pair's
+end block and follows solids that touch (the obstacle-cluster test,
+`SceneGeometry.touching`). A touching solid joins when some landing block of the
+chain can hit it (`blocks` in its [block table](OBSTACLE_RELEVANCE.md)), and every
+member extends the chain (user, 2026-11-19); the kinds only label members:
+blocks a landing block can land on (`landing`) become landings, the rest are
+hit/ceiling obstacles. The group then runs through the last later anchor among its
+landing blocks, and the next group starts at the following pair. Real11: B4 → B7
+is one group (B5, B6, B7); in the extended task B4 → B22 is one group (anchors
+B5, B7, B20, B22), reached through the hit-only blocks B6 and B8 that B22 touches.
+
+A frame searches one group (cursor `anchorIndex` … `groupEnd`). Anchors inside it
+stay required and ordered (`audit`); a group-end arrival must have visited them
+all, and feet stay forbidden on anchors after the group's end block. Alternatives
+are compared only at the group's end. Inside a group the hard latch is per pair:
+a validated group-end arrival latches every pair whose transfer is one jump
+(`transfer_structure(..., until_arrival=True)` ignores the later pairs' history),
+and every latched pair the program has entered is enforced. Slower-arrival
+deferral at a group end applies only when every pair of the group is latched, so
+a one-pair group behaves as before. Hard policy4 and search policy6 carry this.
+
+## O9 — Minimum run ticks for advantageous jumps
+
+**Settled (user, 2026-11-19):** a run tick (a grounded tick without a jump) leaves
+the player on the same block, so outside turnarounds it is generated only as the
+minimum that lets the jump after it be **advantageous**: the jump lands on the
+next required anchor (anchors are visited in order; the task block after the
+last), or it hits a ceiling, or it is a `grind`, `slab_boost` or
+`corner_jump_cancel`. A run-off or walking step-up is itself a run tick: it
+qualifies when it lands on the next anchor or when a jump right after it is
+advantageous (Real11's run-off from B7 onto B11 under B8's 2-block ceiling). This
+mirrors minimum run ticks for hard jumps (`run_bound`, O7), which is unchanged.
+
+An **ordinary decision** is a grounded program whose last decision is not a
+turnaround (`decisionTurnaround`). Its expansion generates jump-now children only
+(`runTickChoices=False` in the generator context: `choice_approaches` and the
+stepping generator's `normal_step`); ladder walk-ins and virtual-goal finishes are
+unchanged. `minimum_runs` (`search/frontier.py`) then counts levels: level L is
+the jumps after L same-block run ticks plus the run-offs/step-ups after L−1 of
+them. A target key (`advantageous_targets`, `search/anchors/policy.py`) gets the
+options of the first level whose option passes the frontier's screens; nothing
+for a key the jump-now children already reach. The cap is
+`MAX_ADVANTAGEOUS_RUN_TICKS = FLAT_JUMP_TICKS − 1` = 11 (a flat jump lasts 12
+ticks), on top of the request caps and the time bound.
+
+The next level is a **reserve** held in the frontier's `alternatives` with the
+options it waits on (`watch`); it is restored when every watched option's branch
+died (its node check failed or everything below it died) and never once a
+watched branch reached a validated group-end arrival. A restored reserve searches
+only its key from its level. Turnaround decisions generate run ticks as before
+and still prefer them (`(T,-J,A)`). Search policy10 carries this.
 
 ## Settled versus remaining implementation choices
 

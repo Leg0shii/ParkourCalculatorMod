@@ -98,7 +98,10 @@ class Real11JointPrerequisiteTests(unittest.TestCase):
             adapter=AnchorAdapter(data['domain'],data['graph'],data['policy'],motion=data['motion'],compiler=compiler)
             context=dict(mode='open',scene=scene,program=p,state=boundary_state(p),
                          maxInputs=200-p['profile']['airtime'],threshold=0.)
-            adapter.for_goal(saved['request'],saved['cursor']).context(context)
+            # The recorded cursor predates encounter groups; b3->b4 is a one-pair group.
+            cursor=dict(saved['cursor'],groupEnd=adapter.group_end(saved['cursor']['anchorIndex']))
+            self.assertEqual(cursor['groupEnd'],cursor['anchorIndex'])
+            adapter.for_goal(saved['request'],cursor).context(context)
             gate=InteractionGate(scene,compiler);gate.context(context)
             with patch('parkour_solver.movement.stepping.landing_wall_options',side_effect=AssertionError('late wall fanout')), \
                  patch('parkour_solver.movement.stepping.corner_rows',side_effect=AssertionError('late corner fanout')):

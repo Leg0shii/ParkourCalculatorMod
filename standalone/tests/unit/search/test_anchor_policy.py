@@ -6,7 +6,7 @@ import math
 import unittest
 
 from parkour_solver.scene.normalize import prepare_scene
-from parkour_solver.search.anchors.policy import audit, local_counts, priority, settings, visit_state, within_caps, single_jump_structure, transfer_structure
+from parkour_solver.search.anchors.policy import audit, encounter_groups, local_counts, priority, settings, visit_state, within_caps, single_jump_structure, transfer_structure
 from parkour_solver.spatial.anchor_guides import build_guides, classify, nearest, onward_objective
 from parkour_solver.search.anchors.adapter import AnchorAdapter
 from parkour_solver.spatial.event_routes import build_route_domain, build_event_graph
@@ -15,6 +15,44 @@ from parkour_solver.observability.turns import record, replay, summary
 from parkour_solver.movement.program import empty_program
 from tests.support.checkpoint_guidance import flat_scene
 from tests.support.archived_events import current_events
+
+
+class EncounterGroupTests(unittest.TestCase):
+    def groups(self, case):
+        scene=prepare_scene(case['request'])
+        names=[scene['startBlock']]+case['anchorSearch']['anchors']+[scene['goalBlock']]
+        return {(g['first'],g['last']):g for g in encounter_groups(scene,names)}
+
+    def case(self, name):
+        from tools.paths import STANDALONE_ROOT
+        return json.loads((STANDALONE_ROOT/'cases/real11'/name).read_text())
+
+    def test_real11_four_anchor_groups_b4_through_the_goal(self):
+        groups=self.groups(self.case('physical-anchors.json'))
+        self.assertEqual(sorted(groups),[(0,0),(1,1),(2,2),(3,4)])
+        self.assertEqual(groups[(3,4)]['anchors'],['b5','b7'])
+        self.assertEqual(groups[(3,4)]['members'],['b5','b6','b7'])
+        self.assertEqual(groups[(3,4)]['landings'],['b5','b7'])
+
+    def test_real11_extended_group_runs_b4_to_b22(self):
+        # b22 touches hit-only b6 and b8, which now extend the chain too.
+        groups=self.groups(self.case('extended-anchors.json'))
+        self.assertEqual(sorted(groups),[(0,0),(1,1),(2,2),(3,6)])
+        self.assertEqual(groups[(3,6)]['anchors'],['b5','b7','b20','b22'])
+        self.assertEqual(groups[(3,6)]['members'],['b10','b11','b12','b13#0','b13#1','b14','b15','b16','b17','b18','b19',
+                                                   'b20','b22','b5','b6','b7','b8','b9a','b9b'])
+        self.assertEqual(groups[(3,6)]['landings'],['b10','b11','b12','b13#0','b13#1','b15','b16','b18','b19','b20','b22',
+                                                    'b5','b7','b8','b9a','b9b'])
+
+    def test_hit_only_block_extends_the_chain(self):
+        boxes=dict(start=[0,0,0,1,1,1],a=[3,0,0,4,1,1],w=[4,0,0,5,10,1],f=[5,0,0,6,1.5,1],goal=[0,0,3,1,1,4])
+        request=dict(version=1,sceneModel='collision_boxes',maxWallHits=0,geometryBounds=[-5,-5,-5,12,12,10],
+            initial=dict(position=[.5,1,.5],velocity=[0,-.0784000015258789,0],yaw=0),startBlock='start',goalBlock='goal',
+            blocks=[dict(id=k,boxes=[v]) for k,v in boxes.items()],objective=dict(axis='Z',sense='MAX'),
+            movementSearch=dict(types=['normal'],maxInputs=60))
+        groups=self.groups(dict(request=request,anchorSearch=dict(anchors=['a'])))
+        self.assertEqual(groups[(0,0)]['members'],['a','f','w'])
+        self.assertEqual(groups[(0,0)]['landings'],['a','f'])
 
 
 class AnchorPolicyTests(unittest.TestCase):
@@ -35,6 +73,29 @@ class AnchorPolicyTests(unittest.TestCase):
         p['terminalSupport']=None;p['profile']['grounded'][-1]=False
         p['profile']['caseEvents']=[dict(input=0,type='stepping',case='corner_jump_cancel')]
         self.assertTrue(transfer_structure(s,p,0,'start','mid')['valid'])
+
+    def test_group_pair_transfer_ignores_history_after_its_arrival(self):
+        s=scene()
+        p=history(s,['mid','optional'])
+        self.assertEqual(transfer_structure(s,p,0,'start','mid',complete=True)['reason'],
+                         'intermediate_support_between_anchors')
+        self.assertTrue(transfer_structure(s,p,0,'start','mid',complete=True,until_arrival=True)['valid'])
+
+    def test_group_end_arrival_requires_every_anchor_inside_the_group(self):
+        s=scene((5,0,0,6,2,1));data=build_route_domain(s,dict(kind='landing',block='goal')).to_dict()
+        adapter=AnchorAdapter(data,build_event_graph(data),settings(dict(anchors=['mid']),s))
+        root=history(s,[]);cursor=adapter.initial_cursor([root])
+        self.assertEqual((cursor['anchorIndex'],cursor['groupEnd']),(0,1))
+        requests,_,_=adapter.next_goals(cursor,[root])
+        self.assertEqual({r['goal']['block'] for r in requests},{'goal'})
+        view=adapter.for_goal(requests[0],cursor)
+        skipped,visited=history(s,['goal']),history(s,['mid','goal'])
+        self.assertFalse(view.program_allowed(skipped))
+        self.assertTrue(view.program_allowed(visited))
+        self.assertEqual(view.bind_program(skipped).candidate({},dict(positions=[[.5,.5]]*2),{})['reason'],
+                         'missing_prior_anchor')
+        ctx=dict(program=history(s,['mid']));view.context(ctx)
+        self.assertTrue(ctx['feetAllowed'](next(b for b in s['blocks'] if b['id']=='goal')))
 
     def test_owner_returns_excluded_but_all_same_owner_jumps_preserved(self):
         s=scene()
@@ -121,7 +182,7 @@ class AnchorPolicyTests(unittest.TestCase):
         self.assertEqual({r['goal']['block'] for r in requests},{'mid'})
         view=adapter.for_goal(requests[0],cursor)
         p=history(s,['start'])
-        node=view.for_node().bind_program(p)
+        node=view.for_node(0).bind_program(p)
         self.assertFalse(hasattr(node,'contact_regions'))
         self.assertTrue(node.candidate({},dict(positions=[[.5,.5]]*2),{})['accepted'])
         self.assertFalse(view.bind_program(p).candidate({},dict(positions=[[.5,.5]]*2),{})['accepted'])
@@ -194,6 +255,40 @@ class AnchorPolicyTests(unittest.TestCase):
         state=visit_state(s,p)
         self.assertEqual((state['valid'],state['current'],state['departed']),(True,'mid',['start']))
         self.assertTrue(audit(s,p,['mid'])['accepted'])
+
+    def test_next_anchor_follows_the_required_order_then_the_task_block(self):
+        from parkour_solver.search.anchors.policy import next_anchor
+        s=scene();anchors=['mid','optional']
+        self.assertEqual(next_anchor(s,history(s,['start']),anchors,'goal'),'mid')
+        self.assertEqual(next_anchor(s,history(s,['start','optional']),anchors,'goal'),'mid')
+        self.assertEqual(next_anchor(s,history(s,['start','mid']),anchors,'goal'),'optional')
+        self.assertEqual(next_anchor(s,history(s,['start','mid','optional']),anchors,'goal'),'goal')
+
+    def test_advantageous_targets_are_the_next_anchor_ceilings_and_named_jump_cases(self):
+        from parkour_solver.search.anchors.policy import advantageous_targets
+        s=scene();base=history(s,['start'])
+        solid=lambda name:s['collisionScene']['solids'][next(b['solidIndex'] for b in s['blocks'] if b['id']==name)]
+        def child(landing=None,jump=True,**events):
+            c=history(s,['start',landing or 'start'])
+            c['profile']['jump'][1]=jump
+            if landing is None:
+                c['profile']['contactEvents'].pop();c['profile']['grounded'][-1]=False;c['terminalSupport']=None
+            for key,value in events.items():c['profile'].setdefault(key,[]).extend(value)
+            return c
+        targets=lambda c:advantageous_targets(s,base,c,'mid')
+        self.assertEqual(targets(child('mid')),{('anchor','mid')})
+        self.assertEqual(targets(child('mid',jump=False)),{('anchor','mid')})
+        self.assertEqual(targets(child('optional')),set())
+        self.assertEqual(targets(child('start')),set())
+        ceiling=lambda *names,offset=1:[dict(offset=offset,axis='Y',direction=1,role='ceiling',boxes=[solid(n) for n in names])]
+        self.assertEqual(targets(child(contactEvents=ceiling('optional'))),{('ceiling','optional')})
+        self.assertEqual(targets(child(contactEvents=ceiling('optional','goal'))),{('ceiling','goal+optional')})
+        self.assertEqual(targets(child(jump=False,contactEvents=ceiling('optional'))),set())
+        self.assertEqual(targets(child(contactEvents=ceiling('optional',offset=0))),set())
+        for case in ('grind','slab_boost','corner_jump_cancel'):
+            self.assertEqual(targets(child(caseEvents=[dict(input=1,case=case,boxes=[solid('optional')])])),{(case,'optional')})
+        for case in ('normal_step','blip','blip_up','corner_blip_up'):
+            self.assertEqual(targets(child(caseEvents=[dict(input=1,case=case,boxes=[solid('optional')])])),set())
 
     def test_hard_structure_excludes_setup_hop_runoff_and_zero_jump_finish(self):
         s=scene();p=history(s,['mid'])

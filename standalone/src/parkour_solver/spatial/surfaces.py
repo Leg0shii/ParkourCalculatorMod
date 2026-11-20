@@ -477,10 +477,17 @@ class SceneGeometry:
     def cluster(self, cluster_id, indices):
         return self._cluster_map(indices)[cluster_id]
 
+    def touching(self, index, indices):
+        """The solids in `indices` (a set or mapping) whose expanded box touches solid `index`'s: no
+        passable gap on any axis."""
+        box, boxes, reach = self.boxes[index], self.boxes, MIN_FREE_WIDTH/2
+        return [b for b in self.near([box[0]-reach, box[2]-reach, box[3]+reach, box[5]+reach])
+                if b != index and b in indices and all(
+                    thin(max(box[k], boxes[b][k])-min(box[k+3], boxes[b][k+3])) for k in range(3))]
+
     def _cluster_map(self, indices):
         indices = tuple(sorted(indices))
         if indices not in self._clusters:
-            boxes = self.boxes
             parent = {i: i for i in indices}
 
             def root(i):
@@ -488,18 +495,15 @@ class SceneGeometry:
                     parent[i] = parent[parent[i]]
                     i = parent[i]
                 return i
-            reach = MIN_FREE_WIDTH/2
             for a in indices:
-                box = boxes[a]
-                for b in self.near([box[0]-reach, box[2]-reach, box[3]+reach, box[5]+reach]):
-                    if b > a and b in parent and all(
-                            thin(max(box[k], boxes[b][k])-min(box[k+3], boxes[b][k+3])) for k in range(3)):
+                for b in self.touching(a, parent):
+                    if b > a:
                         parent[root(b)] = root(a)
             groups = {}
             for i in indices:
                 groups.setdefault(root(i), []).append(i)
             self._clusters[indices] = {
-                min(m): Cluster(min(m), tuple(m), tuple(self.solids[i] for i in m), tuple(boxes[i] for i in m))
+                min(m): Cluster(min(m), tuple(m), tuple(self.solids[i] for i in m), tuple(self.boxes[i] for i in m))
                 for m in sorted(groups.values())}
         return self._clusters[indices]
 

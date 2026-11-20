@@ -24,7 +24,9 @@ FIXTURES = AUTONOMY_DATA / 'fixtures'
 class IntegrationTests(unittest.TestCase):
     def test_wall_and_ceiling_the_player_cannot_pass_between_are_one_obstacle(self):
         # The wall and the overhanging ceiling are 0.14 apart, so one cluster's
-        # walk passes both, with a corner side bounded by each of them.
+        # walk passes both, with a corner side bounded by each of them. Check the
+        # per-phase sides: the passage's face list merges nested sides, and where the
+        # ceiling is out of reach the wall's plain side contains that corner.
         request = json.loads((FIXTURES / 'obstacle-interleaved.json').read_text())
         request.update(ceilingHits=False, maxWallHits=0)
         with PythonCompiler() as compiler:
@@ -35,8 +37,12 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(best['plan']['ticks'], 12)
         self.assertTrue(best['geometryCheck']['feasible'])
         passage = next(p for p in best['passages'] if p['blockId'] == 'ceiling+wall')
-        owners = [{o for b in f['bounds'] for o in b['owners']} for f in passage['faces']]
-        self.assertIn(set(passage['members']), owners)
+        self.assertEqual(len(passage['members']), 2)
+        boxes = {b['id']: b['boxes'][0] for b in request['blocks']}
+        corner = sorted([('X', -1, boxes['ceiling'][0]-.3), ('Z', 1, boxes['wall'][5]+.3)])
+        self.assertTrue(any(len(key) == 2 and all(a == b[0] and d == b[1] and abs(p-b[2]) < 1e-6
+                                                  for (a, d, p), b in zip(sorted(map(tuple, key)), corner))
+                            for _, _, key in passage['phaseSpans']), passage['phaseSpans'])
         timeline = best['blockageTimeline']
         self.assertTrue(timeline and all(g['blockId'] == 'ceiling+wall' for g in timeline))
         self.assertEqual(sum(u['total'] for u in best['blockageUsage']), len(timeline))

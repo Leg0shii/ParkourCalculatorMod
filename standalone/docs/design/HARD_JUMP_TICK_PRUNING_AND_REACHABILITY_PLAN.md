@@ -108,8 +108,7 @@ now use the common module directly.
 The shared-helper scope is intermediate tick/count comparison and pruning.
 [`search.ranking.candidate_rank`](../../src/parkour_solver/search/ranking.py) remains the terminal
 `(actualT, actualObjective)` ranking; it must not acquire intermediate jump or
-run/air preferences. `decision_windows.retain_candidates` is an explicit older
-objective-band/resource policy, not a duplicate tick comparator. Geometric route
+run/air preferences. Geometric route
 priorities, physical feasibility, cap checks, exact model equivalence and solver
 repair ordering also keep their own meanings. They must not silently become
 additional ways to apply the intermediate tick heuristic.

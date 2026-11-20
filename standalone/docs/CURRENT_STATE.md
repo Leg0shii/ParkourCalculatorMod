@@ -9,7 +9,7 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
 - Base branch: the fork's `main`. It contains the Real11 extension work: extended
   geometry and bounds, the six-direction [face catalog](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
   (not yet consumed by any generator) and the [longer Real11 task](../research/real11-long-solve/README.md).
-- Open as a draft PR: `feat/disk-interim-solver`. Automatic discovery runs on the
+- Merged as PR #5 (`feat/disk-interim-solver`): automatic discovery runs on the
   Clarabel [disk relaxation](reference/NUMERICAL_SOLVER.md#disk-relaxation): the
   HiGHS LP screen is gone, interim candidates are relaxed, an acceleration-shortfall
   alarm on jump ticks confirms with IPOPT, and one IPOPT finalization
@@ -19,6 +19,13 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
 - Merged as PR #4 (`feat/jvm-free-orchestrator`): search is JVM-free. The
   in-process Python movement bridge is the default and the Java bridge an explicit
   oracle ([evidence](../research/jvm-free-bridge/README.md)).
+- Active: `feat/encounter-groups`, local. It removes caller-supplied decision
+  windows, gives the block table per-kind sets, and searches each automatically
+  found [encounter group](design/ANCHOR_POLICY_DECISIONS.md#o8--encounter-groups)
+  as one frame, where decision checks compare climbed side families, keep the
+  best with the exact rows of settled stretches, and hold the others as
+  alternatives restored when the branch dies
+  ([controls](../research/encounter-groups/README.md)).
 - Merged as PR #3 (`perf/early-passage-screen`): it adds
   [geometry-driven avoidance passages](design/AVOIDANCE_PASSAGES.md) on obstacle
   clusters (touching blocks are one obstacle; [evidence](../research/obstacle-clusters/README.md)), screening of
@@ -106,7 +113,7 @@ Terminal actualT/objective ranking stays separate. Cells, portals and soft guide
 points are not discrete input clocks or fixed dynamic seams.
 
 Physical automatic continuation is outer schema2 / DFS8 / movement context4 /
-repair assembly13 / constraint policy12/state8. Hard3/search5/comparison1/guide2/proposal1 semantic identities
+repair assembly13 / constraint policy17/state11. Hard4/search9/comparison1/guide2/proposal1 semantic identities
 also matter; schema equality does not make old policy checkpoints compatible.
 Storage remains manifest/SQLite version1. Physical anchor DFS now uses the session's
 global deadline/call allowance continuously, without service-turn or per-program

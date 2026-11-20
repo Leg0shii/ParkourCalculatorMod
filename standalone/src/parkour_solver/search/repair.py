@@ -17,6 +17,32 @@ from parkour_solver.search.repair_state import branch_key, compatible, context a
 FALLBACK_LIMIT = 2
 FALLBACK_GAP = 0.3
 
+def node_alternatives(accepted, incumbent, objective):
+    """A decision check's held alternatives, best first: each branch choice's best accepted point plus
+    up to FALLBACK_LIMIT close switch timings of it, without the incumbent.
+
+    The branch choice (closed stretches) is what the node decides; open stretches are re-decided later.
+    """
+    chosen = branch_key(incumbent['rows'], incumbent['passages'], incumbent['hits']) if incumbent else None
+    classes = {}
+    for variant in accepted:
+        classes.setdefault(variant['best'].get('alternativeBranchKey'), []).append(
+            (candidate_rank(variant['best'], objective), variant))
+    kept = []
+    for members in classes.values():
+        members.sort(key=lambda entry: entry[0])
+        top = members[0][0]
+        kept += members[:1]+[entry for entry in members[1:]
+                             if entry[0][0] == top[0] and entry[0][1]-top[1] <= FALLBACK_GAP][:FALLBACK_LIMIT]
+    kept.sort(key=lambda entry: entry[0])
+    return [copy.deepcopy(variant) for _, variant in kept if variant['branch'] != chosen]
+
+
+def branch_meta(variant):
+    """The intermediate choice a decision check that accepts this variant makes for its search branch."""
+    return dict(branchChoices=variant['branchChoices'], branchKey=variant['branchKey'])
+
+
 def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candidate_seconds, retries,
                            improve=False, rank_equal_cost=False, optimize_goal=False,
                            python_executable=None, cancel_event=None, geometry=None, motion_bound=None,
@@ -308,11 +334,14 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                 termination = str(error)
                 break
             else:
-                converted = []
-                for row in variant['rows']:
-                    tick = row['offset']
-                    leg = max(i for i, e in enumerate(record['plan']['events']) if e['landed'] <= tick)
-                    converted.append(dict(row, leg=leg, offset=tick-record['plan']['events'][leg]['jump']))
+                def on_legs(rows):
+                    converted = []
+                    for row in rows:
+                        tick = row['offset']
+                        leg = max(i for i, e in enumerate(record['plan']['events']) if e['landed'] <= tick)
+                        converted.append(dict(row, leg=leg, offset=tick-record['plan']['events'][leg]['jump']))
+                    return converted
+                converted = on_legs(variant['rows'])
                 selected = copy.deepcopy(variant.get('selectedPassages', []))
                 for passage in selected:
                     passage['phaseReferences'] = []
@@ -323,7 +352,8 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                 from parkour_solver.search.identity import digest
                 arrive(record['score']+variant['score']*1e-9, record['rows']+converted, record['passages'],
                        record['hits'], record['candidate']['yaw'], selected,
-                       dict(family=digest([source, variant['family']]), switches=variant['switches'])
+                       dict(family=digest([source, variant['family']]), switches=variant['switches'],
+                            **branch_meta(variant))
                        if 'family' in variant else None, source)
             continue
         if variant_source is not None and not source_exhausted and not queue:
@@ -338,7 +368,8 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             else:
                 arrive(min([b[0] for b in queue]+[0.])-1, variant['rows'], variant.get('passages', []),
                        route.get('hitEvents', []), reference_yaw or route.get('warmYaw'), variant.get('selectedPassages', []),
-                       dict(family=variant['family'], switches=variant['switches']) if 'family' in variant else None)
+                       dict(family=variant['family'], switches=variant['switches'],
+                            **branch_meta(variant)) if 'family' in variant else None)
             if not queue:
                 continue
         # Generation can consume the remaining budget. Leave the next branch
@@ -422,6 +453,9 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             selected = copy.deepcopy(choices.get(branch_key(rows, passages, hits), []))
             described = passages+[p for p in selected if p not in passages]
             best['alternativeRows'] = copy.deepcopy(rows)
+            if meta is not None and 'branchChoices' in meta:
+                best.update(alternativeBranchChoices=copy.deepcopy(meta['branchChoices']),
+                            alternativeBranchKey=meta['branchKey'])
             best.update(route=best.get('route', branch), profiles=profiles, contactChecks=checks,
                 passages=described, hitEvents=hits, ceilingEvents=branch.get('ceilingEvents', []),
                 blockageTimeline=gate_timeline(described, best['plan']['events']),

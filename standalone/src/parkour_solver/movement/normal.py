@@ -1,6 +1,6 @@
 import copy
 
-from parkour_solver.physics.vertical import f32, vertical_move
+from parkour_solver.physics.vertical import REST_CARRY, f32, vertical_move
 from parkour_solver.movement.program import movement_choice, scalar_initial
 from parkour_solver.movement.vertical_profiles import trace_ladder_schedule
 
@@ -13,6 +13,12 @@ def replay(initial, ticks, *, jumping=False, contacts=(), finite=(), ladder=None
     return trace_ladder_schedule(initial, ladder, sneak, hit,
         jump=[f32(.42) if jumping else None] + [None] * (ticks - 1),
         contacts=contacts, stop_on_landing=False, threshold=threshold)
+
+
+# The game's highest feet rise of a jump from rest: Minecraft zeroes speeds under
+# its 0.005 inertia threshold, so this is lower than the threshold-0 solver peak.
+JUMP_RISE = max(replay(dict(position=0., velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False),
+                       20, jumping=True, threshold=.005)['position'])
 
 
 def approaches(context):
@@ -29,6 +35,20 @@ def first_descent(trace, top):
         if move < 0 and trace['position'][t] >= top > trace['position'][t + 1]:
             return t
     return None
+
+
+# A jump on flat ground lasts FLAT_JUMP_TICKS; running longer than its last tick before an
+# advantageous jump is never the minimum (anchor search, search/frontier.py).
+FLAT_JUMP_TICKS = first_descent(replay(dict(position=0., velocity=REST_CARRY, onGround=True,
+                                            previousHorizontalCollision=False), 30, jumping=True), 0.) + 1
+MAX_ADVANTAGEOUS_RUN_TICKS = FLAT_JUMP_TICKS - 1
+
+
+def choice_approaches(context):
+    """Generator approaches; the frontier withholds run-tick choices (grounded, no jump) at ordinary decisions."""
+    for initial, jumping, trace in approaches(context):
+        if jumping or not initial['onGround'] or context.get('runTickChoices', True):
+            yield initial, jumping, trace
 
 
 def event_choice(context, kind, initial, duration, *, jumping=False, vertical=(), finite=(), cases=(),
@@ -63,8 +83,8 @@ def normal_choices(context):
     from parkour_solver.movement.contact_combinations import (contact_event, reachable_option, region_choices,
                                                               scene_contact_options)
     from parkour_solver.reachability.service import candidate_blocks
-    for initial, jumping, trace in approaches(context):
-        for block in candidate_blocks(context):
+    for initial, jumping, trace in choice_approaches(context):
+        for block in candidate_blocks(context, 'landing'):
             if context.get('checkBudget'):
                 context['checkBudget']()
             if context.get('supportAllowed') is not None and not context['supportAllowed'](block):

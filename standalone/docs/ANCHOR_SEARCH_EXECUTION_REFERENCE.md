@@ -2,7 +2,7 @@
 
 Avoidance follow-up: [geometry-driven phase covers](design/AVOIDANCE_PASSAGES.md)
 replace full-horizon permutations and local repair/passage caps, carrying tightened
-bounds into downstream generation. Constraint policy12/state8 and repair assembly13
+bounds into downstream generation. Constraint policy17/state11 and repair assembly13
 are current. The measured source-era tables below retain their original settings;
 [replacement evidence](../research/geometry-passages/README.md) records the new run.
 
@@ -20,9 +20,15 @@ variables. A **proposal** appends a movement choice. A **constraint variant** ch
 concrete obstacle-side/contact/tick rows for that program. One program can produce
 several variants and numerical calls. Neither is the same unit as a spatial route.
 
-A frame spans source anchor S to next anchor E; start/finish supports are implicit
-anchors. All choices within that span are coupled. Optional supports remain choices
-until a validated one-transfer jump permanently latches S→E as hard. Hard status
+A frame searches one [encounter group](design/ANCHOR_POLICY_DECISIONS.md#o8--encounter-groups):
+consecutive anchor pairs S→E (start/finish supports are implicit anchors) whose
+encounters touch. All choices within the group are coupled, and anchors inside it
+stay required and ordered, but alternatives are compared (anchor query, best kept,
+fallbacks, peer deferral) only at the group's end. A one-pair group is today's
+single span. Per-pair rules (hard latch, remaining-time bound, turnaround test,
+decision-check objective) use the pair the program is in, capped at the group's
+last pair. Optional supports remain choices until a validated one-transfer jump
+permanently latches that pair S→E as hard. Hard status
 and the ordinary/turnaround ordering mode are independent. There is no separate
 three-way classifier for time, hard and momentum routes.
 
@@ -34,11 +40,11 @@ service before wall/call/catalogue caps. IPOPT never chooses these discrete meth
 
 | Combination / candidate | What we construct or preserve | Filtering / ordering before numerical work | Given to IPOPT? |
 | --- | --- | --- | --- |
-| `run(r) → jump → E` | Ground holds compose one input at a time; the launch/landing clock comes from scalar physics. Different run placements remain different histories. | Initial-jump domain, resource caps, required order, physical screens, current hard policy, strict optimistic finish bound; at a hard arrival, protected peer comparison. | An eligible selected anchor arrival is evaluated. Raw hold construction does not independently request an NLP. |
+| `run(r) → jump → E` | At a turnaround decision, run ticks compose one input at a time; the launch/landing clock comes from scalar physics. Different run placements remain different histories. At an ordinary decision only the [minimum run ticks for an advantageous jump](design/ANCHOR_POLICY_DECISIONS.md#o9--minimum-run-ticks-for-advantageous-jumps) are generated, one level per target, and the next level is held as a reserve. | Initial-jump domain, resource caps, required order, physical screens, current hard policy, strict optimistic finish bound; at a hard arrival, protected peer comparison. | An eligible selected anchor arrival is evaluated. Raw run-tick construction does not independently request an NLP. |
 | `jump → S → jump → E` | A source setup hop followed by one transfer. Setup impulses remain in the span's J count. | Same tests; more J or fewer R/A can protect the later arrival from peer deferral. | Selected completed setup hop gets a node feasibility query at cadence1; eligible arrival gets its anchor query. |
 | `S → S → S → E`, including runs before/between hops | Multiple current-owner setup hops, before or after hard latching; bounded by existing caps. | Never banned merely for having multiple span jumps. A late optimistic full finish can still exclude it. | Selected meaningful nodes and eligible anchor arrivals, not every generated sibling. |
 | `S → C → E` through a new optional support | Optional acyclic support contacts within an unlatched span. Required anchors still stay ordered. | Owner/order/reachability checks. After S→E latches hard, an intermediate support is outside that transfer domain. | Only surviving selected nodes/arrivals. A latch-excluded topology does not get a recovery NLP. |
-| `S → air → E` or run-off/continuation | Normal free movement from the actual scalar boundary; ordinary grounded approaches consider jump and nonjump outcomes, airborne ones do not invent grounded impulses. | Scalar landing clock, supports and reachability. A completed hard transfer must have exactly one transfer jump, so pure run-off cannot satisfy it. | Eligible selected meaningful landing/contact or anchor query; no per-air-input NLP. |
+| `S → air → E` or run-off/continuation | Normal free movement from the actual scalar boundary; grounded approaches consider jump and nonjump outcomes (at an ordinary decision a nonjump outcome is a run tick, generated only as a minimum for an advantageous jump), airborne ones do not invent grounded impulses. | Scalar landing clock, supports and reachability. A completed hard transfer must have exactly one transfer jump, so pure run-off cannot satisfy it. | Eligible selected meaningful landing/contact or anchor query; no per-air-input NLP. |
 | Named stepping: normal step, slab boost, corner cancel, blip/up/corner variants | Existing case builders fix the contact outcome and corresponding physical rows; enabled cases depend on scene/generator settings. | Cheap height/owner checks, shared approach reachability, then the common joint outcome before side/corner fan-out where applicable. Unknown named probe heights retain coverage. | Surviving selected cases can reach numerical evaluation in generic/unlatched movement or permitted source preparation. Completed stepped transfers cannot establish/satisfy a hard latch. |
 | Lower/higher blip pair with 8 wall choices or 4 corner choices | First build one shared scalar outcome per case and test its jointly required contacts/rows. | If the conjunction is ruled out, build no side variants for that case. B3@28 rejects both common outcomes before the old8+4 fan-out. | No worker for a rejected common outcome. Surviving variants still require fixed-model screening/selection. |
 | Ceiling clip or launch grind | Existing ceiling family when enabled; fixed contact/case history. | Shared eligibility and scene checks. A possible/unknown shortening ceiling disables the ordinary-flight contribution for that transfer. | Eligible selected choices can reach a worker. The maintained Real11 case enables normal, stepping and ceiling movement. |
@@ -95,7 +101,8 @@ whose relaxed optimum leaves more than 10% of a jump tick's
 acceleration unused is confirmed by IPOPT before its score is used (`work`:
 `confirmations`, `confirmationIpoptCalls`, `materialGaps`); a gap affects only its
 own request, and descendants are solved relaxed and alarm on their own.
-Decision checks are feasibility intent and never confirm. The anchor `feasibilityPolicy` has one value,
+Decision checks optimize the node's onward objective to compare side families, so
+they confirm alarms the same way. The anchor `feasibilityPolicy` has one value,
 `numerical_oracle`: the numerical backend's infeasibility verdict (IPOPT
 `Infeasible_Problem_Detected` or a Clarabel infeasible status) rejects the node.
 
@@ -192,14 +199,14 @@ keys or adding a pose constraint. No mixed or uncertainty mode exists.
 
 | Decision | Why it was requested | Implemented consequence / limit |
 | --- | --- | --- |
-| Ordered caller anchors; compare only there/final | Decisions between anchors are coupled; optional intermediate landings should not become independent comparison rubrics. | `AnchorAdapter` owns required milestones. Optional contacts remain internal decisions. With no supplied anchors, there is one open start→finish span. |
+| Ordered caller anchors; compare only at group ends/final | Decisions between anchors are coupled; optional intermediate landings should not become independent comparison rubrics. Congested anchors (Real11 B5–B7) need their neighbours decided together. | `AnchorAdapter` owns required milestones and searches each encounter group as one frame. Optional contacts remain internal decisions. With no supplied anchors, there is one open start→finish span. |
 | Hard means one transfer, not one jump in the whole span | Chained source hops gain momentum; banning them incorrectly removed the initial0 T64 route. | Global topology latch, last-source-contact boundary, multiple setup hops preserved. |
-| No stepping in hard transfer | User explicitly chose this assumption to make useful flight minima tractable. | Hard policy3 excludes completed stepped transfers; ceiling-aware bounds are conditional on that domain. |
+| No stepping in hard transfer | User explicitly chose this assumption to make useful flight minima tractable. | Hard policy4 excludes completed stepped transfers; ceiling-aware bounds are conditional on that domain. |
 | Protect more J or fewer R/A before slower-arrival deferral | A later intermediate arrival can lead to a better final finish. | Initial0 remains first-class after initial8 succeeds; raw extra air/run ticks alone do not protect. |
 | Restore slower unprotected work only on actual feasibility fallback | Extra preparations should remain reconstructable without consuming routine improvement search after success. | Lossless saved alternatives, one-at-a-time restoration, scoped bypass and failed-edge cause. |
 | One incumbent, lazy strict bound checks | Queue-wide rescans repeated unnecessary work and equality can improve Z. | Check new/selected candidates only; strict greater-than cutoff; no incumbent-triggered queue scan. |
 | Shared prerequisite/model preparation | Independent lower/higher tests allowed jointly impossible stepping cases to fan out; identical screens/compiles were repeated. | `InteractionGate` owns preparation/coefficients/analyses; common-case check precedes fan-out; model-changing rows retain separate keys. |
-| Feasibility never chooses | A first feasible alternative is an arbitrary choice; comparing alternatives needs their optimized objectives. | Anchor legs use `stopOnFeasible=False`, `rankEqualCost=True` with the switch-tick climb; decision checks keep `stopOnFeasible=True` and commit none of their alternative's rows. No constant-zero default or slack proxy. |
+| Feasibility never chooses | A first feasible alternative is an arbitrary choice; comparing alternatives needs their optimized objectives. | Anchor legs use `stopOnFeasible=False`, `rankEqualCost=True` with the switch-tick climb; decision checks use the same policy at the node objective, keep the best as an intermediate choice for the branch (the exact rows of every stretch settled at the node; the open stretch's rows go), and hold the other choices' best points and close timings, restored one at a time when the branch below the node dies. No constant-zero default or slack proxy. |
 | Normal exact-node queries at cadence1 | Reject a selected impossible action before extending it, with unambiguous ownership. | No raw-hold NLPs or separate ancestor tests. Cadence2/4 remains a future measured tradeoff. |
 | Binary spatial turnaround, observable | A single decision needs one clear priority; witness positions can change on later re-solves. | One110° edge+margin classification, frozen key, distances/query/replay-flip records. Preliminary heuristic, not a completeness theorem. |
 | No inter-block revisits yet | Cyclic histories enlarge the decision domain and need dedicated repeat-family design. | Departed-owner filter; same-owner hops remain. [Revisit plan](design/REVISIT_DISCOVERY_DEFERRED_PLAN.md) stays deferred. |
@@ -210,10 +217,10 @@ keys or adding a pose constraint. No mixed or uncertainty mode exists.
 | Owner | Current responsibility |
 | --- | --- |
 | [`event_search`](../src/parkour_solver/search/events/engine.py), [`anchor_adapter`](../src/parkour_solver/search/anchors/adapter.py) | Physical automatic dispatch, required-anchor frames, immutable stage objectives, continuous anchor DFS under the session budget. |
-| [`anchor_policy`](../src/parkour_solver/search/anchors/policy.py) | Owner visits, required order/caps, source preparation versus hard transfer; hard policy3. |
+| [`anchor_policy`](../src/parkour_solver/search/anchors/policy.py) | Owner visits, required order/caps, source preparation versus hard transfer, encounter groups; hard policy4, search policy6. |
 | [`search.comparison`](../src/parkour_solver/search/comparison.py) | Sole intermediate count/key, OR-protection, peer verdict and strict-incumbent predicate owner; comparison policy1. |
-| [`depth_first`](../src/parkour_solver/search/dfs.py), [`search.deferrals`](../src/parkour_solver/search/deferrals.py) | Traversal, validated peer index, single `minimumRunExclusions` compatibility table, selected-only checks and recovery. Generator contexts set `regionItems`, so a contact on a face of several rectangles keeps the rectangle open as a `regionChoices` entry; a kept leg closes the entries it solved (their rows become retained constraints), a decision check keeps them open, and a restored fallback keeps its own rectangle. The run-tick deferral (`compat/minimum_runs`, policy3) never defers across an open entry in the ground hold and keys entries after takeoff into the pattern. Every landing, step and named case onto the goal block carries the goal block's exposed top itself; there is no separate goal-region item, so decision checks apply it too. |
-| [`movement.generation`](../src/parkour_solver/movement/generation.py), [`search.frontier`](../src/parkour_solver/search/frontier.py) | Shared composition/assessment, owned endpoints, raw ordinals, projected flag, queued nodes and `nodeInFlight`. |
+| [`depth_first`](../src/parkour_solver/search/dfs.py), [`search.deferrals`](../src/parkour_solver/search/deferrals.py) | Traversal, validated peer index, single `minimumRunExclusions` compatibility table, selected-only checks and recovery. Generator contexts set `regionItems`, so a contact on a face of several rectangles keeps the rectangle open as a `regionChoices` entry; a kept leg closes the entries it solved (their rows become retained constraints), a decision check closes the entries it commits (siblings take the other rectangles), and a restored fallback keeps its own rectangle. The run-tick deferral (`compat/minimum_runs`, policy3) never defers across an open entry in the ground hold and keys entries after takeoff into the pattern. Every landing, step and named case onto the goal block carries the goal block's exposed top itself; there is no separate goal-region item, so decision checks apply it too. |
+| [`movement.generation`](../src/parkour_solver/movement/generation.py), [`search.frontier`](../src/parkour_solver/search/frontier.py) | Shared composition/assessment, owned endpoints, raw ordinals, projected flag, queued nodes and `nodeInFlight`. At an ordinary decision the expansion withholds run-tick choices and `minimum_runs` adds the minimum run ticks per advantageous-jump target after the types finish; it computes every level before changing frontier state, so a deadline inside it redoes the step on resume. Its reserves are `alternatives` entries with a `watch` list and a `minimumRunSearch` program, restored by `restore_alternatives` like held branch choices. |
 | [`reachability.service`](../src/parkour_solver/reachability/service.py), [`bridge.compiler`](../src/parkour_solver/bridge/compiler.py) | Disposable bounded session cache for preparation, canonical coefficient payloads, exact envelopes/screens and common-case eligibility; proof policy 3. |
 | [`reachability.intervals`](../src/parkour_solver/reachability/intervals.py), [`numerics.disk`](../src/parkour_solver/numerics/disk.py) | Conservative phase envelopes and the disk-relaxation screen; named internal probe uncertainty retained. |
 | [`transfer_time_bounds`](../src/parkour_solver/search/bounds/flight.py), [`anchor_time_bound`](../src/parkour_solver/search/bounds/remaining.py) | Conditional duration certificates, phase-correct state covers, H/V and paid-input residuals; transfer-bound policy1. |

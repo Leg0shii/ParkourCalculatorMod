@@ -17,7 +17,7 @@ from tools.plotting.regions import diagnostic_svg
 from parkour_solver.search.compat.corridor_queue import collision_request
 from parkour_solver.spatial.compat.corridors import enumerate_routes
 from parkour_solver.search.compat.semantic_adapter import SemanticCorridorAdapter
-from research.legacy_cell_routes.window_experiment import save
+from parkour_solver.io.reports import save
 
 
 def audit(fixture,compiler,witness):

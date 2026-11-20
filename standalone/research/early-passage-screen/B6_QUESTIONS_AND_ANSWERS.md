@@ -1258,7 +1258,7 @@ implementation or obstacle-order policy was applied in this investigation.
 [current obstacle order/screens](../../src/parkour_solver/constraints/variants.py),
 [strong-screen return boundary](../../src/parkour_solver/reachability/screen.py),
 [interval/travel propagation](../../src/parkour_solver/reachability/intervals.py),
-[supplied-window planner](../../src/parkour_solver/search/compat/decision_windows.py),
+supplied-window planner (`search/compat/decision_windows.py`, removed 2026-11-19),
 [automatic entry path](../../src/parkour_solver/search/events/engine.py), and
 [rerun composition regression](../../tests/integration/test_generic_composition.py).
 
@@ -1349,7 +1349,7 @@ integrity checks; no runtime change or new numerical benchmark is claimed.
 [original measured results](../decision-windows/RESULTS.md),
 original clustering rationale,
 [current cadence contract](../../docs/design/ANCHOR_POLICY_DECISIONS.md),
-[planner](../../src/parkour_solver/search/compat/decision_windows.py),
+planner (`search/compat/decision_windows.py`, removed 2026-11-19),
 [dispatch and optional supplied planner](../../src/parkour_solver/search/engine.py),
 [internal/anchor commitment](../../src/parkour_solver/search/dfs.py), and
 [retained inequalities](../../src/parkour_solver/spatial/checkpoints.py).

@@ -16,7 +16,7 @@ def grind_options(context, feet, allowed=None):
     for option in scene_contact_options(scene, 1, -1):
         if context.get('checkBudget'):
             context['checkBudget']()
-        if not candidate_option(context, option):
+        if not candidate_option(context, option, 'ceilingSolids'):
             continue
         clearance = option.plane - feet
         owner = '+'.join(sorted(blocks[i]['id'] for i in option.members))
@@ -88,7 +88,7 @@ class CeilingGenerator:
 def open_ceiling_choices(context):
     from parkour_solver.reachability.service import interaction_allowed
     from parkour_solver.movement.program import scalar_initial
-    from parkour_solver.movement.normal import approaches, event_choice, named_choice
+    from parkour_solver.movement.normal import choice_approaches, event_choice, named_choice
     initial = scalar_initial(context['state'])
     scene = context['scene']
     if not scene.get('ceilingHits', True):
@@ -97,10 +97,10 @@ def open_ceiling_choices(context):
     for option in scene_contact_options(scene, 1, -1):
         if context.get('checkBudget'):
             context['checkBudget']()
-        if not candidate_option(context, option):
+        if not candidate_option(context, option, 'ceilingSolids'):
             continue
         plane, owner = option.plane, '+'.join(sorted(names[i] for i in option.members))
-        for state, jumping, trace in approaches(context):
+        for state, jumping, trace in choice_approaches(context):
             hit = next((t for t, move in enumerate(trace['movement'])
                         if move > 0 and trace['position'][t] <= plane < trace['position'][t + 1]), None)
             if hit is None:

@@ -81,10 +81,6 @@ def run_full_audit(request,result,compiler,*,seconds_per_candidate=4,candidate_s
     adapter=CorridorAdapter(scene,corridor,gates,decomposition=d)
     motion=motion_bound(scene,counted,2)
     cfg=movement_settings(scene)
-    policy=None
-    if result.get('decisionPlan') is not None:
-        from parkour_solver.search.compat.decision_windows import DecisionPolicy
-        policy=DecisionPolicy(result['decisionPlan'],scene)
     def evaluate(entry):
         candidate_started=time.monotonic()
         deadline=candidate_started+seconds_per_candidate
@@ -99,8 +95,7 @@ def run_full_audit(request,result,compiler,*,seconds_per_candidate=4,candidate_s
             generation['termination']='exhausted'
         else:
             candidates=iter_movement_programs(scene,settings=cfg,initial_programs=[program],threshold=0.,report=generation,
-                deadline=deadline,cancel_event=cancel_event,work=work,screen=screen,context_adapter=adapter.context,
-                program_filter=policy)
+                deadline=deadline,cancel_event=cancel_event,work=work,screen=screen,context_adapter=adapter.context)
         capped=False
         try:
             for p in candidates:

@@ -23,7 +23,6 @@ from parkour_solver.numerics import prepare, validate
 from parkour_solver.io.checkpoint_store import read_report
 from parkour_solver.reachability.intervals import motion_bound
 from parkour_solver.spatial.checkpoints import checkpoint, retain_prefix
-from parkour_solver.search.compat.decision_windows import DecisionPolicy, plan_windows
 from research.legacy_cell_routes.generation_diagnostic import KeyAudit, QueueAudit, instrumented_generator, save
 from parkour_solver.spatial.cells import decompose
 from parkour_solver.validation.scoped_scene import CorridorAdapter
@@ -41,7 +40,7 @@ def read(path):
 def generation_scenes():
     for path in sorted((ROOT/'decision-windows/fixtures').glob('*.json')):
         fixture = read(path)
-        yield path.stem,fixture['request'],fixture['spatialPoints'],fixture['opportunities']
+        yield path.stem,fixture['request'],fixture['spatialPoints']
     controls = ROOT/'cell-routes/controls'
     for name in ('run-up','remote-supports','grind'):
         request = read(ROOT/'cell-routes/evidence/witnesses'/(name+'-prescribed.json'))['request']
@@ -52,7 +51,7 @@ def generation_scenes():
 
 def run_generation(compiler, policy, canonical, *, expansions=512, queue_cap=384, proposals=12):
     results = []
-    for name,request,points,opportunities in generation_scenes():
+    for name,request,points in generation_scenes():
         scene = prepare_scene(dict(request,maxWallHits=0))
         cfg = movement_settings(scene)
         cfg.update(maxPrefixes=expansions,maxQueuedPrefixes=queue_cap)
@@ -63,7 +62,6 @@ def run_generation(compiler, policy, canonical, *, expansions=512, queue_cap=384
         if points is not None:
             d,gates = decompose(scene),landmarks(scene)
             adapter = CorridorAdapter(scene,corridor_for_points(d,points,gates),gates,decomposition=d)
-        domain = DecisionPolicy(plan_windows(opportunities,gap=1,max_inputs=cfg['maxInputs']),scene) if opportunities is not None else None
         queue,keys = QueueAudit(scene['goalBlock'],policy),KeyAudit(canonical)
         generate = iter_movement_programs if policy == 'balanced' else instrumented_generator(queue,keys)
         report,completed = {},[]
@@ -75,7 +73,7 @@ def run_generation(compiler, policy, canonical, *, expansions=512, queue_cap=384
             return screen_program(scene,program,counted,2)
         started = time.monotonic()
         generator = generate(scene,settings=cfg,deadline=started+30,report=report,screen=screen,
-            context_adapter=adapter.context if adapter else None,threshold=0.,program_filter=domain)
+            context_adapter=adapter.context if adapter else None,threshold=0.)
         for program in generator:
             completed.append(dict(ticks=program['profile']['airtime'],expandedAtYield=report['expandedPrefixes'],
                 methods=[u.get('case',u['type']) for u in program['movementUnits']],program=program))
@@ -98,7 +96,7 @@ def run_generation(compiler, policy, canonical, *, expansions=512, queue_cap=384
             equivalence.append(dict(passed=same,ticks=a['profile']['airtime']))
         results.append(dict(name=name,policy=policy,canonical=canonical,config=cfg,
             request=copy.deepcopy(request),spatialPoints=points,
-            context='prescribed_corridor' if adapter else 'unconditioned_scene',opportunityDomains=opportunities,
+            context='prescribed_corridor' if adapter else 'unconditioned_scene',
             firstCompleteExpanded=completed[0]['expandedAtYield'] if completed else None,
             completed=completed,generation=report,queue=(dict(policy='balanced', instrumentation=False) if policy == 'balanced' else queue.summary()),metadataDuplicates=keys.metadata_duplicates,
             uniqueLegacyKeys=len(keys.legacy),uniquePhysicalKeys=len(keys.physical),equivalence=equivalence,

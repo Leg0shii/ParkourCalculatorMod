@@ -54,6 +54,16 @@ def landing_segments(profile, through):
     return list(zip(sorted(cuts), sorted(cuts)[1:]))
 
 
+def settled_through(profile, through):
+    """The tick before which every landing segment is closed: `through` when the prefix ends
+    grounded, else the start of its last (airborne) segment."""
+    ground = profile.get('grounded', [])
+    if through < len(ground) and ground[through]:
+        return through
+    segments = landing_segments(profile, through)
+    return segments[-1][0] if segments else 0
+
+
 def region(side):
     return tuple((-math.inf if i < 2 else math.inf) if v is None else v for i, v in enumerate(side['region']))
 
@@ -113,7 +123,7 @@ def prepare_encounter(owner, item, envelopes):
     if 'phases' in item:
         return
     geometry = owner.geometry
-    cluster = geometry.cluster(item['clusterId'], owner.scope_indices)
+    cluster = geometry.cluster(item['clusterId'], item['basis'])
     result = dict(item, sides=[], phases=[], verticalClear=[], coveredPhases=[], uncertain=[], excludedFaces=[])
     indices = {}
 
@@ -157,8 +167,11 @@ def prepare_encounter(owner, item, envelopes):
                 result['coveredPhases'].append([at, [vertical]])
                 owner.metric('excludedPhases')
                 continue
-            if all(block_interaction(envelopes, cluster.solids[k], tick, (phase,), interior=True)['ruledOut']
-                   for k in active):
+            # Members the envelope rules out at this phase cannot be touched then; the sides are
+            # built around the rest.
+            reachable = [k for k in active
+                         if not block_interaction(envelopes, cluster.solids[k], tick, (phase,), interior=True)['ruledOut']]
+            if not reachable:
                 certain = [i for i in sides(active) if satisfied(result['sides'][i], bounds)]
                 result['coveredPhases'].append([at, certain])
                 owner.metric('excludedPhases')
@@ -172,7 +185,7 @@ def prepare_encounter(owner, item, envelopes):
                 continue
             states = {axis: phase_states(tick, phase, axis) for axis in ('X', 'Z')}
             options, costs = {}, {}
-            for i in sides(active):
+            for i in sides(reachable):
                 rows = [owner.face_row(b, t) for b in result['sides'][i]['bounds'] for t in states[b['axis']]]
                 if interaction_reachability(envelopes, rows)['ruledOut']:
                     owner.metric('excludedFaces')

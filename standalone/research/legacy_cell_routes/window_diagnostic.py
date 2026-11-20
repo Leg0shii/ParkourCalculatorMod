@@ -15,12 +15,11 @@ from research.legacy_cell_routes.checkpoint_experiment import brief, replay_witn
 from parkour_solver.search.engine import _key, evaluate_program, find_checkpoint_route
 from parkour_solver.reachability.intervals import motion_bound
 from parkour_solver.spatial.checkpoints import checkpoint, retain_prefix
-from parkour_solver.search.compat.decision_windows import DecisionPolicy, plan_windows, score_features
 from parkour_solver.spatial.cells import decompose
 from parkour_solver.validation.scoped_scene import CorridorAdapter
 from parkour_solver.search.work import SearchWork
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
-from research.legacy_cell_routes.window_experiment import save
+from parkour_solver.io.reports import save
 
 
 def load(path):
@@ -84,11 +83,6 @@ def main():
                 adapter = CorridorAdapter(scene,corridor,gates,decomposition=d)
                 motion = motion_bound(scene,compiler,2)
                 full = copy.deepcopy(known['movementProgram'])
-                policy = DecisionPolicy(plan_windows(fixture['opportunities'],gap=fixture['settings']['cluster_gap'],
-                                                     max_inputs=scene['movementSearch']['maxInputs']),scene)
-                audit = policy.audit(full)
-                if not audit['accepted']:
-                    raise ValueError('Diagnostic control lies outside the tested opportunity domains')
                 full['guideSeedYaw'] = known['candidate']['yaw'][:]
                 for h in horizons:
                     program = truncate_program(full,h)
@@ -98,11 +92,10 @@ def main():
                         seconds=4,candidate_seconds=.8,solver_calls=16,python_executable=args.python)
                     record = dict(name=name,label=label,repeat=repeat,h=h,prefixKey=_key(program),
                         knownTicks=known['plan']['ticks'],score=None,scoreResult=score,
-                        reference=None,bestCompletion=None,continuation=None,fixture=fixture,opportunityAudit=audit)
+                        reference=None,bestCompletion=None,continuation=None,fixture=fixture)
                     completed, reference_best = [], None
                     if score['best'] is not None:
                         record['score'] = score['best']['candidate']['objective']
-                        record['features'] = score_features(score['best'],cp)
                         retained = retain_prefix(program,score['best'])
                         reference_program = retain_prefix(full,score['best'])
                         reference_program['guideSeedYaw'] += known['candidate']['yaw'][h:]
