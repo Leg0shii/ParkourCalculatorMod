@@ -299,5 +299,58 @@ class RelaxedAutomaticSearchTests(unittest.TestCase):
             perturbed['candidate']['controls'][3][0] *= .9
             self.assertFalse(replay_witness(scene, perturbed, compiler)['passed'])
 
+    def solve_relaxed(self, request):
+        """Automatic search on the relaxed backend; returns its published, replayed physical route."""
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.scene.normalize import prepare_scene
+        from parkour_solver.search.engine import find_checkpoint_route
+        from parkour_solver.validation.witness import replay_witness
+        with PythonCompiler() as compiler:
+            result = find_checkpoint_route(prepare_scene(request), compiler, anchor_search={}, seconds=20, score_seconds=4,
+                                           max_solver_calls=40, python_executable=os.environ['PKC_IPOPT_PYTHON'])
+            best = result['best']
+            self.assertIsNotNone(best, result['termination'])
+            work = result['work']
+            self.assertGreater(work['conicCandidates'], 0)
+            self.assertEqual(work['workerLaunches'], work['confirmationIpoptCalls'])
+            self.assertEqual(result['finalization']['stage'], 'complete')
+            self.assertNotIn('model', best['candidate'])
+            self.assertTrue(replay_witness(prepare_scene(result['effectiveRequest']), best, compiler)['passed'])
+        return best
+
+    def boxes(self, types, **blocks):
+        return dict(version=1, sceneModel='collision_boxes', geometryBounds=[-10,-6,-10,20,12,10],
+            initial=dict(position=[.5,1,.5], velocity=[.25,-.0784000015258789,0], yaw=-90),
+            startBlock='start', goalBlock='goal', maxWallHits=0, maxContactCombinations=0,
+            blocks=[dict(id=k, boxes=v) for k, v in blocks.items()],
+            movementSearch=dict(types=types, maxInputs=30, maxPrefixes=96, maxQueuedPrefixes=128, maxChoicesPerType=16))
+
+    def test_relaxed_route_slab_boosts_onto_a_step_and_jumps_on(self):
+        best = self.solve_relaxed(self.boxes(['normal','stepping'], start=[[-2,0,-2,1,1,2]], slab=[[1,1,-2,4,1.5,2]],
+                                             goal=[[6,0,-1,7,1.5,1]]))
+        self.assertEqual(best['vertical']['contacts'][0]['case'], 'slab_boost')
+        self.assertEqual(sum(best['plan']['jump']), 2)
+        self.assertGreaterEqual(best['candidate']['positions'][-1][0], 5.7)
+
+    def test_relaxed_routes_hit_a_ceiling_and_grind_under_one(self):
+        from tests.support.stepping_cases import fixture
+        best = self.solve_relaxed(self.boxes(['normal','ceiling'], start=[[-2,0,-2,3,1,2]], roof=[[1,3.5,-2,4,4.5,2]],
+                                             goal=[[5,0,-1,6,1,1]]))
+        self.assertIn(1, [c['direction'] for c in best['vertical']['contacts']])
+        grind = dict(fixture('grind')['request'], movementSearch=dict(types=['normal','ceiling'], maxInputs=20))
+        self.assertEqual(self.solve_relaxed(grind)['vertical']['contacts'][0]['case'], 'grind')
+
+    def test_relaxed_route_turns_toward_a_goal_off_the_initial_heading(self):
+        best = self.solve_relaxed(self.boxes(['normal'], start=[[-2,0,-2,2,1,2]], goal=[[-1,0,4.5,1,1,6]]))
+        self.assertGreater(max(best['candidate']['yaw'])-min(best['candidate']['yaw']), 30)
+        self.assertGreater(best['candidate']['positions'][-1][1], 4.2)
+
+    def test_relaxed_route_runs_off_the_start_and_jumps_from_the_lower_block(self):
+        best = self.solve_relaxed(self.boxes(['normal'], start=[[-2,0,-2,1,1,2]], middle=[[1,-1,-2,4,0,2]],
+                                             goal=[[6,-1,-1,7,0,1]]))
+        plan = best['plan']
+        self.assertFalse(any(plan['jump'][:plan['grounded'].index(False)]))
+        self.assertEqual(sum(plan['jump']), 1)
+
 
 if __name__=='__main__':unittest.main()
