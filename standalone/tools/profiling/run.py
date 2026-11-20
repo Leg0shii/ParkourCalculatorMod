@@ -25,7 +25,7 @@ from parkour_solver.bridge.python_compiler import PythonCompiler
 from parkour_solver.io.checkpoint_store import CheckpointStore, read_report
 from parkour_solver.io.search_checkpoint import SearchCheckpoint
 from parkour_solver.search.application import run
-from parkour_solver.io.provenance import source_hashes, source_revision
+from parkour_solver.io.provenance import source_hashes
 from parkour_solver.validation.witness import replay_witness
 from parkour_solver.io.reports import save
 

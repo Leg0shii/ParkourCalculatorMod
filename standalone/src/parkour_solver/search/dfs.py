@@ -1,5 +1,4 @@
 import copy
-import math
 import time
 
 from parkour_solver.numerics.disk import ipopt_seed
@@ -8,7 +7,7 @@ from parkour_solver.movement.program import boundary_state, empty_program, progr
 from parkour_solver.movement.generation import generate_choices, propose_choices
 from parkour_solver.search.movement import iter_movement_programs, screen_program
 from parkour_solver.reachability.viability import prefix_viability
-from parkour_solver.search.identity import digest, motion_record, processing_key
+from parkour_solver.search.identity import digest, processing_key
 from parkour_solver.spatial.checkpoints import Checkpoint, retain_prefix
 from parkour_solver.search.goals import goal_spec, goal_key, region_arrival, _landing_prefixes
 from parkour_solver.search.virtual_goals import KIND, bind_goal, satisfied

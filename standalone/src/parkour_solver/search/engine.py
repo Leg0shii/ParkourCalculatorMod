@@ -7,7 +7,7 @@ import time
 from parkour_solver.constraints.contacts import floor_checks
 from parkour_solver.search.repair import solve_contact_branches
 from parkour_solver.scene.normalize import prepare_scene
-from parkour_solver.movement.program import compile_program, program_physics_key
+from parkour_solver.movement.program import program_physics_key
 from parkour_solver.movement.settings import movement_settings
 from parkour_solver.scene.route import supports
 from parkour_solver.schema import integer, number
@@ -19,7 +19,7 @@ from parkour_solver.bridge.counting import CountingCompiler; from parkour_solver
 from parkour_solver.spatial.compat.corridors import corridor_for_points, landmarks
 from parkour_solver.search.goals import goal_spec, landing_satisfied
 from parkour_solver.search.identity import solve_scope, solve_identity, validation_prefix
-from parkour_solver.reachability.intervals import motion_bound, reachable_envelopes
+from parkour_solver.reachability.intervals import motion_bound
 from parkour_solver.constraints.variants import ConstraintVariants
 
 

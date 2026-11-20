@@ -1,14 +1,11 @@
 from parkour_solver.validation.vertical import validate_vertical_schedule
-from parkour_solver.constraints.contacts import floor_checks, contact_conflicts, avoid_contact_rows
+from parkour_solver.constraints.contacts import contact_conflicts, avoid_contact_rows
 import copy
 from collections import Counter
 import heapq
 import json
 import time
 
-from parkour_solver.numerics import prepare, validate
-from parkour_solver.physics.vertical import f32, vertical_move, vertical_step
-from parkour_solver.scene.route import center_bounds, supports
 from parkour_solver.search.ranking import candidate_rank
 from parkour_solver.search.ordered_route import find_route
 from parkour_solver.constraints.avoidance import blockage_usage, gate_timeline, passage_y_valid

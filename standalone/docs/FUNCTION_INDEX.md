@@ -901,11 +901,11 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `candidate_key` | [21](../src/parkour_solver/search/dfs.py#L21) | function |
-| `arrival_key` | [26](../src/parkour_solver/search/dfs.py#L26) | function |
-| `decision_family` | [30](../src/parkour_solver/search/dfs.py#L30) | function |
-| `commit_arrival` | [41](../src/parkour_solver/search/dfs.py#L41) | function |
-| `search_goals` | [66](../src/parkour_solver/search/dfs.py#L66) | function |
+| `candidate_key` | [20](../src/parkour_solver/search/dfs.py#L20) | function |
+| `arrival_key` | [25](../src/parkour_solver/search/dfs.py#L25) | function |
+| `decision_family` | [29](../src/parkour_solver/search/dfs.py#L29) | function |
+| `commit_arrival` | [40](../src/parkour_solver/search/dfs.py#L40) | function |
+| `search_goals` | [65](../src/parkour_solver/search/dfs.py#L65) | function |
 
 ## search/domain.py
 
@@ -1021,9 +1021,9 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `iter_movement_programs` | [15](../src/parkour_solver/search/movement.py#L15) | function |
-| `find_movement_blocks` | [212](../src/parkour_solver/search/movement.py#L212) | function |
-| `screen_program` | [279](../src/parkour_solver/search/movement.py#L279) | function |
+| `iter_movement_programs` | [14](../src/parkour_solver/search/movement.py#L14) | function |
+| `find_movement_blocks` | [211](../src/parkour_solver/search/movement.py#L211) | function |
+| `screen_program` | [278](../src/parkour_solver/search/movement.py#L278) | function |
 
 ## search/ordered_route.py
 
@@ -1044,7 +1044,7 @@ Line numbers are a snapshot; symbol names are the stable lookup keys. Private he
 
 | Symbol | Line | Kind |
 | --- | ---: | --- |
-| `solve_contact_branches` | [23](../src/parkour_solver/search/repair.py#L23) | function |
+| `solve_contact_branches` | [20](../src/parkour_solver/search/repair.py#L20) | function |
 
 ## search/repair_state.py
 

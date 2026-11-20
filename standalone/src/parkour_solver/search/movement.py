@@ -1,13 +1,12 @@
 from parkour_solver.movement.settings import movement_settings
-import copy
 import heapq
 import json
 import time
 
 from parkour_solver.schema import integer, number
 from parkour_solver.movement.cases import entry_possible
-from parkour_solver.movement.program import append_choice, boundary_state, compile_program, empty_program, truncate_program, program_search_key
-from parkour_solver.movement.generation import GENERATORS, generate_choices, propose_choices, assess_proposal
+from parkour_solver.movement.program import boundary_state, compile_program, empty_program, truncate_program, program_search_key
+from parkour_solver.movement.generation import generate_choices, propose_choices, assess_proposal
 from parkour_solver.search.anchors.policy import launch
 from parkour_solver.search.comparison import compare_candidates
 

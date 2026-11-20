@@ -1408,9 +1408,9 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/search/compat/time_progress.py](../src/parkour_solver/search/compat/time_progress.py) | 5140 |
 | [src/parkour_solver/search/completion.py](../src/parkour_solver/search/completion.py) | 436 |
 | [src/parkour_solver/search/deferrals.py](../src/parkour_solver/search/deferrals.py) | 1105 |
-| [src/parkour_solver/search/dfs.py](../src/parkour_solver/search/dfs.py) | 71258 |
+| [src/parkour_solver/search/dfs.py](../src/parkour_solver/search/dfs.py) | 71231 |
 | [src/parkour_solver/search/domain.py](../src/parkour_solver/search/domain.py) | 959 |
-| [src/parkour_solver/search/engine.py](../src/parkour_solver/search/engine.py) | 23188 |
+| [src/parkour_solver/search/engine.py](../src/parkour_solver/search/engine.py) | 23150 |
 | [src/parkour_solver/search/entry.py](../src/parkour_solver/search/entry.py) | 10726 |
 | [src/parkour_solver/search/events/__init__.py](../src/parkour_solver/search/events/__init__.py) | 0 |
 | [src/parkour_solver/search/events/adapter.py](../src/parkour_solver/search/events/adapter.py) | 10037 |
@@ -1420,10 +1420,10 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [src/parkour_solver/search/goals.py](../src/parkour_solver/search/goals.py) | 4458 |
 | [src/parkour_solver/search/identity.py](../src/parkour_solver/search/identity.py) | 4491 |
 | [src/parkour_solver/search/ladder_ranking.py](../src/parkour_solver/search/ladder_ranking.py) | 5290 |
-| [src/parkour_solver/search/movement.py](../src/parkour_solver/search/movement.py) | 17866 |
+| [src/parkour_solver/search/movement.py](../src/parkour_solver/search/movement.py) | 17827 |
 | [src/parkour_solver/search/ordered_route.py](../src/parkour_solver/search/ordered_route.py) | 18566 |
 | [src/parkour_solver/search/ranking.py](../src/parkour_solver/search/ranking.py) | 3371 |
-| [src/parkour_solver/search/repair.py](../src/parkour_solver/search/repair.py) | 35661 |
+| [src/parkour_solver/search/repair.py](../src/parkour_solver/search/repair.py) | 35452 |
 | [src/parkour_solver/search/repair_state.py](../src/parkour_solver/search/repair_state.py) | 3036 |
 | [src/parkour_solver/search/support_profiles.py](../src/parkour_solver/search/support_profiles.py) | 32398 |
 | [src/parkour_solver/search/virtual_goals.py](../src/parkour_solver/search/virtual_goals.py) | 3132 |
@@ -1610,7 +1610,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tests/unit/search/__init__.py](../tests/unit/search/__init__.py) | 0 |
 | [tests/unit/search/test_anchor_dfs.py](../tests/unit/search/test_anchor_dfs.py) | 26925 |
 | [tests/unit/search/test_anchor_policy.py](../tests/unit/search/test_anchor_policy.py) | 17143 |
-| [tests/unit/search/test_anchor_search.py](../tests/unit/search/test_anchor_search.py) | 18148 |
+| [tests/unit/search/test_anchor_search.py](../tests/unit/search/test_anchor_search.py) | 21739 |
 | [tests/unit/search/test_anchor_time_bound.py](../tests/unit/search/test_anchor_time_bound.py) | 1919 |
 | [tests/unit/search/test_block_search.py](../tests/unit/search/test_block_search.py) | 16987 |
 | [tests/unit/search/test_candidate_comparison.py](../tests/unit/search/test_candidate_comparison.py) | 6042 |
@@ -1654,7 +1654,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/layout-extractions.json](../tools/layout-extractions.json) | 6510 |
 | [tools/layout-migration.json](../tools/layout-migration.json) | 363180 |
 | [tools/layout-test-support.json](../tools/layout-test-support.json) | 3356 |
-| [tools/native-suite.json](../tools/native-suite.json) | 3827 |
+| [tools/native-suite.json](../tools/native-suite.json) | 3871 |
 | [tools/native_gate.py](../tools/native_gate.py) | 1704 |
 | [tools/paths.py](../tools/paths.py) | 567 |
 | [tools/plotting/__init__.py](../tools/plotting/__init__.py) | 69 |
@@ -1667,7 +1667,7 @@ verified by [layout validation](../tools/validate_layout.py), not rewritten here
 | [tools/profiling/enumeration.py](../tools/profiling/enumeration.py) | 5326 |
 | [tools/profiling/enumeration_calibrate.py](../tools/profiling/enumeration_calibrate.py) | 4476 |
 | [tools/profiling/enumeration_compare.py](../tools/profiling/enumeration_compare.py) | 3565 |
-| [tools/profiling/run.py](../tools/profiling/run.py) | 11754 |
+| [tools/profiling/run.py](../tools/profiling/run.py) | 11737 |
 | [tools/profiling/runtime.py](../tools/profiling/runtime.py) | 9272 |
 | [tools/profiling/trace.py](../tools/profiling/trace.py) | 41019 |
 | [tools/validate_layout.py](../tools/validate_layout.py) | 1433 |
