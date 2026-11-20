@@ -9,7 +9,7 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
 - Base branch: the fork's `main`. It contains the Real11 extension work: extended
   geometry and bounds, the six-direction [face catalog](design/FACE_MERGING_IMPLEMENTATION_PLAN.md)
   (not yet consumed by any generator) and the [longer Real11 task](../research/real11-long-solve/README.md).
-- Local, not pushed: `feat/disk-interim-solver`. Automatic discovery runs on the
+- Open as a draft PR: `feat/disk-interim-solver`. Automatic discovery runs on the
   Clarabel [disk relaxation](reference/NUMERICAL_SOLVER.md#disk-relaxation): the
   HiGHS LP screen is gone, interim candidates are relaxed, an acceleration-shortfall
   alarm on jump ticks confirms with IPOPT, and one IPOPT finalization

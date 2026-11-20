@@ -96,7 +96,10 @@ extended and the encounter-groups p5 requests), 32 have no IPOPT point and every
 one has a jump tick at least 28.5% short, so the 10% jump alarm catches all 32
 while flagging 103 requests with no material gap and 93 with one
 ([shortfalls](2026-11-19/jump-shortfall.txt), [ground alarm value](2026-11-19/ledge-alarm-value.txt)).
-With it in place the thin-ledge ground rule would alarm no further request.
+With it in place the thin-ledge ground rule would alarm no further request. Only
+optimization requests confirm: of the 228 flagged, 135 (p5) and 9 (native) are
+optimizations, the 69 Real11 ones are feasibility checks and the 15 held-out ones
+carry no recorded intent ([by intent](2026-11-19/jump10-by-intent.txt)).
 Landing room on the final block does not predict infeasibility: the 32 land with
 0.33 to 1.0 blocks of room before the near edge. In the one examined
 ([report](2026-11-19/infeasible-5e10cd17/report.md)) the leg asks for a sprint jump from
