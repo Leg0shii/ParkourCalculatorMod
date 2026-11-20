@@ -55,7 +55,8 @@ PY
 ```
 
 For automatic discovery, `best` is the physical witness from the IPOPT
-finalization, or `None` with `termination: finalization_failed`; the relaxed
+finalization, or `None` with `termination: finalization_failed` (or `cancelled`
+when cancellation stops the traversal or the finalization); the relaxed
 incumbent stays in `searchState.dfs.best`, and `provisionalBest` (ticks,
 objective, model) appears whenever the published route differs from it.
 `finalization` lists the attempts and stage. In `work`, `workerLaunches` and

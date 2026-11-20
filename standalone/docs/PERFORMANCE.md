@@ -97,6 +97,13 @@ work. Verify digest call counts and call sites before attributing cost; the cold
 profiler writes its shared store only after search, so durable checkpoint IO
 needs a separate control.
 
+On the Real11 extended control (300 s, deadline-bound) at `ea33c191` the relaxed
+backend leaves generation as the cost: `program.program_physics_key` 81.3 s over
+111,967 calls, `preparation.analyze_model` 45.4 s, `preparation.prepare` 37.4 s,
+`numerical.evaluate` 33.2 s, `reachability.screen` 20.6 s and `solver.invoke` 6.8 s
+([comparison with stock and encounter groups](../research/disk-relaxation/2026-11-19/extended-profile-compare.txt),
+[analysis](../research/disk-relaxation/README.md#extended-course-and-the-encounter-groups-requests)).
+
 Constraint enumeration after `86c06e39` runs 2.93x to 3.56x faster on captured
 B6/B7 catalogues, with 94.1% to 94.7% fewer iteration checks and identical
 ordered options. That is targeted enumeration work, not a whole-solver speedup.

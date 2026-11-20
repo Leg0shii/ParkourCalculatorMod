@@ -14,7 +14,8 @@ policy1, DFS `numericalBackend`, solve policy `numerical`.
 The native gate passes **775 tests** with zero failures, errors or skips and
 unchanged source at `a5f42e35` ([report](2026-11-19/native-report.json)), and
 **779 tests** at `2f9eef00`, after the undecided retry, the alarm ticks and the
-confirmation seed ([report](2026-11-19/native-report-2f9eef00.json)).
+confirmation seed ([report](2026-11-19/native-report-2f9eef00.json)), and **778
+tests** at `ea33c191` without lineage promotion ([report](2026-11-19/native-report-ea33c191.json)).
 
 ## Real11 matrix
 
@@ -68,6 +69,9 @@ automatic-search test modules ([counts](2026-11-19/search-test-dispatch.json)):
 `test_semantic_search` 2 Clarabel, `test_integration` and `test_event_search` none
 (they use non-automatic entry points or mocked evaluations). The relaxation's
 breadth evidence is therefore the held-out probe above, not these modules.
+`RelaxedAutomaticSearchTests` later added relaxed searches over a slab boost, a
+ceiling hit, a grind, a turn and a run-off, and a native cancel/resume sequence
+through `search.application.run`.
 
 ## Alarm ticks
 
@@ -134,3 +138,65 @@ are a different mechanism: those seeds are 18 degrees off-axis, and IPOPT settle
 in a wrong basin; the full seed avoids them. The turned full seed (`1e-4` rad) is an
 assumption: revisit it if confirmations start rejecting feasible requests or
 report spurious gaps.
+
+## No lineage promotion
+
+`ea33c191` removed promotion: a confirmed gap no longer sends the program's later
+optimization requests and its descendants' to IPOPT; every request is solved
+relaxed and only its own alarm calls IPOPT. A/B on the whole native suite with
+every route at threshold 0 ([script](2026-11-19/ab_capture.py),
+[comparison](2026-11-19/promotion-ab-compare.txt)), two runs per arm, each
+repeating exactly: all 79 automatic searches common to both arms published the same
+status, objective (to `1e-6`), finalization stage and termination, and every
+replayable published route passed independent replay (28 searches in mocked unit
+tests have no scene to replay, identically in both arms). Only the wall-in-flight
+resume scene promoted: its 7 searches published 6.598204 in both arms with 103
+IPOPT calls with promotion (100 promoted, 3 confirmations) against 93 without (93
+confirmations, 78 of them material gaps, 13 relaxed candidates); its total search
+time was 97 to 104 s with promotion and 105 to 118 s without. The Real11 fixtures
+are unchanged at `ea33c191`: T64, objective -1093.2381026602416, 14/14/8 requests,
+0 interim IPOPT workers, 1 finalization call, all replays passed.
+
+## Extended course and the encounter-groups requests
+
+The Real11 extended control (anchors b2 b3 b4 b5 b7 b20, goal b22) runs to its
+300 s deadline on every revision. At `ea33c191` it issued 144 requests with one
+IPOPT launch (one confirmation) and expanded 171 prefixes; stock `c9deef42`
+issued 145 requests with 131 launches and expanded 161. The run is
+generation-bound, not solver-bound ([profile comparison](2026-11-19/extended-profile-compare.txt)):
+solver invocation fell from 30.3 s to 6.8 s and the interval screen from 49.7 s
+(HiGHS) to 20.6 s (Clarabel), while program keys, preparation and model analysis
+take 164 s. The call limit does not bind there (144 of 1024).
+
+The encounter-groups checkpoint `4fa120e1` (with its run's patch) makes every
+request an optimization, so its 334 distinct requests on the same course are the
+population a relaxed confirmation would see. [`p5_study.py`](2026-11-19/p5_study.py)
+([summary](2026-11-19/p5-study-summary.txt)) solved each with the production
+relaxation and IPOPT from the request's own seed, the production confirmation
+seed and a cold seed, plus 8 random restarts wherever an arm found no point or
+the arms' objectives differed by more than 1e-4:
+
+- The relaxation called 19 requests infeasible; no IPOPT run found a point for any.
+- 32 relaxation-feasible requests had no IPOPT point; all 32 alarm (a jump tick
+  60 to 62 short by 0.29 to 0.76), so confirmations reject them.
+- 153 of 315 relaxation-feasible requests alarm: 32 full-infeasible, 53 material
+  gaps and 68 false alarms (13.1 s of the 35.0 s confirmation CPU).
+- 7 material gaps do not alarm (largest 1.37e-3): ground ticks 58 and 59 short
+  by 0.34 to 0.63 on a 1.6 by 1.0 landing area, wider than a thin ledge.
+- Production seed: 0 false no-point and 2 optimizations more than 1e-4 short of
+  the best known; own seed (stock): 2 false `Infeasible_Problem_Detected` in the
+  capturing run, 1 on re-solve; cold: 1 and 3.
+
+Row order ([`row_order.py`](2026-11-19/row_order.py), [summary](2026-11-19/row-order-summary.json)):
+882 distinct requests from five captures, 691 with a spec, solved in sorted,
+reversed and three shuffled row orders. No request switched between feasible and
+infeasible; 5 switched between infeasible and undecided (an undecided request goes
+to IPOPT), and the largest objective spread was 3.7e-6.
+
+Retained solvers: an IPOPT confirmation takes a median 0.21 s, of which worker
+start and imports are 0.09 s; a Clarabel solve takes 0.4 ms to assemble, 0.4 ms to
+set up and 2.8 ms to solve ([times](2026-11-19/clarabel-phase-times.txt)). With one
+or two IPOPT calls per run neither a persistent worker nor solver reuse changes a
+run measurably. The search-level screen cache had 0 hits in 6041 lookups on the
+extended course; the process-wide spec cache answered all 144 candidate requests
+from their screens.

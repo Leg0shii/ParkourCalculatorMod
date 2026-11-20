@@ -3,9 +3,9 @@
 ## Current gate
 
 `tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the disk relaxation in
-automatic discovery at `2f9eef00`: **779 tests, no failures, errors or skips**, source
+automatic discovery at `ea33c191`: **778 tests, no failures, errors or skips**, source
 unchanged during the run, layout validation passed
-([report](../research/disk-relaxation/2026-11-19/native-report-2f9eef00.json)).
+([report](../research/disk-relaxation/2026-11-19/native-report-ea33c191.json)).
 The gate fails on any skip, so it needs `PKC_RUN_TICKS_COMPILER` for the Java
 differential tests and the `research` extra for the route-guidance tests.
 A run of the switch-climb source (`55e3beef`) under a load average of 5.5 failed
@@ -25,6 +25,7 @@ persistence without the removed 32/128 limits.
 
 | Source | Tests | Evidence |
 | --- | ---: | --- |
+| `ea33c191` + no lineage promotion (its test removed) | 778 | [report](../research/disk-relaxation/2026-11-19/native-report-ea33c191.json) |
 | `2f9eef00` + jump/thin-ledge alarm ticks, symmetry-broken confirmation seed | 779 | [report](../research/disk-relaxation/2026-11-19/native-report-2f9eef00.json) |
 | `5edfc66a` + zero-cost retry of undecided disk specs | 776 | not archived |
 | `a5f42e35` disk relaxation, alarm confirmation, one IPOPT finalization | 775 | [report](../research/disk-relaxation/2026-11-19/native-report.json) |

@@ -1,0 +1,39 @@
+extended-relaxed-ea33c191 wall 302.1 cpu 291.5 expanded 171 solverCalls 144 workerLaunches 1
+   program.program_physics_key                   self   81.3 s  calls 111967
+   run.search_and_final_replay                   self   56.1 s  calls 1
+   preparation.analyze_model                     self   45.4 s  calls 14353
+   preparation.prepare                           self   37.4 s  calls 14353
+   numerical.evaluate                            self   33.2 s  calls 154
+   reachability.screen                           self   20.6 s  calls 3580
+   program.compile_program                       self    7.6 s  calls 8311
+   solver.invoke                                 self    6.8 s  calls 144
+   postrun.shared_report_write                   self    6.1 s  calls 1
+   reachability.condition_envelopes              self    5.1 s  calls 1256
+   program.program_search_key                    self    1.2 s  calls 86199
+   postrun.shared_report_compact                 self    0.8 s  calls 1
+extended-stock-c9deef42 wall 306.0 cpu 276.2 expanded 161 solverCalls 145 workerLaunches 131
+   program.program_physics_key                   self   68.1 s  calls 94280
+   reachability.linear_exclusion                 self   49.7 s  calls 3062
+   run.search_and_final_replay                   self   48.3 s  calls 1
+   preparation.analyze_model                     self   33.7 s  calls 11360
+   numerical.evaluate                            self   31.0 s  calls 156
+   solver.invoke                                 self   30.3 s  calls 145
+   preparation.prepare                           self   27.8 s  calls 11360
+   program.compile_program                       self    6.6 s  calls 6607
+   postrun.shared_report_write                   self    5.1 s  calls 1
+   reachability.condition_envelopes              self    3.5 s  calls 1249
+   program.program_search_key                    self    1.0 s  calls 73825
+   postrun.shared_report_compact                 self    0.6 s  calls 1
+extended-p5-4fa120e1 wall 305.1 cpu 225.4 expanded 405 solverCalls 334 workerLaunches 334
+   solver.invoke                                 self   92.6 s  calls 334
+   run.search_and_final_replay                   self   48.0 s  calls 1
+   reachability.linear_exclusion                 self   41.6 s  calls 2983
+   numerical.evaluate                            self   34.4 s  calls 135
+   preparation.analyze_model                     self   32.7 s  calls 10746
+   preparation.prepare                           self   27.5 s  calls 10746
+   program.program_physics_key                   self   14.5 s  calls 25714
+   program.compile_program                       self    6.4 s  calls 6697
+   postrun.shared_report_write                   self    3.8 s  calls 1
+   reachability.condition_envelopes              self    2.4 s  calls 1149
+   postrun.shared_report_compact                 self    0.8 s  calls 1
+   preparation.analyze                           self    0.2 s  calls 10611

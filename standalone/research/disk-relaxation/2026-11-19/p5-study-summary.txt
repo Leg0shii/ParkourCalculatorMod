@@ -1,0 +1,63 @@
+distinct requests 334
+relaxation x truth {('feasible', 'feasible'): 283, ('infeasible', 'noPointFound'): 19, ('feasible', 'noPointFound'): 32}
+captured (own seed, stock intent) status x truth {('Solve_Succeeded', True): 281, ('Infeasible_Problem_Detected', False): 51, ('Infeasible_Problem_Detected', True): 2}
+own 334 {'best': 282, 'falseNoPoint:Infeasible_Problem_Detected': 1, 'truthNoPoint:Infeasible_Problem_Detected': 51, 'worse>1e-4': 0} cpu total 71.00 median 0.1904
+production 315 {'best': 281, 'truthNoPoint:Infeasible_Problem_Detected': 32, 'worse>1e-4': 2} cpu total 64.70 median 0.1854
+cold 334 {'best': 279, 'falseNoPoint:Infeasible_Problem_Detected': 1, 'truthNoPoint:Infeasible_Problem_Detected': 51, 'worse>1e-4': 3} cpu total 78.06 median 0.2130
+relaxation-infeasible but IPOPT found a point []
+relaxation other []
+retried 2
+captured Infeasible_Problem_Detected but a point exists: 2 [('7c0b27ef', False, 'feasible'), ('56c09e06', False, 'feasible')]
+relaxation-feasible 315 alarmed 153 of which optimize-intent captured 153
+gap > 1e-4 (relaxed better than best known): [(0.08573537712243251, True, False, '15b72802'), (0.07514115219083806, True, False, 'c5f8492c'), (0.05487256429836407, True, False, '4f1b261b'), (0.051882163540369675, True, False, 'cc30c14f'), (0.04553983499829428, True, False, '0d681751'), (0.045539833657414874, True, False, '75c9b73c'), (0.03892172631418589, True, False, '2d448a8b'), (0.035019476006993955, True, False, 'f21a4a7b'), (0.03485007014324992, True, False, '34a0bcf0'), (0.03268316703133678, True, False, '3479d339'), (0.027606414275055613, True, False, 'c034b265'), (0.02709286923112586, True, False, '97320480'), (0.026923457588850397, True, False, 'aeb574a9'), (0.021138868133220967, True, False, 'f4822e2d'), (0.019409989147391116, True, False, '9d4da841'), (0.019062144015663307, True, False, 'c1b2721a'), (0.018896438300203044, True, False, 'c67480fc'), (0.018727032466586024, True, False, '68eddb47'), (0.01369555760163621, True, False, '5f404c94'), (0.012051698786592624, True, False, 'bdb65e1e'), (0.010363669529056097, True, False, '135526ef'), (0.008155130684656342, True, False, '110a8507'), (0.008037134236246857, True, False, 'c4ea0db0'), (0.00554833608316585, True, False, '12bdec86'), (0.005181153494675073, True, False, '04ca0e16'), (0.005125021932826712, True, False, 'f9b1fe72'), (0.0036332700887555802, True, False, 'a17e3194'), (0.002465451272428254, True, False, '3a17aef1'), (0.0016019962192217463, True, False, '011e31b1'), (0.001366026799246356, False, False, '58cae72c'), (0.0013660267047725938, False, False, 'e5a47de8'), (0.0006080981208924641, True, False, 'd67dc7e6'), (0.0006080978640738977, True, False, '0c249518'), (0.0005536611628826904, True, False, 'c384e490'), (0.0004642174046693981, True, False, '8730f3e7'), (0.0004642172690978441, True, False, 'ccba453b'), (0.0004179724784876271, True, False, 'd1073e8c'), (0.0004070058292882095, True, False, '4f8bc87a'), (0.0004049252651157076, True, False, 'c3adbf5f'), (0.00040492523123702995, True, False, '2eb8b3ac'), (0.00040387010795939204, False, False, '5974bed1'), (0.00040387005969932943, False, False, '2d13098f'), (0.0003082973458958804, True, False, '5511ae35'), (0.00030829731855419595, True, False, 'c7e8c7fd'), (0.00029792575190867865, True, False, 'b596b563'), (0.00029792560485475406, True, False, 'f5cb1fb9'), (0.00028379477680573473, False, False, '074e01c8'), (0.0002837946482827647, False, False, '2298ab24'), (0.00022999571109494354, True, False, '43b641b1'), (0.00022999570046522422, True, False, 'db424466'), (0.00018244956947910396, True, False, 'c4c1cd6f'), (0.0001824494475499705, True, False, 'ba9bdec1'), (0.0001661004583866088, True, False, 'e570d0b5'), (0.00016610034612085656, True, False, '10bf5b65'), (0.00015763732346840698, True, False, '2a140dd0'), (0.00015763704095661524, True, False, 'bd543ca2'), (0.00013029392897578873, True, False, '3d5fb3dc'), (0.00012490089881112, True, False, '932a6628'), (0.0001249008864760981, True, False, '88875c6e'), (0.00011137525712001661, False, False, 'b53da11a')]
+negative gap < -1e-6 (best known beats relaxation, impossible): []
+relaxation cpu total 1.59 median 0.0040
+capturedStop Counter({False: 334})
+relaxation-feasible, no IPOPT point: 32 alarmed 32
+  5e10cd17 ticks 66 peak 0.620 alarm [60] random 0 / 8
+  19a987aa ticks 66 peak 0.624 alarm [60] random 0 / 8
+  96aed273 ticks 66 peak 0.592 alarm [60] random 0 / 8
+  f045f1dd ticks 66 peak 0.758 alarm [60] random 0 / 8
+  2d777e17 ticks 66 peak 0.717 alarm [60] random 0 / 8
+  566f816a ticks 66 peak 0.645 alarm [60] random 0 / 8
+  b5bba337 ticks 67 peak 0.617 alarm [61] random 0 / 8
+  d018d86c ticks 67 peak 0.601 alarm [61] random 0 / 8
+  8e086065 ticks 67 peak 0.592 alarm [61] random 0 / 8
+  1aea5e3c ticks 67 peak 0.692 alarm [61] random 0 / 8
+  446b0a34 ticks 67 peak 0.652 alarm [61] random 0 / 8
+  9b87e5ed ticks 67 peak 0.603 alarm [61] random 0 / 8
+  51be809b ticks 67 peak 0.702 alarm [61] random 0 / 8
+  4f7d72af ticks 67 peak 0.659 alarm [61] random 0 / 8
+  bbecd1e3 ticks 67 peak 0.584 alarm [61] random 0 / 8
+  0dd5efd1 ticks 67 peak 0.663 alarm [61] random 0 / 8
+  bbd043ba ticks 67 peak 0.604 alarm [61] random 0 / 8
+  c6889419 ticks 67 peak 0.530 alarm [61] random 0 / 8
+  0e705763 ticks 68 peak 0.285 alarm [60] random 0 / 8
+  dc3c6ed2 ticks 68 peak 0.669 alarm [62] random 0 / 8
+  a11786d5 ticks 68 peak 0.648 alarm [62] random 0 / 8
+  6f1b0bb2 ticks 68 peak 0.617 alarm [62] random 0 / 8
+  6393ffa5 ticks 68 peak 0.671 alarm [62] random 0 / 8
+  49b797d0 ticks 68 peak 0.630 alarm [62] random 0 / 8
+  5cc18391 ticks 68 peak 0.549 alarm [62] random 0 / 8
+  9f77b142 ticks 68 peak 0.694 alarm [62] random 0 / 8
+  0591f6f3 ticks 68 peak 0.655 alarm [62] random 0 / 8
+  aa9ddb3c ticks 68 peak 0.585 alarm [62] random 0 / 8
+  e71b11a7 ticks 68 peak 0.631 alarm [62] random 0 / 8
+  60b57a15 ticks 68 peak 0.694 alarm [62] random 0 / 8
+  bcdf14e7 ticks 68 peak 0.614 alarm [62] random 0 / 8
+  8ee9f0ca ticks 69 peak 0.445 alarm [61] random 0 / 8
+alarm x truth (relaxation-feasible): {(False, 'gap<=1e-4'): 155, (False, 'gap>1e-4'): 7, (True, 'fullInfeasible'): 32, (True, 'gap<=1e-4'): 68, (True, 'gap>1e-4'): 53}
+production-seed confirmation cpu by truth (alarmed): {'gap<=1e-4': 13.09, 'fullInfeasible': 12.07, 'gap>1e-4': 9.85}
+missed material gaps (not alarmed, gap > 1e-4):
+  58cae72c gap 1.37e-03 ticks 66 short ticks [(58, 0.628, 'ground')]
+  e5a47de8 gap 1.37e-03 ticks 66 short ticks [(58, 0.628, 'ground')]
+  074e01c8 gap 2.84e-04 ticks 67 short ticks [(58, 0.39, 'ground')]
+  2298ab24 gap 2.84e-04 ticks 67 short ticks [(58, 0.39, 'ground')]
+  2d13098f gap 4.04e-04 ticks 68 short ticks [(59, 0.518, 'ground')]
+  5974bed1 gap 4.04e-04 ticks 68 short ticks [(59, 0.518, 'ground')]
+  b53da11a gap 1.11e-04 ticks 69 short ticks [(59, 0.338, 'ground')]
+rows and room around the missed ground ticks:
+  58cae72c tick 58 ground [False, True, True, True] {'X57': (729.7, 731.3, 1.6), 'X58': (729.7, 731.3, 1.6), 'X59': (729.7, 731.3, 1.6), 'X60': (729.7, 731.3, 1.6), 'Z57': (-1096.3, -1095.3, 1.0), 'Z58': (-1096.3, -1095.3, 1.0), 'Z59': (-1096.3, -1095.3, 1.0), 'Z60': (-1096.3, -1095.3, 1.0)}
+  074e01c8 tick 58 ground [False, True, True, True] {'X57': (729.7, 731.3, 1.6), 'X58': (729.7, 731.3, 1.6), 'X59': (729.7, 731.3, 1.6), 'X60': (729.7, 731.3, 1.6), 'Z57': (-1096.3, -1095.3, 1.0), 'Z58': (-1096.3, -1095.3, 1.0), 'Z59': (-1096.3, -1095.3, 1.0), 'Z60': (-1096.3, -1095.3, 1.0)}
+  2d13098f tick 59 ground [True, True, True, True] {'X58': (729.7, 731.3, 1.6), 'X59': (729.7, 731.3, 1.6), 'X60': (729.7, 731.3, 1.6), 'X61': (729.7, 731.3, 1.6), 'Z58': (-1096.3, -1095.3, 1.0), 'Z59': (-1096.3, -1095.3, 1.0), 'Z60': (-1096.3, -1095.3, 1.0), 'Z61': (-1096.3, -1095.3, 1.0)}
+  b53da11a tick 59 ground [True, True, True, False] {'X58': (729.7, 731.3, 1.6), 'X59': (729.7, 731.3, 1.6), 'X60': (731.3, inf, inf), 'Z58': (-1096.3, -1095.3, 1.0), 'Z59': (-1096.3, -1095.3, 1.0), 'Z60': (-inf, -1095.3, inf), 'Z61': (-inf, -1095.3, inf)}

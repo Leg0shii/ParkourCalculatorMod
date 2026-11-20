@@ -204,15 +204,19 @@ def search_event_routes(request, compiler, *, task_goal=None, discovery=None, an
         numerical['finalizationIpoptCalls']+=final['work'].get('workerLaunches',0)
     report=dict(last or {})
     best=state['best']
+    # The search keeps its relaxed incumbent; only a physical witness is published,
+    # so a cancelled or failed run without a finalization publishes no relaxed one.
     if finalization is not None:
-        # The search keeps its relaxed incumbent; only a physical witness is published.
         best=finalization['best']
         report['finalization']={k:v for k,v in finalization.items() if k!='best'}
         if best is None:
-            termination='finalization_failed'
-        if best is None or best['candidate']['positions']!=state['best']['candidate']['positions']:
-            report['provisionalBest']=dict(ticks=state['best']['plan']['ticks'],objective=state['best']['candidate']['objective'],
-                                           model=state['best']['candidate'].get('model'))
+            # Only a cancellation leaves the finalization running.
+            termination='cancelled' if finalization['stage']=='running' else 'finalization_failed'
+    elif best is not None and 'model' in best['candidate']:
+        best=None
+    if state['best'] is not None and (best is None or best['candidate']['positions']!=state['best']['candidate']['positions']):
+        report['provisionalBest']=dict(ticks=state['best']['plan']['ticks'],objective=state['best']['candidate']['objective'],
+                                       model=state['best']['candidate'].get('model'))
     report.update(status='feasible' if best else 'cancelled' if termination=='cancelled' else 'unknown',
         termination=termination,best=best,searchState=state,effectiveRequest=request,taskGoal=task,
         work=dict(dict.fromkeys(NUMERICAL_COUNTS+('finalizationIpoptCalls',),0),**numerical,solverCalls=calls,

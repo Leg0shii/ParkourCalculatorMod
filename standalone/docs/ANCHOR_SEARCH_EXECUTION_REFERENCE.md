@@ -106,7 +106,9 @@ relaxed facings turned by `numerics.disk.ipopt_seed`, with `rankEqualCost=False`
 conflict on the exact trajectory is repaired by the usual avoidance sources. A
 witness that is already physical needs no call. On failure the next-ranked
 final-frame witness is tried; if none succeeds the run publishes no route
-(`termination='finalization_failed'`). The DFS keeps its relaxed incumbent for
+(`termination='finalization_failed'`). A cancelled run publishes no relaxed
+incumbent either; a finalization the cancellation interrupts stays `running` and
+reruns on resume. The DFS keeps its relaxed incumbent for
 later sessions; the record is the DFS state's `finalization`
 ([checkpoint storage](CHECKPOINT_STORAGE.md)).
 

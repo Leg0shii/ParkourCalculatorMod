@@ -352,5 +352,43 @@ class RelaxedAutomaticSearchTests(unittest.TestCase):
         self.assertFalse(any(plan['jump'][:plan['grounded'].index(False)]))
         self.assertEqual(sum(plan['jump']), 1)
 
+    def test_cancelled_sessions_publish_no_relaxed_route_and_resume_without_repeating_requests(self):
+        import threading
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.numerics import disk
+        from parkour_solver.numerics.model import fingerprint, prepare
+        fixture = dict(request=self.boxes(['normal'], start=[[-2,0,-2,1,1,2]], middle=[[1,-1,-2,4,0,2]], goal=[[6,-1,-1,7,0,1]]),
+                       anchorSearch=dict(anchors=[]), settings=dict(seconds=20, score_seconds=4, max_solver_calls=40))
+        requests = []
+        original = disk.RelaxedDispatch.solve
+        def recorded(dispatch, problem, **options):
+            requests.append(fingerprint(prepare(dict(problem, seconds=options['seconds']))))
+            return original(dispatch, problem, **options)
+        def session(compiler, saved, stop):
+            cancel = threading.Event()
+            result, validation = run(fixture, compiler, python_executable=os.environ['PKC_IPOPT_PYTHON'],
+                resume_state=json.loads(json.dumps(saved)) if saved else None, cancel_event=cancel,
+                on_progress=lambda state: stop(state['dfs'] or {}) and cancel.set())
+            return result, validation
+        relaxed = lambda dfs: (dfs.get('best') or {}).get('candidate', {}).get('model') == 'relaxed_disk'
+        finalizing = lambda dfs: (dfs.get('finalization') or {}).get('stage') == 'running'
+        with PythonCompiler() as compiler, patch.object(disk.RelaxedDispatch, 'solve', recorded):
+            traversal, _ = session(compiler, None, relaxed)
+            finalization, _ = session(compiler, traversal['searchState'], finalizing)
+            rerun, validation = session(compiler, finalization['searchState'], lambda dfs: False)
+            published = len(requests)
+            complete, _ = session(compiler, rerun['searchState'], lambda dfs: False)
+        for cancelled in (traversal, finalization):
+            self.assertEqual((cancelled['status'], cancelled['termination'], cancelled['best']), ('cancelled', 'cancelled', None))
+            self.assertEqual(cancelled['provisionalBest']['model'], 'relaxed_disk')
+        self.assertNotIn('finalization', traversal)
+        self.assertEqual((finalization['finalization']['stage'], finalization['work']['finalizationIpoptCalls']), ('running', 0))
+        self.assertEqual((rerun['finalization']['stage'], rerun['work']['finalizationIpoptCalls']), ('complete', 1))
+        self.assertTrue(validation[0]['passed'])
+        self.assertNotIn('model', rerun['best']['candidate'])
+        self.assertEqual(len(set(requests)), len(requests))
+        self.assertEqual((len(requests), complete['work']['finalizationIpoptCalls']), (published, 0))
+        self.assertEqual(complete['best']['candidate'], rerun['best']['candidate'])
+
 
 if __name__=='__main__':unittest.main()
