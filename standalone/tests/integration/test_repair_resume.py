@@ -330,6 +330,69 @@ class RepairResumeTests(RepairHarness, unittest.TestCase):
         self.assertEqual(before+after,[(0,2),(0,1),(0,3)])
         self.assertEqual(second['best']['candidate']['objective'],0)
 
+    def walk(self, relaxed, confirmed, *, solves=100, resume_state=None, families=None, climb_families=True):
+        # Variant i solves relaxed to relaxed[i]; it alarms when confirmed has an entry, whose IPOPT value
+        # (None: no point) the walk's confirming solve returns.
+        loop,walks=[],[]
+        confirm=object()
+        def solve(request,*args,**options):
+            i=int(request['constraints'][0]['rhs'])
+            if options.get('numerical') is confirm:
+                walks.append(i)
+                value=confirmed[i]
+                return dict(status='unknown',termination='search_exhausted',attempts=[],best=None) if value is None else outcome(value)
+            loop.append(i)
+            found=dict(best(relaxed[i]),problemHash=str(i))
+            found['candidate']['model']='relaxed_disk'
+            return dict(status='feasible',termination='done',best=found,attempts=[dict(diagnostics=[dict(
+                problemHash=str(i),status='feasible',disk=dict(alarmTicks=[0] if i in confirmed else []))])])
+        families=families or list(range(len(relaxed)))
+        variants=iter([dict(rows=[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=float(i))],selectedPassages=[],
+            family='family:'+str(f),branchChoices=[],branchKey='',switches=[i],score=i) for i,f in enumerate(families)])
+        result=self.invoke(route(),solve,lambda *a:dict(accepted=True),initial_variants=variants,work=SearchWork(solves),
+                           climb_families=climb_families,confirm=confirm,resume_state=resume_state)
+        return result,loop,walks
+
+    def test_walk_accepts_an_unalarmed_best_without_ipopt(self):
+        result,loop,walks=self.walk([10,9],{})
+        self.assertEqual((loop,walks,result['best']['candidate']['objective']),([0,1],[],10))
+
+    def test_walk_stops_when_the_confirmed_point_beats_the_next_relaxed_one(self):
+        result,_,walks=self.walk([10,9,8],{0:9.5,1:9.4})
+        self.assertEqual((walks,result['best']['candidate']['objective']),([0],9.5))
+        self.assertEqual(result['repairState']['incumbent']['rows'][0]['rhs'],0.)
+
+    def test_walk_moves_past_an_ipopt_rejection_and_never_holds_it(self):
+        result,_,walks=self.walk([10,9.9,9.8],{0:None})
+        self.assertEqual((walks,result['best']['candidate']['objective']),([0],9.9))
+        self.assertEqual([v['best']['candidate']['objective'] for v in result['repairState']['fallbackVariants']],[9.8])
+
+    def test_walk_stops_after_three_examined_once_one_is_confirmed(self):
+        result,_,walks=self.walk([10,9.9,9.8,9.7,9.6],{0:5,1:5.1,2:5.2,3:5.3})
+        self.assertEqual((walks,result['best']['candidate']['objective']),([0,1,2],5.2))
+
+    def test_walk_continues_past_three_until_one_confirms(self):
+        result,_,walks=self.walk([10,9.9,9.8,9.7,9.6],{0:None,1:None,2:None,3:None})
+        self.assertEqual((walks,result['best']['candidate']['objective']),([0,1,2,3],9.6))
+
+    def test_walk_keeps_a_close_second_of_a_family_and_drops_its_third(self):
+        result,_,walks=self.walk([10,9.9,9.8],{0:None,1:None,2:9.},families=[0,0,0],climb_families=False)
+        self.assertEqual((walks,result['best']),([0,1],None))
+
+    def test_walk_without_a_confirmed_candidate_rejects_the_node(self):
+        from parkour_solver.search.feasibility import outcome as node_outcome, policy_spec
+        result,_,walks=self.walk([10,9],{0:None,1:None})
+        self.assertEqual((walks,result['best']),([0,1],None))
+        policy=policy_spec(dict(purpose='node',stopOnFeasible=False,rankEqualCost=True,oracleRejection=True,numerical='relaxed'))
+        self.assertEqual(node_outcome(result,'node',policy)['status'],'oracle_rejected')
+
+    def test_interrupted_walk_resumes_without_repeating_a_solve(self):
+        first,loop,walks=self.walk([10,9],{0:9.5},solves=2)
+        self.assertEqual((first['best'],loop,walks),(None,[0,1],[]))
+        self.assertEqual(first['repairState']['inFlight']['rows'][0]['rhs'],0.)
+        second,more,later=self.walk([10,9],{0:9.5},resume_state=json.loads(json.dumps(first['repairState'])))
+        self.assertEqual((more,later,second['best']['candidate']['objective']),([],[0],9.5))
+
     def test_without_climbing_every_alternative_is_solved(self):
         _,requests=self.climb([(0,t) for t in (2,1,3,4,5,6)],lambda f,t:-(t-2)**2,climb_families=False)
         self.assertEqual(requests,[(0,t) for t in (2,1,3,4,5,6)])

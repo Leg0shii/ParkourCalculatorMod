@@ -133,15 +133,24 @@ class RelaxedDispatch:
 
     IPOPT runs, with stock semantics, on requests outside the supported class,
     requests the relaxation leaves undecided, and relaxed points the scalar
-    validator rejects. Every other request is solved relaxed; an optimization
-    request whose relaxed optimum leaves more than ALARM_FRACTION of a jump
-    tick's acceleration unused (alarm_ticks) is confirmed by IPOPT.
+    validator rejects. Every other request is solved relaxed. `solve` returns
+    the relaxed point with its alarm ticks; `confirmed` also re-solves an
+    optimization request whose relaxed optimum leaves more than ALARM_FRACTION
+    of a jump tick's acceleration unused (alarm_ticks) with IPOPT. The repair
+    loop solves with `solve` and confirms its kept candidates once, at its end
+    (search/repair.py).
     """
     def __init__(self, *, gate):
         self.gate = gate
 
-    def solve(self, problem, *, seconds, stop_on_feasible, python_executable=None, cancel_event=None,
-              on_incumbent=None):
+    def solve(self, problem, **options):
+        return self._dispatch(problem, confirming=False, **options)
+
+    def confirmed(self, problem, **options):
+        return self._dispatch(problem, confirming=True, **options)
+
+    def _dispatch(self, problem, *, seconds, stop_on_feasible, python_executable=None, cancel_event=None,
+                  on_incumbent=None, confirming):
         from parkour_solver.numerics.solver import solve as full_solve
         from parkour_solver.validation.numerical import validate_controls
 
@@ -170,7 +179,7 @@ class RelaxedDispatch:
         alarmed = alarm_ticks(problem, shortfall)
         relaxed.update(peakRelativeDeficit=peak, peakTick=tick, alarmTicks=alarmed)
         candidate['model'] = 'relaxed_disk'
-        if alarmed and not stop_on_feasible:
+        if confirming and alarmed and not stop_on_feasible:
             return self.confirm(problem, candidate, relaxed, seconds=seconds, python_executable=python_executable,
                                 cancel_event=cancel_event, on_incumbent=on_incumbent)
         if on_incumbent is not None:

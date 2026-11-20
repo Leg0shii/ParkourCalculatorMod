@@ -16,6 +16,15 @@ from parkour_solver.search.repair_state import branch_key, compatible, context a
 # Close losers are kept only to recover when the route fails later; objectives are positions in blocks.
 FALLBACK_LIMIT = 2
 FALLBACK_GAP = 0.3
+# The confirmation walk stops after this many examined candidates once one is confirmed.
+WALK_LIMIT = 3
+
+
+def usable(accepted):
+    """Accepted variants a walk has not rejected, each with its confirmed point when it has one."""
+    return [dict(v, best=v['confirmation']) if isinstance(v.get('confirmation'), dict) else v
+            for v in accepted if v.get('confirmation') != 'rejected']
+
 
 def node_alternatives(accepted, incumbent, objective):
     """A decision check's held alternatives, best first: each branch choice's best accepted point plus
@@ -25,7 +34,7 @@ def node_alternatives(accepted, incumbent, objective):
     """
     chosen = branch_key(incumbent['rows'], incumbent['passages'], incumbent['hits']) if incumbent else None
     classes = {}
-    for variant in accepted:
+    for variant in usable(accepted):
         classes.setdefault(variant['best'].get('alternativeBranchKey'), []).append(
             (candidate_rank(variant['best'], objective), variant))
     kept = []
@@ -36,6 +45,17 @@ def node_alternatives(accepted, incumbent, objective):
                              if entry[0][0] == top[0] and entry[0][1]-top[1] <= FALLBACK_GAP][:FALLBACK_LIMIT]
     kept.sort(key=lambda entry: entry[0])
     return [copy.deepcopy(variant) for _, variant in kept if variant['branch'] != chosen]
+
+
+def alarmed(result):
+    """The alarm ticks of a branch result's relaxed point (numerics/disk.py alarm_ticks); an IPOPT point has none."""
+    if result['best']['candidate'].get('model') != 'relaxed_disk':
+        return []
+    for attempt in reversed(result['attempts']):
+        for d in attempt.get('diagnostics', []):
+            if d.get('problemHash') == result['best'].get('problemHash') and d.get('status') == 'feasible':
+                return list((d.get('disk') or {}).get('alarmTicks', []))
+    return []
 
 
 def branch_meta(variant):
@@ -49,7 +69,10 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                            solid_blocks=None, max_wall_hits=0,
                            max_wall_candidates=24, candidate_filter=None, work=None, resume_state=None, repair_scope=None,
                            on_progress=None, validation_scope=None, initial_variants=None, retry_unresolved=True,
-                           stop_on_feasible=None, oracle_rejection=False, climb_families=False, numerical=None):
+                           stop_on_feasible=None, oracle_rejection=False, climb_families=False, numerical=None,
+                           confirm=None):
+    """`confirm`: with `rank_equal_cost`, the numerical callable that confirms an alarmed relaxed point
+    (RelaxedDispatch.confirmed); `numerical` solves relaxed only and the walk at the end confirms."""
     route = copy.deepcopy(route)
     if solid_blocks is not None:
         for passage in route.get('passages', []):
@@ -68,7 +91,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
     settling = None
     policy = dict(stopOnFeasible=stop_on_feasible, optimizeGoal=optimize_goal,
                   rankEqualCost=rank_equal_cost, oracleRejection=oracle_rejection)
-    current_context = repair_context(route, profiles, geometry, dict(scope=repair_scope, solvePolicy=policy, avoidancePolicy=13))
+    current_context = repair_context(route, profiles, geometry, dict(scope=repair_scope, solvePolicy=policy, avoidancePolicy=14))
     resuming = (isinstance(resume_state, dict) and resume_state.get('version') == 3
                 and compatible(resume_state.get('context'), current_context))
     exact_resume = resuming and resume_state['context'] == current_context
@@ -191,7 +214,8 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         if not retry_unresolved:
             unresolved.extend(copy.deepcopy(resume_state.get('unresolved', [])))
         floor = max([b['score'] for b in pending]+[0.])+1
-        restored = set()
+        # An accepted branch left in flight is an unfinished walk's candidate: keep its result, re-walk.
+        restored = {v['branch'] for v in resume_state.get('acceptedVariants', [])} if exact_resume else set()
         for index, saved in enumerate(pending+deferred):
             key = branch_key(saved['rows'], saved['passages'], saved['hits'])
             if key in restored:
@@ -215,7 +239,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             return []
         top = candidate_rank(best_result['best'], route['objective'])
         chosen = branch_key(best_branch['rows'], best_branch['passages'], best_branch['hits'])
-        close = sorted(((candidate_rank(v['best'], route['objective']), v) for v in accepted_variants
+        close = sorted(((candidate_rank(v['best'], route['objective']), v) for v in usable(accepted_variants)
                         if v['branch'] != chosen), key=lambda entry: entry[0])
         return [copy.deepcopy(v) for rank, v in close
                 if rank[0] == top[0] and rank[1]-top[1] <= FALLBACK_GAP][:FALLBACK_LIMIT]
@@ -244,7 +268,8 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
 
     def finish(result):
         nonlocal in_flight
-        in_flight = None
+        # An unfinished walk's next candidate stays in flight: the check is unfinished and a resume re-walks.
+        in_flight = walking
         result['repairState'] = snapshot()
         metrics = completed_source_metrics.copy()
         metrics.update(getattr(variant_source, 'state', {}).get('metrics', {}))
@@ -261,7 +286,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
     best_branch = copy.deepcopy(resume_state.get('incumbent')) if exact_resume else None
     completed = copy.deepcopy(resume_state.get('completed', [])) if exact_resume else []
     accepted_variants = copy.deepcopy(resume_state.get('acceptedVariants', [])) if exact_resume else []
-    in_flight = None
+    in_flight = walking = None
     if best_result is not None:
         saved = best_result['best']
         valid = validate_vertical_schedule(route, profiles, saved['plan'])
@@ -280,6 +305,157 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             key = branch_key([], route.get('passages', []), route.get('hitEvents', []))
             seen.discard(key)
             offer(-1, [], route.get('passages', []), route.get('hitEvents', []), route.get('warmYaw'))
+
+    def build_branch(rows, passages, hits, warm_yaw):
+        branch = copy.deepcopy(route)
+        branch['constraints'].extend(rows)
+        branch['passages'] = passages
+        branch['hitEvents'] = hits
+        if warm_yaw is not None:
+            branch['warmYaw'] = warm_yaw
+        return branch
+
+    def audit_point(best, branch, passages):
+        plan, candidate = best['plan'], best['candidate']
+        checked = dict(conflicts=contact_conflicts(checks, plan, candidate), accepted=False)
+        if not checked['conflicts']:
+            vertical = validate_vertical_schedule(branch, profiles, plan)
+            checked['vertical'] = vertical
+            if not vertical['feasible']:
+                checked['reason'] = 'vertical_schedule_mismatch'
+            elif any(not passage_y_valid(p, plan['events'][p['leg']], profiles[p['leg']]) for p in passages):
+                checked['reason'] = 'passage_y_mismatch'
+            else:
+                verdict = candidate_filter(plan, candidate, vertical) if candidate_filter is not None else dict(accepted=True)
+                checked['verdict'] = verdict
+                if not verdict['accepted']:
+                    checked['reason'] = verdict.get('reason', 'candidate_filter')
+                elif geometry is not None:
+                    remaining = deadline-time.monotonic()
+                    if remaining <= 0:
+                        raise TimeoutError('Geometry validation exceeded the contact budget')
+                    if validation_scope is None:
+                        checked['geometryCheck'] = check_geometry(geometry, plan, candidate, vertical, compiler, remaining)
+                    else:
+                        from parkour_solver.search.identity import scoped_geometry, validation_prefix
+                        selected, indices = scoped_geometry(geometry, validation_scope)
+                        p, c, v = validation_prefix(plan, candidate, vertical, validation_scope['through'])
+                        checked['geometryCheck'] = check_geometry(selected, p, c, v, compiler, remaining)
+                        if 'solidIndex' in checked['geometryCheck']:
+                            checked['geometryCheck']['solidIndex'] = indices[checked['geometryCheck']['solidIndex']]
+                    checked['accepted'] = checked['geometryCheck']['feasible']
+                else:
+                    checked['accepted'] = True
+        return checked
+
+    def enrich_point(best, checked, branch, rows, passages, hits, meta):
+        best = copy.deepcopy(best)
+        selected = copy.deepcopy(choices.get(branch_key(rows, passages, hits), []))
+        described = passages+[p for p in selected if p not in passages]
+        best['alternativeRows'] = copy.deepcopy(rows)
+        if meta is not None and 'branchChoices' in meta:
+            best.update(alternativeBranchChoices=copy.deepcopy(meta['branchChoices']),
+                        alternativeBranchKey=meta['branchKey'])
+        best.update(route=best.get('route', branch), profiles=profiles, contactChecks=checks,
+            passages=described, hitEvents=hits, ceilingEvents=branch.get('ceilingEvents', []),
+            blockageTimeline=gate_timeline(described, best['plan']['events']),
+            blockageUsage=[{'blockId': value if kind == 'block' else 'solid:' + str(value), **counts}
+                for (kind, value), counts in blockage_usage(described).items()], vertical=checked['vertical']['vertical'])
+        best['selectedInteractions'] = copy.deepcopy(choices.get(branch_key(rows, passages, hits), passages))
+        best['selectedInteractionAlternatives'] = copy.deepcopy(choice_alternatives.get(
+            branch_key(rows, passages, hits), [best['selectedInteractions']]))
+        best['candidate'].update({key: checked['vertical'][key] for key in ('y', 'vy', 'onGround')})
+        if candidate_filter is not None:
+            best['corridorCheck'] = checked['verdict']
+        if 'geometryCheck' in checked:
+            best['geometryCheck'] = checked['geometryCheck']
+        return best
+
+    def walk_order():
+        """Each family's best relaxed candidate and a close second (same ticks, within FALLBACK_GAP), best first."""
+        groups = {}
+        for variant in accepted_variants:
+            groups.setdefault(variant.get('family') or variant['branch'], []).append(
+                (candidate_rank(variant['best'], route['objective']), variant))
+        kept = []
+        for members in groups.values():
+            members.sort(key=lambda entry: entry[0])
+            top = members[0][0]
+            kept += members[:1]+[entry for entry in members[1:2]
+                                 if entry[0][0] == top[0] and entry[0][1]-top[1] <= FALLBACK_GAP]
+        kept.sort(key=lambda entry: entry[0])
+        return [variant for _, variant in kept]
+
+    def examine(variant):
+        """One IPOPT solve of an alarmed candidate's own branch; its point must pass the same audit.
+
+        Returns the confirmed point, 'rejected' (IPOPT infeasible, timed out or unknown, or the point
+        failed the audit), or None when there was no budget to run it."""
+        saved = variant['state']
+        if deadline-time.monotonic() <= 0 or cancel_event is not None and cancel_event.is_set():
+            return None
+        if work is not None:
+            try:
+                work.check()
+            except TimeoutError:
+                return None
+        branch = build_branch(saved['rows'], saved['passages'], saved['hits'], saved.get('warmYaw'))
+        result = find_route(branch, compiler, seconds=deadline-time.monotonic(), candidate_seconds=candidate_seconds,
+                            retries=retries, improve=improve, rank_equal_cost=rank_equal_cost,
+                            optimize_goal=optimize_goal, stop_on_feasible=stop_on_feasible,
+                            python_executable=python_executable, cancel_event=cancel_event, work=work, numerical=confirm)
+        inner_attempts.extend(result['attempts'])
+        if result['status'] in ('cancelled', 'error'):
+            return None
+        if result['best'] is None:
+            completion = next((c for c in completed if c['branch'] == variant['branch']), None)
+            if completion is not None:
+                completion['oracleRejected'] = True
+            return 'rejected'
+        try:
+            checked = audit_point(result['best'], branch, saved['passages'])
+        except (TimeoutError, ValueError, RuntimeError, OSError):
+            return None
+        if not checked['accepted']:
+            return 'rejected'
+        return enrich_point(result['best'], checked, branch, saved['rows'], saved['passages'], saved['hits'],
+                            saved.get('meta'))
+
+    def walk():
+        """Confirm the loop's kept candidates once, in relaxed rank order (relaxed objectives are optimistic
+        for their own branch): an unalarmed point is accepted as is, an alarmed one by its IPOPT re-solve.
+
+        Stops when the best confirmed point ranks at least as well as the next relaxed candidate, or after
+        WALK_LIMIT examined candidates once one is confirmed; with none confirmed it keeps walking."""
+        nonlocal best_result, best_branch, walking
+        incumbent, examined = None, 0
+        for variant in walk_order():
+            if incumbent is not None and (examined >= WALK_LIMIT or candidate_rank(incumbent[0], route['objective'])
+                                          <= candidate_rank(variant['best'], route['objective'])):
+                break
+            point = variant['best']
+            if variant['alarmTicks']:
+                if variant.get('confirmation') is None:
+                    outcome = examine(variant)
+                    if outcome is None:
+                        walking = variant['state']
+                        break
+                    variant['confirmation'] = outcome
+                point = variant['confirmation']
+            examined += 1
+            if point != 'rejected' and (incumbent is None or candidate_rank(point, route['objective'])
+                                        < candidate_rank(incumbent[0], route['objective'])):
+                incumbent = (point, variant)
+        if incumbent is None:
+            best_result = best_branch = None
+            return
+        point, variant = incumbent
+        saved = variant['state']
+        best_branch = save_branch(saved['score'], saved['rows'], saved['passages'], saved['hits'],
+                                  point['candidate']['yaw'], saved.get('meta'))
+        best_result = dict(status='feasible', best=copy.deepcopy(point), termination='validated_incumbent',
+                           minimumProven=False)
+
     termination = 'contact_search_exhausted'
     while queue or not source_exhausted or repair_sources:
         if settling is not None:
@@ -396,14 +572,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                        and h['offset'] == hit['offset'] for h in hits):
                     continue
                 offer(score + 10 + index * .01, rows, passages, hits + [hit], proposal_yaw)
-        branch = copy.deepcopy(route)
-        branch['constraints'].extend(rows)
-        branch['passages'] = passages
-        branch['hitEvents'] = hits
-        if reference_yaw is not None:
-            branch['warmYaw'] = reference_yaw
-        elif proposal_yaw is not None:
-            branch['warmYaw'] = proposal_yaw
+        branch = build_branch(rows, passages, hits, reference_yaw if reference_yaw is not None else proposal_yaw)
         if best_result is not None:
             branch['maxTotalRunTicks'] = min(branch['maxTotalRunTicks'], best_result['best']['cost'])
         audit_cache, audit_errors = {}, []
@@ -413,63 +582,12 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             # Equal facings with different relaxed accelerations are different trajectories.
             key = (tuple(best['allocation']), best['plan']['ticks'], tuple(best['candidate']['yaw']),
                    digest(best['candidate']['controls']) if 'controls' in best['candidate'] else None)
-            if key in audit_cache:
-                return audit_cache[key]
-            plan, candidate = best['plan'], best['candidate']
-            checked = dict(conflicts=contact_conflicts(checks, plan, candidate), accepted=False)
-            if not checked['conflicts']:
-                vertical = validate_vertical_schedule(branch, profiles, plan)
-                checked['vertical'] = vertical
-                if not vertical['feasible']:
-                    checked['reason'] = 'vertical_schedule_mismatch'
-                elif any(not passage_y_valid(p, plan['events'][p['leg']], profiles[p['leg']]) for p in passages):
-                    checked['reason'] = 'passage_y_mismatch'
-                else:
-                    verdict = candidate_filter(plan, candidate, vertical) if candidate_filter is not None else dict(accepted=True)
-                    checked['verdict'] = verdict
-                    if not verdict['accepted']:
-                        checked['reason'] = verdict.get('reason', 'candidate_filter')
-                    elif geometry is not None:
-                        remaining = deadline-time.monotonic()
-                        if remaining <= 0:
-                            raise TimeoutError('Geometry validation exceeded the contact budget')
-                        if validation_scope is None:
-                            checked['geometryCheck'] = check_geometry(geometry, plan, candidate, vertical, compiler, remaining)
-                        else:
-                            from parkour_solver.search.identity import scoped_geometry, validation_prefix
-                            selected, indices = scoped_geometry(geometry, validation_scope)
-                            p, c, v = validation_prefix(plan, candidate, vertical, validation_scope['through'])
-                            checked['geometryCheck'] = check_geometry(selected, p, c, v, compiler, remaining)
-                            if 'solidIndex' in checked['geometryCheck']:
-                                checked['geometryCheck']['solidIndex'] = indices[checked['geometryCheck']['solidIndex']]
-                        checked['accepted'] = checked['geometryCheck']['feasible']
-                    else:
-                        checked['accepted'] = True
-            audit_cache[key] = checked
-            return checked
+            if key not in audit_cache:
+                audit_cache[key] = audit_point(best, branch, passages)
+            return audit_cache[key]
 
         def enrich(best, checked):
-            best = copy.deepcopy(best)
-            selected = copy.deepcopy(choices.get(branch_key(rows, passages, hits), []))
-            described = passages+[p for p in selected if p not in passages]
-            best['alternativeRows'] = copy.deepcopy(rows)
-            if meta is not None and 'branchChoices' in meta:
-                best.update(alternativeBranchChoices=copy.deepcopy(meta['branchChoices']),
-                            alternativeBranchKey=meta['branchKey'])
-            best.update(route=best.get('route', branch), profiles=profiles, contactChecks=checks,
-                passages=described, hitEvents=hits, ceilingEvents=branch.get('ceilingEvents', []),
-                blockageTimeline=gate_timeline(described, best['plan']['events']),
-                blockageUsage=[{'blockId': value if kind == 'block' else 'solid:' + str(value), **counts}
-                    for (kind, value), counts in blockage_usage(described).items()], vertical=checked['vertical']['vertical'])
-            best['selectedInteractions'] = copy.deepcopy(choices.get(branch_key(rows, passages, hits), passages))
-            best['selectedInteractionAlternatives'] = copy.deepcopy(choice_alternatives.get(
-                branch_key(rows, passages, hits), [best['selectedInteractions']]))
-            best['candidate'].update({key: checked['vertical'][key] for key in ('y', 'vy', 'onGround')})
-            if candidate_filter is not None:
-                best['corridorCheck'] = checked['verdict']
-            if 'geometryCheck' in checked:
-                best['geometryCheck'] = checked['geometryCheck']
-            return best
+            return enrich_point(best, checked, branch, rows, passages, hits, meta)
 
         def retain(best):
             nonlocal best_result, best_branch, proposal_yaw, reference_yaw
@@ -587,7 +705,10 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             result['best'] = enrich(result['best'], audit_result)
             accepted_key = branch_key(rows, passages, hits)
             if not any(v['branch']==accepted_key for v in accepted_variants):
-                accepted_variants.append(dict(branch=accepted_key,best=copy.deepcopy(result['best'])))
+                accepted_variants.append(dict(branch=accepted_key, best=copy.deepcopy(result['best']),
+                    family=meta['family'] if meta is not None and 'family' in meta else None,
+                    alarmTicks=alarmed(result) if confirm is not None else [],
+                    state=save_branch(score, rows, passages, hits, result['best']['candidate']['yaw'], meta)))
             if reference_yaw is None:
                 reference_yaw = result['best']['candidate']['yaw'][:]
             if work is not None and not audit_result.get('reportedAcceptance'):
@@ -613,6 +734,8 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             offer(score + delta, new_rows, passages, hits, proposal_yaw, meta=meta)
     if settling is not None:
         settle(settling)
+    if confirm is not None and rank_equal_cost:
+        walk()
     if best_result is not None:
         best_result.update(termination=termination, attempts=inner_attempts, contactAttempts=attempts)
         return finish(best_result)

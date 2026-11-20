@@ -173,10 +173,13 @@ collision-repair source is keyed with that source and climbs separately. Every
 family is climbed, the best accepted alternative by `candidate_rank` is kept, and
 up to `FALLBACK_LIMIT` (2) others with the same ticks and an objective within
 `FALLBACK_GAP` (0.3 blocks) are saved as `fallbackVariants` for the DFS to restore
-if a later leg fails. The family state and held variants persist in the repair
+if a later leg fails. On the relaxed backend these are relaxed points: the
+[confirmation walk](../ANCHOR_SEARCH_EXECUTION_REFERENCE.md#numerical-backend-and-finalization)
+confirms the kept candidates when the loop ends, and a point it rejected is never
+saved as a fallback. The family state and held variants persist in the repair
 snapshot (version 3), so a resumed climb solves nothing twice.
 
-Constraint generation uses policy17/state11 and repair avoidancePolicy13 with assembly13. The DFS context
+Constraint generation uses policy18/state11 and repair avoidancePolicy14 with assembly13. The DFS context
 fingerprints the new policy. Old raw generator cursors reject; reproduce an old
 run with its original source and inputs. Source-era scene fields
 `maxContactBranches`, `maxPassageCandidates`, `maxBlockagesPerObstacle`,

@@ -96,13 +96,24 @@ relaxation-infeasible request counts as oracle-rejected (`termination
 'disk_finished'`, Clarabel status in `workerStatus`). IPOPT answers, with stock
 semantics, requests outside the supported class (threshold, ladder, non-X/Z rows),
 requests the relaxation leaves undecided even after its zero-cost retry, and
-relaxed points the scalar validator rejects. An anchor or terminal optimization
-whose relaxed optimum leaves more than 10% of a jump tick's
-acceleration unused is confirmed by IPOPT before its score is used (`work`:
-`confirmations`, `confirmationIpoptCalls`, `materialGaps`); a gap affects only its
-own request, and descendants are solved relaxed and alarm on their own.
-Decision checks optimize the node's onward objective to compare side families, so
-they confirm alarms the same way. The anchor `feasibilityPolicy` has one value,
+relaxed points the scalar validator rejects. Every repair-loop solve of a
+decision check, anchor leg or finish stays relaxed, and the switch-tick climb
+compares relaxed objectives. When the loop ends, a confirmation walk
+(`search/repair.py` `walk`) takes each side family's best accepted point plus a
+second one with the same ticks within `FALLBACK_GAP` (0.3 blocks), and visits them
+best first by `candidate_rank`. A point whose relaxed optimum leaves more than 10%
+of a jump tick's acceleration unused (`alarmTicks`) is re-solved once by IPOPT on
+its own branch (`RelaxedDispatch.confirmed`), and that point must pass the same
+audit; any other point is accepted as is. An IPOPT timeout or unknown counts as
+infeasible. The walk stops when its best confirmed point ranks at least as well as
+the next relaxed one, which bounds its own branch, or after 3 examined candidates
+once one is confirmed. With none confirmed it keeps walking, and if nothing
+confirms the check has no point: a decision check is `oracle_rejected`, or
+`exhausted` when another branch failed differently, and both drop the branch.
+Walk-rejected points are never held as alternatives, and confirmed ones are held
+with their IPOPT point. A walk cut off by the budget leaves its candidate in
+flight, so a resume repeats only the walk (`work`: `confirmations`,
+`confirmationIpoptCalls`, `materialGaps`). The anchor `feasibilityPolicy` has one value,
 `numerical_oracle`: the numerical backend's infeasibility verdict (IPOPT
 `Infeasible_Problem_Detected` or a Clarabel infeasible status) rejects the node.
 

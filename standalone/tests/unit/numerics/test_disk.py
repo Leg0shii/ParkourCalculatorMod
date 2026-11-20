@@ -206,6 +206,14 @@ class DispatchTests(unittest.TestCase):
         self.assertEqual(incumbents, [candidate])
         self.assertEqual(result['problemHash'], fingerprint(p))
 
+    def test_the_loop_solve_returns_an_alarmed_optimum_relaxed(self):
+        # The repair loop's confirmation walk, not the dispatch, decides whether to confirm it.
+        result, calls, incumbents = self.dispatch(analytic('true-gap'))
+        self.assertEqual((result['backend'], result['candidate']['model'], calls), ('clarabel', 'relaxed_disk', []))
+        self.assertEqual(result['disk']['alarmTicks'], [0])
+        self.assertNotIn('confirmation', result)
+        self.assertEqual(incumbents, [result['candidate']])
+
     def test_relaxed_infeasible_requests_are_unknown_without_ipopt(self):
         result, calls, _ = self.dispatch(request(2, .1, walls=[dict(mode='X', t1=2, cmp='GE', rhs=5.)]))
         self.assertEqual((result['status'], result['termination'], result['candidate'], calls),
@@ -274,7 +282,7 @@ class ConfirmationTests(unittest.TestCase):
             return original(request, **dict(kwargs, python_executable=RUNTIME))
         dispatch = disk.RelaxedDispatch(gate=gate or SimpleNamespace(cache={}))
         with mock.patch.object(full, 'solve', side_effect=counted):
-            result = dispatch.solve(problem, seconds=5., stop_on_feasible=stop_on_feasible,
+            result = dispatch.confirmed(problem, seconds=5., stop_on_feasible=stop_on_feasible,
                                     on_incumbent=incumbents.append)
         return dispatch, result, calls, incumbents
 
@@ -289,7 +297,7 @@ class ConfirmationTests(unittest.TestCase):
         self.assertGreater(confirmation['gap'], disk.MATERIAL_GAP)
         self.assertTrue(confirmation['material'])
         # A gap only describes its own request: the next one is solved relaxed and alarms on its own.
-        result = dispatch.solve(analytic('no-alarm'), seconds=5., stop_on_feasible=False)
+        result = dispatch.confirmed(analytic('no-alarm'), seconds=5., stop_on_feasible=False)
         self.assertEqual((result['backend'], result['candidate']['model']), ('clarabel', 'relaxed_disk'))
 
     def test_a_false_alarm_is_confirmed_without_a_material_gap(self):
@@ -339,7 +347,7 @@ class RejectedConfirmationTests(unittest.TestCase):
                         workerLaunched=True, workerStatus='Infeasible_Problem_Detected')
         with mock.patch('parkour_solver.numerics.solver.solve', return_value=rejected):
             dispatch = disk.RelaxedDispatch(gate=SimpleNamespace(cache={}))
-            result = dispatch.solve(analytic('true-gap'), seconds=1., stop_on_feasible=False)
+            result = dispatch.confirmed(analytic('true-gap'), seconds=1., stop_on_feasible=False)
         self.assertEqual((result['status'], result['termination'], result['workerStatus'], result['candidate']),
                          ('unknown', 'worker_finished', 'Infeasible_Problem_Detected', None))
         self.assertEqual((result['confirmation']['gap'], result['confirmation']['material']), (None, False))

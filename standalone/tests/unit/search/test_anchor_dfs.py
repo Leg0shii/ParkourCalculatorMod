@@ -427,7 +427,7 @@ class AnchorDFSTests(unittest.TestCase):
         self.assertEqual(len(calls),1)
         self.assertEqual(policy,dict(purpose='terminal',stopOnFeasible=False,rankEqualCost=False,oracleRejection=True,
                                      numerical='ipopt'))
-        self.assertEqual(route,dict(source='relaxed',warmYaw=ipopt_seed([0.]*20)))
+        self.assertEqual(route,dict(source='relaxed',objective=dict(axis='X',sense='MAX'),warmYaw=ipopt_seed([0.]*20)))
         self.assertEqual((result['status'],result['best']['candidate']['objective']),('feasible',-.5))
         self.assertNotIn('model',result['best']['candidate'])
         self.assertEqual(result['searchState']['dfs']['best']['candidate']['model'],'relaxed_disk')

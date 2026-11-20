@@ -201,10 +201,13 @@ request returns `unknown` with the Clarabel status in `workerStatus`. IPOPT
 answers, with `backend: ipopt` and a `fallback` reason, requests with no spec
 (`unsupported`), requests the relaxation leaves undecided (`relaxed_undecided`)
 and relaxed points
-the validator rejects (`rejected_relaxed_point`). A relaxed optimum of an optimization request
-(`stop_on_feasible=False`) with a relative acceleration shortfall above 10% on a
-jump tick (`vertical.jumpVelocity`; `alarm_ticks`, listed in `disk.alarmTicks`; a
-request without that schedule never alarms) is confirmed. A jump input always
+the validator rejects (`rejected_relaxed_point`). Every relaxed result lists its
+alarm ticks in `disk.alarmTicks`: jump ticks (`vertical.jumpVelocity`;
+`alarm_ticks`; a request without that schedule never alarms) with a relative
+acceleration shortfall above 10%. `solve` never confirms; the repair loop's
+confirmation walk decides which alarmed candidates to confirm. `confirmed`
+confirms a relaxed optimum of an optimization request (`stop_on_feasible=False`)
+that alarms. A jump input always
 applies its whole sprint-jump push, so a relaxed optimum that brakes it can be
 impossible at full strength.
 IPOPT re-solves the same request once and its result replaces the relaxed one.
