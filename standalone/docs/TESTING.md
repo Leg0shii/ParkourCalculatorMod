@@ -2,10 +2,10 @@
 
 ## Current gate
 
-`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on the disk relaxation in
-automatic discovery at `944bfe54`: **782 tests, no failures, errors or skips**, source
-unchanged during the run, layout validation passed
-([report](../research/disk-relaxation/2026-11-19/native-report-944bfe54.json)).
+`tools/native_gate.py` (commands in the [runbook](RUNBOOK.md)) on encounter groups with
+phase 4 (confirmation walk, decision objectives, conflict-driven avoidance) at
+`c2b2a3d2`: **816 tests, no failures, errors or skips**, source unchanged during the
+run ([report](../research/encounter-groups/native-gate-phase4/report.json)).
 The gate fails on any skip, so it needs `PKC_RUN_TICKS_COMPILER` for the Java
 differential tests and the `research` extra for the route-guidance tests.
 A run of the switch-climb source (`55e3beef`) under a load average of 5.5 failed
@@ -25,6 +25,7 @@ persistence without the removed 32/128 limits.
 
 | Source | Tests | Evidence |
 | --- | ---: | --- |
+| `c2b2a3d2` phase 4: confirmation walk, decision objectives, shared creation request, conflict-driven avoidance | 816 | [report](../research/encounter-groups/native-gate-phase4/report.json) |
 | `55bc1b10` + obstacle test on per-phase sides: settled rows, climbed node families, group growth, reachable members | 750 | [report](../research/encounter-groups/native-gate-phase2/report.json) |
 | `76dc45dc` + resume order: encounter groups, block-table kinds, side families | 742 | [report](../research/encounter-groups/native-gate/report.json) |
 | `ea33c191` + no lineage promotion (its test removed) | 778 | [report](../research/disk-relaxation/2026-11-19/native-report-ea33c191.json) |

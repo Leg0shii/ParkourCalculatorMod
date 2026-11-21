@@ -24,7 +24,10 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
   found [encounter group](design/ANCHOR_POLICY_DECISIONS.md#o8--encounter-groups)
   as one frame, where decision checks compare climbed side families, keep the
   best with the exact rows of settled stretches, and hold the others as
-  alternatives restored when the branch dies
+  alternatives restored when the branch dies. On the relaxed backend each
+  decision optimizes toward the next required anchor, alarmed candidates are
+  confirmed once at the end of the repair loop, and an obstacle gets passages
+  only once a solve hits it
   ([controls](../research/encounter-groups/README.md)).
 - Merged as PR #3 (`perf/early-passage-screen`): it adds
   [geometry-driven avoidance passages](design/AVOIDANCE_PASSAGES.md) on obstacle

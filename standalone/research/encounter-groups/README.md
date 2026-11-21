@@ -188,3 +188,26 @@ touched get none; the user accepted this ([extended](avoidance-ab/extended-ab-2-
 [first extended run](avoidance-ab/extended-ab-1-off-by-one-analysis.txt) mapped a
 collision to its movement's start state and lost 11 feasible checks. The fix maps
 the collision to the state the movement ends in.
+
+## Phase 4 controls, 2026-11-20
+
+Source `c2b2a3d2`, which covers the confirmation walk, decision objectives, the
+shared creation-time request and conflict-driven avoidance. The controls run on PR 5's
+relaxed backend with inputs `<case>-pr5-control.json`
+(`feasibilityPolicy: numerical_oracle`).
+
+| Run | Best T | Best objective | Search end | Requests | IPOPT confirmations | Finalization | Expanded | Replays |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 4-anchor, rebased `e9ca522c` | 64 | -1093.2381026602418 | 4.9 s `exhausted` | 15 | 1 | 1 | 11 | 8/8 |
+| 4-anchor, `c2b2a3d2` | 64 | -1093.2381026602418 | 6.2 s `exhausted` | 19 | 1 | 1 | 11 | 8/8 |
+| extended, rebased `e9ca522c` | none | - | 295.0 s `deadline` | 106 | 85 | 0 | 44 | 3/3 |
+| extended, `c2b2a3d2` | none | - | 295.0 s `deadline` | 172 | 35 | 0 | 60 | 3/3 |
+
+The 4-anchor case spends 3.04 s in `numerical.evaluate`, against 2.24 s before the
+step 3/3b changes. It makes three more requests, because a check first solves its
+program without avoidance rows and then again once an obstacle is hit. On the
+extended case 86 of the decision checks' 134 relaxed loop solves alarmed, and the
+walk confirmed 35 of them: 27 IPOPT points and 8 infeasible. Three solves were
+undecided by Clarabel and fell back to IPOPT. The deepest request was 78 ticks, and
+the search still ends in the B4 → B22 frame. Time goes to `preparation.analyze`
+(117.5 s), `preparation.prepare` (61.1 s) and garbage collection (53.3 s).

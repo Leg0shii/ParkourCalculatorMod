@@ -39,10 +39,14 @@ production code.
 | `db7f8f61` + avoidance table | block table for generators and avoidance | 64 | -1093.2381026602416 | 18 / 17 | 37 | 10/10 | [block table](../research/block-table/README.md) |
 | `b4180095` + group frames | B4 → B7 searched as one encounter group | 64 | -1093.2381026602416 | 25 / 23 | 75 | 8/8 | [encounter groups](../research/encounter-groups/README.md) |
 | `533e3831` + side families | decision checks commit side families, siblings queued | 64 | -1093.2381026602416 | 26 / 24 | 75 | 8/8 | [encounter groups](../research/encounter-groups/README.md) |
+| `c2b2a3d2` (on PR 5) | confirmation walk, decision objectives, conflict-driven avoidance; 6.2 s | 64 | -1093.2381026602418 | 19 / 1 + 1 finalization | 11 | 8/8 | [encounter groups](../research/encounter-groups/README.md#phase-4-controls-2026-11-20) |
 
 On the extended task (measurement only) side-family siblings multiply decision
 checks inside the B4 → B20 group: 234 checks in 300 s versus the base's 140, and
 the search does not leave that group ([evidence](../research/encounter-groups/README.md)).
+At `c2b2a3d2` it still ends in the B4 → B22 frame at the deadline. It makes 172
+requests, with 35 IPOPT confirmations instead of 85 before the confirmation walk,
+and expands 60 prefixes instead of 44.
 
 The switch-climb run finds T64 at 6.1 s and stops at 10.0 s with
 `numerical_unknown`: the DFS ran out of runnable work while the B7 frame stayed
