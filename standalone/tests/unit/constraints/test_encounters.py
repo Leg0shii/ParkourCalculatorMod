@@ -16,7 +16,7 @@ from tests.support.checkpoint_guidance import flat_scene
 
 
 def source(n=3, *, y=None, position=(-1., 0.), walls=(), box=(0., 0., -.2, 1., 3., .2), boxes=None,
-           profile=None, magnitude=1., friction=.9, state=None, settled=0, segment_solids=None, obstacles=None):
+           profile=None, magnitude=1., friction=.9, state=None, settled=0, segment_solids=None, obstacles=None, walk_offs=()):
     y = y or [1.]*(n+1)
     boxes = boxes or [box]
     model = dict(ticks=n, position=list(position), velocity=[0., 0.], magnitude=[magnitude]*n,
@@ -25,7 +25,7 @@ def source(n=3, *, y=None, position=(-1., 0.), walls=(), box=(0., 0., -.2, 1., 3
     return ConstraintVariants(dict(supportClearance=0.), profile,
         dict(events=[dict(jump=0, runTicks=0)]), dict(solids=[list(b) for b in boxes]), reachable_envelopes(model, y),
         dict(through=n, solidIndices=list(range(len(boxes)))), state=state, settled=settled, segment_solids=segment_solids,
-        obstacles=obstacles)
+        obstacles=obstacles, walk_offs=walk_offs)
 
 
 def clear(boxes, y, positions):
@@ -48,6 +48,16 @@ def satisfies(rows, positions):
 
 
 class EncounterTests(unittest.TestCase):
+    def test_carried_walk_off_faces_are_one_item_over_their_options(self):
+        east = dict(leg=0, offset=1, mode='X', cmp='GE', rhs=-.5, name='walk_off:start')
+        north = dict(east, mode='Z', rhs=.5)
+        def variants(options, settled=0):
+            generator = source(obstacles=[], settled=settled, walk_offs=[dict(offset=1, solids=[0], options=options)])
+            return [(v['rows'], [c['kind'] for c in v['branchChoices']]) for v in generator]
+        self.assertEqual(variants([east, north]), [([east], ['walk_off']), ([north], ['walk_off'])])
+        self.assertEqual(variants([east]), [([east], ['walk_off'])])
+        self.assertEqual(variants([east, north], settled=2), [([], [])])
+
     def test_known_entry_comes_from_finite_support_not_post_contact_travel(self):
         box = [0., 0., 0., 1., 20., 1.]
         support = [0., 0., -1., 1., 1., 0.]

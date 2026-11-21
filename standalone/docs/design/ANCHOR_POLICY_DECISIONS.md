@@ -105,7 +105,7 @@ anchor or the task, otherwise its top-face centre. The objective aims from that 
 required anchor's guide point. When X's point is inside that anchor's turnaround boundary, it aims at the
 anchor after it instead. Landing on a group's last anchor therefore aims like that group's end, and
 landing on the task keeps the scene objective. Guide points are a deferred improvement
-([P14](../DEFERRED_WORK.md)). `searchPolicyVersion` 11.
+([P14](../DEFERRED_WORK.md)).
 
 **Settled design evidence:** the user reports a measurement of approximately equal speed for this objective with early stop. Adopt that as the design input; this session did not reproduce or inspect the other agent's measurement. No further approval or constant-objective comparison is required to proceed with this direction. Implementation/regression/cold acceptance is recorded in the current evidence linked above.
 
@@ -297,29 +297,75 @@ the player on the same block, so outside turnarounds it is generated only as the
 minimum that lets the jump after it be **advantageous**: the jump lands on the
 next required anchor (anchors are visited in order; the task block after the
 last), or it hits a ceiling, or it is a `grind`, `slab_boost` or
-`corner_jump_cancel`. A run-off or walking step-up is itself a run tick: it
-qualifies when it lands on the next anchor or when a jump right after it is
-advantageous (Real11's run-off from B7 onto B11 under B8's 2-block ceiling). This
-mirrors minimum run ticks for hard jumps (`run_bound`, O7), which is unchanged.
+`corner_jump_cancel`. A run-off or walking step-up onto another block is itself
+a run tick, kept when it reaches that block sooner than jumping would (Real11's
+run-off from B7 onto B11 under B8's 2-block ceiling). This mirrors minimum run
+ticks for hard jumps (`run_bound`, O7), which is unchanged.
 
-An **ordinary decision** is a grounded program whose last decision is not a
+An **ordinary decision** P is a grounded program whose last decision is not a
 turnaround (`decisionTurnaround`). Its expansion generates jump-now children only
 (`runTickChoices=False` in the generator context: `choice_approaches` and the
 stepping generator's `normal_step`); ladder walk-ins and virtual-goal finishes are
-unchanged. `minimum_runs` (`search/frontier.py`) then counts levels: level L is
-the jumps after L same-block run ticks plus the run-offs/step-ups after L−1 of
-them. A target key (`advantageous_targets`, `search/anchors/policy.py`) gets the
-options of the first level whose option passes the frontier's screens; nothing
-for a key the jump-now children already reach. The cap is
-`MAX_ADVANTAGEOUS_RUN_TICKS = FLAT_JUMP_TICKS − 1` = 11 (a flat jump lasts 12
-ticks), on top of the request caps and the time bound.
+unchanged. `minimum_runs` (`search/frontier.py`) then adds run ticks, bounded by
+time (user, 2026-11-19/20):
 
-The next level is a **reserve** held in the frontier's `alternatives` with the
-options it waits on (`watch`); it is restored when every watched option's branch
-died (its node check failed or everything below it died) and never once a
-watched branch reached a validated group-end arrival. A restored reserve searches
-only its key from its level. Turnaround decisions generate run ticks as before
-and still prefer them (`(T,-J,A)`). Search policy10 carries this.
+- **N** is P's fastest jump-now landing: on the next anchor if any child lands
+  there, else on any block other than P's own. "N is a heuristic for how many run
+  ticks we tolerate."
+- **Candidates** come from `advantageous_candidates` (`search/anchors/policy.py`)
+  without building anything: the launch tables (`block_table`) give the blocks and
+  undersides, vertical replays give each move's airtime A (A = 2 for slab boosts
+  and corner jump cancels; a ceiling or grind A is inferred to the first landing
+  top, since the built ceiling choice stops at the hit). There are three kinds
+  (user, 2026-11-20):
+  1. **Advantageous jump**: k same-block run ticks then the jump, built while
+     k + A < N, cheapest (total, A) first, at most
+     `MAX_ADVANTAGEOUS_RUN_TICKS = FLAT_JUMP_TICKS − 1` = 11 run ticks (a flat jump
+     lasts 12 ticks), on top of the request caps and the time bound. One beaten on
+     both total and A by a kept one (advantageous jump-now children count) is not
+     built.
+  2. **Run-off onto another block B**: R run ticks, the last walking off the edge
+     (it moves as a run tick: a grounded input), then r airborne inputs (0 when it
+     lands within the walk-off input). The fewest R, from 1 to 11, with R + r < J_B,
+     the airtime of a jump from P onto B (from the same vertical replay; it may
+     exceed N), offered only when a jump-now child lands on B, since a run-off
+     reaches only blocks close enough to jump onto. The run-off must leave its
+     launch block: see walk-off faces below.
+  3. **Walking step-up onto another block**: its step input is a run tick too, so 1
+     run tick (the step on the first tick), else 2 (one run tick then the step);
+     more run-up than that is a slab boost.
+
+  Run-offs and step-ups take no part in beating and hold no reserve. The first run
+  count whose children pass the frontier's screens keeps a candidate; the landing
+  block's own expansion then finds the jumps after it.
+- **Walk-off faces.** A run-off's player centre must be off its launch block's
+  exposed top at the walk-off tick (the Y sweep of that input starts from the
+  previous state's X/Z). The launch block's faces are tried by where the landing
+  block lies: beyond one face, that face and the two side faces (the one toward
+  the landing block first), the opposite face only when those three are blocked;
+  diagonal, the two facing faces, the two opposite only when both are blocked;
+  overlapping, all four, nearest first. A face is blocked when a neighbouring
+  solid covers it entirely (`SceneGeometry.sides`, as for obstacle sides). The
+  generators drop a run-off that cannot reach any open face, the creation screen
+  picks the first face whose disk relaxation is not infeasible (both faces in a
+  diagonal tie), and the node solve carries that choice instead of generic floor
+  checks ([obstacle relevance](OBSTACLE_RELEVANCE.md#run-off-walk-off-faces)).
+- **Reserves** (advantageous jumps only) are held in the frontier's `alternatives`
+  with the options they wait on (`watch`), restored when every watched option's
+  branch died (its node check failed or everything below it died), and never once
+  a watched branch reached a validated group-end arrival. A kept candidate reserves
+  its next run count while the total stays below N; beaten candidates wait for
+  every candidate that beat them (one reserve per set of beaters); when every child
+  landing on N's block died, that block is a dead end for this decision and N
+  widens to the next landing (the next anchor is never a dead end).
+- **Without N** (no jump-now landing on another block), run counts are scanned
+  until a jump or run-off lands on the next anchor, else on another block; that
+  sets N and its next count is reserved.
+
+Every resolution is logged in the frontier's `minimumRunCandidates`. This mirrors
+minimum run ticks for hard jumps (`run_bound`, O7), which is unchanged.
+Turnaround decisions generate run ticks as before and still prefer them
+(`(T,-J,A)`). `searchPolicyVersion` 12 carries this and the decision objectives.
 
 ## Settled versus remaining implementation choices
 

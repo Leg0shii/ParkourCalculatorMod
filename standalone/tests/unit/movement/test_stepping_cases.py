@@ -336,6 +336,10 @@ class ExposureTests(unittest.TestCase):
                 self.owners.append(label['owner'])
                 return dict(ruledOut=False)
 
+            def walk_off(self, context, landing_boxes, *, label):
+                self.owners.append(label['owner'])
+                return True
+
         def run(name, block, reject):
             scene = prepare_scene(fixture(name)['request'])
             program = empty_program(scene['initial'], threshold=0.)

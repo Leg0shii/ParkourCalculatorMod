@@ -59,6 +59,100 @@ def floor_checks(scene, block_ids, profiles, *, envelopes=None):
     return checks
 
 
+def walk_off_faces(scene, program, cut, envelopes, landing_boxes):
+    """The faces of its launch support a run-off can leave by on its walk-off tick `cut`: the Y sweep of input
+    `cut` starts from the state-`cut` X/Z, so the centre must be off the support's exposed top there.
+
+    The support L is the touching component of feet-height exposed tops holding a launch solid (what input
+    cut-1 landed on, or the initial floor); other feet-height blocks keep their generic floor checks. Faces are
+    ordered by where `landing_boxes` lie on raw footprints (player-space regions of flush blocks overlap):
+    beyond one face, that face then the two side faces (toward B first), the opposite face only when all three
+    are blocked; diagonal, the two facing faces, the two opposite only when both are blocked; overlapping, all
+    four, nearest first. A face is blocked when no free side of the support's cluster at the feet height is
+    bounded by it (`SceneGeometry.sides`), and dropped when `envelopes` cannot reach it at state `cut`.
+
+    None leaves the generic floor checks alone: not grounded, a ladder tick, no reachable support, or L's
+    regions and the solids beside them at the feet height not covering L's bounding box (leaving the box
+    would be stronger than leaving every piece). Else dict(solids, region, options, diagonal); no options
+    means the support cannot be left.
+    """
+    from parkour_solver.reachability.intervals import interaction_reachability
+    from parkour_solver.reachability.service import block_interaction
+    from parkour_solver.scene.route import supports
+    from parkour_solver.spatial.surfaces import free_rectangles
+    profile = program['profile']
+    if not profile['grounded'][cut] or profile['ladderTicks'][cut]:
+        return None
+    y0, solids = profile['position'][cut], scene['collisionScene']['solids']
+    feet = [b for b in scene['blocks'] if abs(b['top']-y0) < 1e-7
+            and not block_interaction(envelopes, solids[b['solidIndex']], cut, ('Y',))['ruledOut']]
+    regions = [(b, r) for b in feet for r in exposed_tops(scene, b)]
+    parent = list(range(len(regions)))
+    def root(i):
+        while parent[i] != i:
+            i = parent[i]
+        return i
+    for i, (_, a) in enumerate(regions):
+        for j, (_, b) in enumerate(regions[:i]):
+            dx, dz = min(a[2], b[2])-max(a[0], b[0]), min(a[3], b[3])-max(a[1], b[1])
+            if dx >= -1e-9 and dz >= -1e-9 and max(dx, dz) > 1e-9:
+                parent[root(i)] = root(j)
+    groups = {}
+    for i in range(len(regions)):
+        groups.setdefault(root(i), []).append(i)
+    if cut:
+        launch = {i for e in profile['contactEvents'] if e['offset'] == cut-1 and e.get('role') in ('landing', 'step')
+                  for i, box in enumerate(solids) if box in e.get('boxes', ())}
+    else:
+        x, _, z = scene['initial']['position']
+        launch = {b['solidIndex'] for b in feet if supports(b, x, z)}
+    # An unidentified launch can only be the one reachable component; an unreachable one is already left.
+    held = ([g for g in groups.values() if any(regions[i][0]['solidIndex'] in launch for i in g)] if launch
+            else list(groups.values()))
+    if len(held) != 1:
+        return None
+    pieces = [regions[i][1] for i in held[0]]
+    blocks = {regions[i][0]['id']: regions[i][0] for i in held[0]}
+    region = [min(r[0] for r in pieces), min(r[1] for r in pieces), max(r[2] for r in pieces), max(r[3] for r in pieces)]
+    geometry = scene_geometry(scene['collisionScene'])
+    # Space solids fill at the feet height (a wall clipping the top) may lie in the box: no one stands there.
+    filled = [geometry.boxes[i] for i in geometry.near(region) if geometry.boxes[i][1] < y0 < geometry.boxes[i][4]+1e-6]
+    if any(min(f[2], region[2])-max(f[0], region[0]) > 1e-9 and min(f[3], region[3])-max(f[1], region[1]) > 1e-9
+           for f in free_rectangles([(r[0], 0., r[1], r[2], 1., r[3]) for r in pieces]+filled)):
+        return None
+    members = {b['solidIndex'] for b in blocks.values()}
+    midpoint = [sum(envelopes['states'][cut][axis])/2 for axis in ('X', 'Z')]
+    rows = avoid_contact_rows(dict(leg=0, offset=cut, reason='walk_off', block=dict(id='+'.join(sorted(blocks))),
+                                   region=region, position=midpoint), scene['supportClearance'])
+    face = {(row['mode'], 1 if row['cmp'] == 'GE' else -1): row for row in rows}
+    raw = [solids[i] for i in members]
+    low = [min(box[0] for box in raw), min(box[2] for box in raw)]
+    high = [max(box[3] for box in raw), max(box[5] for box in raw)]
+    beyond, displacement = [0, 0], [0., 0.]
+    for k in (0, 1):
+        if landing_boxes:
+            lo, hi = min(box[2*k] for box in landing_boxes), max(box[2*k+3] for box in landing_boxes)
+            beyond[k] = 1 if lo >= high[k] else -1 if hi <= low[k] else 0
+            displacement[k] = (lo+hi)/2-(low[k]+high[k])/2
+    if beyond == [0, 0]:
+        sets = [list(face)]
+    elif 0 in beyond:
+        k = 0 if beyond[0] else 1
+        toward = 1 if displacement[1-k] > 0 else -1
+        sets = [[('XZ'[k], beyond[k]), ('XZ'[1-k], toward), ('XZ'[1-k], -toward)], [('XZ'[k], -beyond[k])]]
+    else:
+        order = (0, 1) if abs(displacement[0]) >= abs(displacement[1]) else (1, 0)
+        sets = [[('XZ'[k], beyond[k]) for k in order], [('XZ'[k], -beyond[k]) for k in order]]
+    cluster = next(c for c in geometry.clusters(range(len(solids))) if members & set(c.members))
+    edge = {('X', -1): region[0], ('X', 1): region[2], ('Z', -1): region[1], ('Z', 1): region[3]}
+    open_faces = {(axis, direction) for side in geometry.sides(cluster, geometry.active(cluster, y0-1e-6, y0))
+                  for (axis, direction, plane), owners in zip(side.bounds, side.owners)
+                  if abs(plane-edge[axis, direction]) < 1e-9 and members & set(owners)}
+    chosen = next(([f for f in faces if f in open_faces] for faces in sets if any(f in open_faces for f in faces)), [])
+    return dict(solids=sorted(members), region=region, diagonal=0 not in beyond,
+                options=[face[f] for f in chosen if not interaction_reachability(envelopes, [face[f]])['ruledOut']])
+
+
 def contact_conflicts(checks, plan, candidate):
     conflicts = []
     for check in checks:

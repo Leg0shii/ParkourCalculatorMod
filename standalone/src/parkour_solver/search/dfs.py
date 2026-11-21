@@ -12,7 +12,7 @@ from parkour_solver.spatial.checkpoints import Checkpoint, retain_prefix
 from parkour_solver.search.goals import goal_spec, goal_key, region_arrival, _landing_prefixes
 from parkour_solver.search.virtual_goals import KIND, bind_goal, satisfied
 from parkour_solver.search.compat.minimum_runs import POLICY_VERSION, latest_jump, remember, exclusion
-from parkour_solver.search.anchors.policy import advantageous_targets, launch, next_anchor, semantic_settings
+from parkour_solver.search.anchors.policy import advantageous_candidates, advantageous_targets, launch, next_anchor, owner, semantic_settings
 from parkour_solver.constraints.variants import GENERATION_POLICY
 from parkour_solver.search.comparison import comparison_label, priority_key, compare_candidates, POLICY_VERSION as COMPARISON_POLICY_VERSION
 
@@ -630,9 +630,16 @@ def search_goals(scene, compiler, adapter, work, motion, *, cfg, plans, goals, d
                 root.setdefault('decisionPointSource','original_initial' if not root['profile']['airtime'] else 'validated_anchor')
                 root['decisionTurnaround']=classify(adapter.guide_plan,span,point)['isTurnaround']
             anchors,task=adapter.anchor_policy['anchors'],adapter.data['task']['block']
+            tables={}
+            def candidates(p):
+                key=(owner(scene,p['terminalSupport']),p['profile']['position'][-1],next_anchor(scene,p,anchors,task))
+                if key not in tables:
+                    tables[key]=advantageous_candidates(scene,gate.reachable_blocks,*key,settings['types'],0.)
+                return tables[key]
             # Outside turnarounds a grounded decision runs only the minimum ticks an advantageous jump needs.
             run_policy=dict(ordinary=lambda p:boundary_state(p)['onGround'] and not p.get('decisionTurnaround',False),
-                targets=lambda base,child:advantageous_targets(scene,base,child,next_anchor(scene,base,anchors,task)))
+                targets=lambda base,child:advantageous_targets(scene,base,child,next_anchor(scene,base,anchors,task)),
+                candidates=candidates,next=lambda p:next_anchor(scene,p,anchors,task),owner=lambda block:owner(scene,block))
             node_options=dict(node_evaluator=lambda p,n,x:evaluate_node(p,n,x,f),
                 priority_key=lambda p,identity:priority(p,f,identity),identity_key=candidate_key,
                 live_programs=lambda:live_programs(f),run_policy=run_policy,

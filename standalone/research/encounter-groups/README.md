@@ -211,3 +211,76 @@ walk confirmed 35 of them: 27 IPOPT points and 8 infeasible. Three solves were
 undecided by Clarabel and fell back to IPOPT. The deepest request was 78 ticks, and
 the search still ends in the B4 → B22 frame. Time goes to `preparation.analyze`
 (117.5 s), `preparation.prepare` (61.1 s) and garbage collection (53.3 s).
+
+## Time-bounded minimum run ticks, 2026-11-20
+
+Source `fb50d8f8` plus the run-tick revision (uncommitted at measurement): an ordinary
+decision builds only the advantageous jumps and the run-offs/step-ups onto other blocks
+that finish before its fastest jump-now landing N
+([O9](../../docs/design/ANCHOR_POLICY_DECISIONS.md#o9--minimum-run-ticks-for-advantageous-jumps)).
+Same inputs as the phase 4 controls. Step-7 time is the wall time inside the frontier's
+`minimum_runs`, measured with `sys.monitoring`.
+
+| Run | Best T | Best objective | Search end | Requests | IPOPT confirmations | Expanded | Step-7 calls / s | Replays |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 4-anchor, `c2b2a3d2` | 64 | -1093.2381026602418 | 6.2 s `exhausted` | 19 | 1 | 11 | - | 8/8 |
+| 4-anchor, revision | 64 | -1093.2381026602418 | 5.8 s `exhausted` | 19 | 1 | 11 | - | 8/8 |
+| extended, `fb50d8f8` (level loop) | none | - | 295.0 s `deadline` | 163 | 32 | - | 32 / 238.4 | 3/3 |
+| extended, revision | none | - | 295.0 s `deadline` | 293 | 65 | 93 | 45 / 157.7 | 3/3 |
+
+On the extended case the B4 → B22 frame made 99 decision checks (86 on programs
+with run ticks, 218 of their requests) and still ends there, furthest at B7. Its 33
+decisions with run-tick work resolved 32 candidates as kept (23 run-off or step-up
+landings, 6 ceiling jumps, 1 scan), 177 as dominated and 212 as unreached. No round
+widened, and one decision had no N and scanned. Of the reserves, 31 were next run
+counts (6 restored), 52 beaten-candidate sets (3 restored), 19 widening (none
+restored) and 1 scan. The B7 run-off onto B11 under B8 is built at k = 0 to 2 (total
+4 to 6 against N 12 or 13). The search state is 44.8 MB, against 25.0 MB at `fb50d8f8`.
+
+An earlier draft compared a run-off by its total through the jump after it. It ran
+1189 reserves (104.2 MB of state) and on the gate's run-off scene (start, a flush block
+one lower, goal) found T26 instead of the run-off route's T20, because N was the
+jump-now landing on the lower block. The revision measured above compared a run-off
+or step-up by its own landing time against N; the rework below replaces that rule.
+
+Ceiling-guess check (every node built was logged and matched to the kept ceiling and
+grind candidates): 6 kept, 5 expanded to a landing, all 5 two ticks later than the
+table, 1 reaching N. The table takes the minimum over every landing top of the launch
+table: from B5 (top 6) a B22 bonk is inferred to land on B11/B13 (top 6.5) after 4
+ticks, but every built bonk lands back on B5 after 6.
+
+## Run-tick rework and walk-off faces, 2026-11-20
+
+Source `fb50d8f8` plus the run-tick rework and walk-off faces (uncommitted at
+measurement, src diff `e88f6fd3e724`): a run-off onto block B is built at the fewest run
+ticks, its walk-off input included (1 to 11), landing before a jump onto B would, only
+when a jump-now child lands on B, with no reserve; a walking step-up (its step input a run
+tick) only on the first tick or after one run tick; a run-off must leave its launch block
+by an open face, checked by the generators and the creation screen and carried to the node
+solve ([O9](../../docs/design/ANCHOR_POLICY_DECISIONS.md#o9--minimum-run-ticks-for-advantageous-jumps)).
+Same inputs and step-7 timing as above. Both runs shared the machine with other
+applications (load average 4.5 to 7); the extended run's minimum-run step took 4.1 s per
+call against 2.4 s for the same rule on the previous source, so its work counts are
+lower bounds, not a comparison.
+
+| Run | Best T | Best objective | Search end | Requests | IPOPT confirmations | Expanded | Step-7 calls / s | Replays |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 4-anchor | 64 | -1093.2381026602418 | 6.1 s `exhausted` | 19 | 1 | 11 | - | 8/8 |
+| extended | none | - | 295.3 s `deadline` | 199 | 45 | 69 | 31 / 127.3 | 3/3 |
+
+Before walk-off faces, the gate's run-off scene (start, a flush block one lower, goal)
+found T26: the fewest run ticks for the run-off onto the lower block was 2, which the
+creation screen passed (its relaxation had no avoidance rows), but the player cannot be
+past start's edge until the fourth input, so the branch died at its node solve with no
+request and, without a reserve, nothing restored 3 or 4. With walk-off faces those run
+counts are not generated and the search finds T20 (4 run ticks, the last walking off, one
+jump at tick 8) with 10 requests instead of 15.
+
+On the extended case the B4 → B22 frame made 73 decision checks (196 requests) and still
+ends there, furthest at B7. Its 23 decisions with run-tick work kept 18 candidates (12
+run-off landings at 1 to 5 run ticks, 5 ceiling jumps, 1 scan), 119 dominated and 117
+unreached; no round widened. Reserves: 5 next run counts (3 restored), 34 beaten-candidate
+sets (2 restored), 12 widening, 1 scan. The generators dropped 4 run-offs onto B11 that
+could not leave their launch block. The B7 run-off onto B11 is kept at 1, 3 and 5 run
+ticks. The search state is 29.5 MB. Ceiling-guess check: 5 kept, 4 expanded, all 4 later
+than the table, 1 reaching N.

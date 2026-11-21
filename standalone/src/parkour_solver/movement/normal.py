@@ -82,7 +82,7 @@ def feet_allowed(context, block):
 def normal_choices(context):
     from parkour_solver.movement.contact_combinations import (contact_event, reachable_option, region_choices,
                                                               scene_contact_options)
-    from parkour_solver.reachability.service import candidate_blocks
+    from parkour_solver.reachability.service import candidate_blocks, walk_off_allowed
     for initial, jumping, trace in choice_approaches(context):
         for block in candidate_blocks(context, 'landing'):
             if context.get('checkBudget'):
@@ -99,6 +99,9 @@ def normal_choices(context):
                 if option is None:
                     continue
                 event = contact_event(option, 'Y', -1, t, 'landing')
+                if (initial['onGround'] and not jumping and block['top'] < initial['position'] and
+                        not walk_off_allowed(context, event['boxes'], label=dict(owner=block['id'], role='landing'))):
+                    continue
                 choice = event_choice(context, 'normal', initial, t + 1, jumping=jumping,
                     vertical=[dict(state=t + 1, direction=-1, plane=block['top'])], finite=[event],
                     support=block['id'], landing_phase='pre', region_choices=region_choices(context, event, block['id']))

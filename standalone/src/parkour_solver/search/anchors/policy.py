@@ -43,7 +43,7 @@ def settings(value, scene):
 
 def semantic_settings(policy):
     return dict({k:v for k,v in policy.items() if k!='observability'},
-                hardJumpPolicyVersion=HARD_JUMP_POLICY_VERSION,searchPolicyVersion=11,comparisonPolicyVersion=COMPARISON_POLICY_VERSION)
+                hardJumpPolicyVersion=HARD_JUMP_POLICY_VERSION,searchPolicyVersion=12,comparisonPolicyVersion=COMPARISON_POLICY_VERSION)
 
 
 def owner(scene, block):
@@ -176,6 +176,90 @@ def advantageous_targets(scene, base, child, next_owner):
     keys |= {(e['case'], owners(e['boxes'])) for e in p.get('caseEvents', [])
              if e.get('case') in ADVANTAGE_CASES and e['input'] >= start}
     return keys
+
+
+def advantageous_candidates(scene, table, launch, top, next_owner, types, threshold=.005):
+    """Advantageous moves from a grounded decision on owner `launch` (feet at `top`), from launch tables
+    (`table(owner)`, see reachability.service.block_table) and vertical replays only.
+
+    Each entry is dict(key, A, via). A jump-now move (via None) has the key advantageous_targets
+    gives as a JSON list and its airtime A; ceiling and grind airtimes are inferred (the built choice stops
+    at the hit), the rest equal the generators' replays. A run-off onto another owner (via) is a
+    ["landing", owner] entry: A counts its airborne inputs only, since the walk-off input moves as a run
+    tick (0 when it lands within that input), and `limit` is the airtime of a jump from here onto that
+    owner, which its run ticks plus A compete with whatever follows it. A walking step-up onto another
+    owner is a ["step", owner] entry with A = 0: its step input is a run tick too.
+    """
+    import json
+    import math
+    from parkour_solver.movement.cases import case_profile
+    from parkour_solver.movement.contact_combinations import scene_contact_options
+    from parkour_solver.movement.normal import first_descent, replay
+    from parkour_solver.physics.vertical import REST_CARRY, f32
+    blocks = {b['id']: b for b in scene['blocks']}
+    by_box = box_owners(scene)
+    undersides = scene_contact_options(scene, 1, -1) if 'ceiling' in types and scene.get('ceilingHits', True) else []
+
+    def rest(y):
+        return dict(position=y, velocity=REST_CARRY, onGround=True, previousHorizontalCollision=False)
+
+    def landing(trace, tops):
+        return min((t+1 for u in tops for t in [first_descent(trace, u)] if t is not None), default=None)
+
+    def jumps(name, t):
+        """(kind, owner) -> A for the jumps from a block of owner `name` with feet at t."""
+        kinds = table(name)
+        tops = {blocks[b]['top'] for b in kinds['landing']}
+        trace = replay(rest(t), 200, jumping=True, threshold=threshold)
+        found = {}
+        def add(key, airtime):
+            if airtime is not None and airtime < found.get(key, math.inf):
+                found[key] = airtime
+        if 'normal' in types:
+            add(('anchor', next_owner), landing(trace, {blocks[b]['top'] for b in kinds['landing']
+                                                        if owner(scene, b) == next_owner}))
+        for option in undersides:
+            if not any(i in kinds['ceilingSolids'] for i in option.members):
+                continue
+            names, plane = '+'.join(sorted({by_box[tuple(b)] for b in option.boxes if tuple(b) in by_box})), option.plane
+            hit = next((h for h, move in enumerate(trace['movement'])
+                        if move > 0 and trace['position'][h] <= plane < trace['position'][h+1]), None)
+            if hit is not None:
+                add(('ceiling', names), landing(replay(rest(t), 200, jumping=True, threshold=threshold,
+                                                       contacts=[dict(state=hit+1, plane=plane, direction=1)]), tops))
+            if 0 <= plane-t < f32(.42):
+                event = dict(case='grind', input=0, plane=t, clearance=plane-t)
+                add(('grind', names), min((p['airtime'] for u in tops
+                                           for p in [case_profile(t, u, event, threshold=threshold)] if p), default=None))
+        if 'stepping' in types:
+            for b in kinds['stepping']:
+                if f32(.42) < blocks[b]['top']-t <= f32(.6):
+                    add(('slab_boost', owner(scene, b)), 2)
+                    add(('corner_jump_cancel', owner(scene, b)), 2)
+        return found
+
+    entries = {}
+    def add(key, airtime, via, **bound):
+        key = json.dumps(key)
+        if key not in entries or airtime < entries[key]['A']:
+            entries[key] = dict(key=key, A=airtime, via=via, **bound)
+    for (kind, name), airtime in jumps(launch, top).items():
+        add([kind, name], airtime, None)
+    kinds, fall = table(launch), replay(rest(top), 200, threshold=threshold)
+    rise = replay(rest(top), 200, jumping=True, threshold=threshold)
+    for b in sorted(kinds['landing'] | kinds['stepping']):
+        name, u = owner(scene, b), blocks[b]['top']
+        if name == launch:
+            continue
+        if 'normal' in types and b in kinds['landing'] and (u < top or u == top and name == next_owner):
+            t = first_descent(fall, u)
+            limit = landing(rise, {blocks[c]['top'] for c in kinds['landing'] if owner(scene, c) == name})
+            if t is None or limit is None:
+                continue
+            add(['landing', name], t, name, limit=limit)
+        elif 'stepping' in types and b in kinds['stepping'] and 0 < u-top <= f32(.6):
+            add(['step', name], 0, name)
+    return sorted(entries.values(), key=lambda e: e['key'])
 
 
 def encounter_groups(scene, names):

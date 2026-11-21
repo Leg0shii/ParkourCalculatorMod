@@ -214,7 +214,8 @@ CHECKS = dict(
     interaction_distance_unreachable='distance reachability',
     required_interaction_unreachable='required contact reachability',
     composition_rejected='composition',
-    contact_reach_contradiction='contact reachability')
+    contact_reach_contradiction='contact reachability',
+    launch_support_not_left='leaving the launch support')
 
 
 def generator_exclusions(result):

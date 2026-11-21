@@ -121,6 +121,8 @@ class AnchorDFSTests(unittest.TestCase):
         self.assertFalse(policy['ordinary'](dict(root,decisionTurnaround=True)))
         self.assertEqual(policy['targets'](root,extend(s,root,'mid',10)),{('anchor','mid')})
         self.assertEqual(policy['targets'](root,extend(s,root,'goal',10)),set())
+        self.assertEqual((policy['next'](root),policy['owner'](root['terminalSupport'])),('mid','start'))
+        self.assertIn('["anchor", "mid"]',[e['key'] for e in policy['candidates'](root)])
 
     def test_anchor_search_uses_run_budget_across_routes_and_constraint_requests(self):
         clock=[100.]

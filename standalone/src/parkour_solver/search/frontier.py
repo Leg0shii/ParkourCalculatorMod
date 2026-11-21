@@ -237,110 +237,267 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
         return {json.dumps(list(target)) for target in run_policy['targets'](base, child)}
 
     def minimum_runs(e):
-        """Minimum run ticks for advantageous jumps at an ordinary decision (see run_policy).
+        """Minimum run ticks for advantageous jumps at an ordinary decision P (see run_policy).
 
-        Level L holds the jumps after L same-block run ticks and the run-offs/step-ups after L-1 of
-        them (a run-off is itself a run tick); level 0 is the expansion's own jump-now children. A
-        run-off or step-up also carries the targets of the jumps right after it. For each target
-        key, the first level with an accepted option queues those options and reserves the next
-        level, restored once every queued option's branch died. Everything is computed before
-        frontier state changes, so a deadline inside redoes the step from scratch.
+        N is P's fastest jump-now landing (on the next anchor first, else on any other block). Candidates
+        come from run_policy['candidates'] (tables and vertical replays, nothing built):
+        - k same-block run ticks then an advantageous jump: built when k + airtime < N, cheapest first, unless
+          a kept one beats it on both total and airtime. Each kept one reserves its next run count; beaten
+          ones wait for their beaters; when N's block dies, N widens to the next landing.
+        - a run-off onto another block B, whose walk-off input is a run tick: the fewest run ticks (1 to 11)
+          landing before a jump onto B would (run ticks + airborne inputs < the entry's limit, which may
+          exceed N), only when a jump-now proposal lands on B.
+        - a walking step-up onto another block, whose step input is a run tick: on the first tick, else after
+          one run tick (more run-up is a slab boost).
+        Run-offs and step-ups take no part in beating and hold no reserve. Without N, run counts are scanned
+        until a block is reached.
+        Everything is computed before frontier state changes, so a deadline inside redoes the step.
         """
         from parkour_solver.search.feasibility import meaningful_choice
         program=e['program']
         search=program.get('minimumRunSearch')
         node=search['node'] if search else program.get('decisionNode')
-        first=search['start'] if search else 1
-        satisfied=set() if search else set(e['reached'])
-        reserves=[] if search else [(target,1,nodes) for target,nodes in e['reached'].items()]
-        effects,queued,queued_ids,levels=[],[],set(),[]
+        upcoming,here,owner=run_policy['next'](program),run_policy['owner'](program['terminalSupport']),run_policy['owner']
+        effects,queued,queued_ids,log,reserves=[],[],set(),[],[]
+        levels,bases,checks,keys=[],[[program]],{},{}
 
-        def relevant(keys):
-            return {target for target in keys if target not in satisfied and (search is None or target==search['target'])}
-
-        def checked(proposal, context_data):
-            child,reason,found=check_child(proposal,context_data,queued_ids)
-            effects.append(found)
-            return child,reason
-
-        def onward(run, own):
-            """Unscreened jump-now children of a run-off/step-up that carry keys it does not."""
-            if complete(run) or not boundary_state(run)['onGround']:
-                return []
-            context_data=expansion_context(run,False)
-            return [(keys,proposal,context_data) for kind in settings['types'] for proposal in proposals(kind,context_data)
-                    if proposal['program'] is not None
-                    for keys in [relevant(target_keys(run,proposal['program']))-own] if keys]
-
-        bases,runs=[program],[]
-        for level in range(MAX_ADVANTAGEOUS_RUN_TICKS+1):
-            jumps,next_runs,steps=[],[],[]
-            for base in bases:
-                context_data=expansion_context(base)
-                for kind in settings['types']:
-                    for proposal in proposals(kind,context_data):
-                        if proposal['program'] is None:
+        def level(k):
+            """Unscreened proposals of every type after k same-block run ticks (bases are never queued)."""
+            while len(levels)<=k:
+                if len(levels)==len(bases):
+                    ids,found=set(),[]
+                    for item in levels[-1]:
+                        base,_,proposal=item
+                        child=proposal['program']
+                        if (proposal['choice']['profile']['jump'][0] or meaningful_choice(proposal['choice'])
+                                or lands(child)==upcoming):
                             continue
-                        if proposal['choice']['profile']['jump'][0]:
-                            if level>=first:
-                                jumps.append((base,context_data,proposal))
-                        elif level<MAX_ADVANTAGEOUS_RUN_TICKS:
-                            # A walk onto a flush next anchor is a run tick that is itself a target, not a base.
-                            run=meaningful_choice(proposal['choice']) or target_keys(base,proposal['program'])
-                            (next_runs if run else steps).append((base,context_data,proposal))
-            if level>=first:
-                found={}
-                for base,context_data,proposal in jumps+runs:
-                    own=relevant(target_keys(base,proposal['program']))
-                    later=[] if proposal['choice']['profile']['jump'][0] else onward(proposal['program'],own)
-                    if not own and not later:
-                        continue
-                    child,reason=checked(proposal,context_data)
-                    if child is None:
-                        continue
-                    keys=set(own)
-                    for extra,grand,grand_context in later:
-                        if extra-keys and checked(grand,grand_context)[0] is not None:
-                            keys|=extra
-                    if not keys:
-                        continue
+                        child,_=check(item)
+                        if child is not None and program_search_key(child) not in ids:
+                            ids.add(program_search_key(child))
+                            found.append(child)
+                    bases.append(found)
+                found=[]
+                for base in bases[len(levels)]:
+                    context_data=expansion_context(base)
+                    found.extend((base,context_data,proposal) for kind in settings['types']
+                                 for proposal in proposals(kind,context_data) if proposal['program'] is not None)
+                levels.append(found)
+            return levels[k]
+
+        def check(item):
+            base,context_data,proposal=item
+            if id(proposal) not in checks:
+                child,reason,found=check_child(proposal,context_data,queued_ids)
+                effects.append(found)
+                if child is not None:
                     link(base,proposal['choice'],child)
-                    if reason is None:
-                        queued.append((base,proposal['choice'],child))
-                        queued_ids.add(program_search_key(child))
-                    for target in keys:
-                        found.setdefault(target,[]).append(child['decisionNode'])
-                for target,nodes in found.items():
-                    satisfied.add(target)
-                    levels.append(dict(node=node,target=target,level=level,options=len(nodes)))
-                    if level<MAX_ADVANTAGEOUS_RUN_TICKS:
-                        reserves.append((target,level+1,nodes))
-                if search and search['target'] in found:
+                checks[id(proposal)]=(child,reason)
+            return checks[id(proposal)]
+
+        def lands(child):
+            return owner(child['terminalSupport']) if child['profile']['grounded'][-1] and child.get('terminalSupport') else None
+
+        def ticks(child):
+            return child['profile']['airtime']-program['profile']['airtime']
+
+        def enqueue(item, child, reason, landed):
+            if reason is None and program_search_key(child) not in queued_ids:
+                queued.append((item[0],item[2]['choice'],child))
+                queued_ids.add(program_search_key(child))
+            if lands(child) is not None:
+                landed.append(dict(owner=lands(child),node=child['decisionNode']))
+
+        def realize(entry, k):
+            """(item, child, reason) of the proposals after k run ticks that make the entry's move and pass the screens."""
+            found=[]
+            for item in level(k):
+                base,_,proposal=item
+                child,jump=proposal['program'],proposal['choice']['profile']['jump'][0]
+                if entry['via'] is None:
+                    if jump and id(proposal) not in keys:
+                        keys[id(proposal)]=target_keys(base,child)
+                    wanted=jump and entry['key'] in keys[id(proposal)]
+                else:
+                    wanted=(not jump and lands(child)==entry['via'] and
+                            (entry['via']==upcoming or meaningful_choice(proposal['choice'])))
+                if wanted:
+                    child,reason=check(item)
+                    if child is not None:
+                        found.append((item,child,reason))
+            return found
+
+        def runs(entry, k):
+            """Run ticks of an entry built after k run-tick choices: a walk-off or step input is one more."""
+            return k+1 if json.loads(entry['key'])[0] in ('landing','step') else k
+
+        def record(entry, k, total, N, lower, number, outcome, nodes=()):
+            log.append(dict(node=node,key=entry['key'],k=k,total=total,A=entry['A'],N=N,lower=lower,round=number,
+                            outcome=outcome,nodes=list(nodes)))
+
+        def reserve(watch, **fields):
+            reserves.append((dict(node=node,**fields),list(watch)))
+
+        def source(landings, dead):
+            """(N, owner) of the fastest landing on the next anchor, else on a live block; None without one."""
+            for allowed in (lambda o:o==upcoming,lambda o:o not in dead):
+                times=[(l['ticks'],l['owner']) for l in landings if allowed(l['owner'])]
+                if times:
+                    return min(times)
+            return None
+
+        def take_entry(entry, start, N, number, landed):
+            """The first run count from `start` at which the entry's move passes the screens (next/dominated reserves)."""
+            for k in range(start,MAX_ADVANTAGEOUS_RUN_TICKS+1):
+                total=k+entry['A']
+                if total>=N:
                     break
-            runs,bases,ids=next_runs,[],set()
-            for base,context_data,proposal in steps:
-                child,_=checked(proposal,context_data)
-                if child is None or program_search_key(child) in ids:
+                found=realize(entry,k)
+                if found:
+                    nodes=[child['decisionNode'] for _,child,_ in found]
+                    for item,child,reason in found:
+                        enqueue(item,child,reason,landed)
+                    record(entry,k,total,N,0,number,'kept',nodes)
+                    if k+1<=MAX_ADVANTAGEOUS_RUN_TICKS and k+1+entry['A']<N:
+                        reserve(nodes,kind='next',entry=entry,start=k+1,N=N,round=number)
+                    return
+            record(entry,None,None,N,0,number,'unreached')
+
+        def jumped():
+            """Owners a jump-now proposal lands on: a run-off reaches only blocks close enough to jump onto."""
+            return {lands(proposal['program']) for _,_,proposal in level(0) if proposal['choice']['profile']['jump'][0]}
+
+        def round_(dead, lower, N, kept, number, landed, landings, widen=True):
+            pairs,reachable=[],None
+            for entry in run_policy['candidates'](program):
+                kind=json.loads(entry['key'])[0]
+                if entry['via'] is None:
+                    counts=[k for k in range(1,MAX_ADVANTAGEOUS_RUN_TICKS+1) if lower<=k+entry['A']<N]
+                elif lower:
+                    # Run-offs and step-ups are offered once per decision, in its first round.
                     continue
-                ids.add(program_search_key(child))
-                link(base,proposal['choice'],child)
-                bases.append(child)
-            if not bases and not runs:
+                elif kind=='step':
+                    counts=[0,1]
+                else:
+                    # The walk-off input is a run tick too: k run ticks before it, at most 11 in all.
+                    reachable=jumped() if reachable is None else reachable
+                    counts=[k for k in range(MAX_ADVANTAGEOUS_RUN_TICKS) if k+1+entry['A']<entry['limit']] if entry['via'] in reachable else []
+                pairs.extend((runs(entry,k)+entry['A'],entry['A'],entry['key'],k,entry) for k in counts)
+            pairs.sort(key=lambda pair:pair[:4])
+            resolved,beaten={},{}
+            for total,A,key,k,entry in pairs:
+                if key in resolved:
+                    continue
+                # A run-off or step-up is an earlier landing, not an advantageous move: no beating either way.
+                beaters=[m for m in kept if entry['via'] is None and m['total']<=total and m['A']<=A and (m['total'],m['A'])!=(total,A)]
+                if beaters:
+                    resolved[key]=True
+                    record(entry,runs(entry,k),total,N,lower,number,'dominated')
+                    beaten.setdefault(tuple(sorted({n for m in beaters for n in m['nodes']})),[]).append(dict(entry=entry,start=k))
+                    continue
+                found=realize(entry,k)
+                if not found:
+                    continue
+                resolved[key]=True
+                nodes=[child['decisionNode'] for _,child,_ in found]
+                for item,child,reason in found:
+                    enqueue(item,child,reason,landed)
+                record(entry,runs(entry,k),total,entry.get('limit',None if entry['via'] else N),lower,number,'kept',nodes)
+                if entry['via'] is None:
+                    kept.append(dict(key=key,total=total,A=A,nodes=nodes))
+                    if k+1<=MAX_ADVANTAGEOUS_RUN_TICKS and k+1+A<N:
+                        reserve(nodes,kind='next',entry=entry,start=k+1,N=N,round=number)
+            for total,A,key,k,entry in pairs:
+                if key not in resolved:
+                    resolved[key]=True
+                    record(entry,None,None,entry.get('limit',None if entry['via'] else N),lower,number,'unreached')
+            for watch,entries in beaten.items():
+                # Candidates beaten by the same kept ones are restored together, once all of those died.
+                reserve(watch,kind='dominated',entries=entries,N=N,round=number)
+            blocked=widen and source(landings,dead)[1]
+            if widen and blocked!=upcoming:
+                watch=[l['node'] for l in landings+landed if l['owner']==blocked]
+                reserve(watch,kind='widen',dead=dead,landings=landings,lower=N,kept=kept,landed=landed,round=number+1)
+
+        def scan(dead, start, lower, kept, number, landed, landings):
+            """No N: the first run count whose screened jumps or run-offs reach the next anchor, else another block."""
+            def landers(k, wanted):
+                found=[]
+                for item in level(k):
+                    base,_,proposal=item
+                    child,jump=proposal['program'],proposal['choice']['profile']['jump'][0]
+                    target=lands(child)
+                    # A no-jump lander walks off on its own run tick: k+1 run ticks, at most 11.
+                    if ((jump and k==0) or target is None or not wanted(target) or
+                            not jump and (k==MAX_ADVANTAGEOUS_RUN_TICKS or
+                                          target!=upcoming and not meaningful_choice(proposal['choice']))):
+                        continue
+                    child,reason=check(item)
+                    if child is not None:
+                        found.append((item,child,reason))
+                return found
+            for target,wanted in (('next',lambda o:o==upcoming),('block',lambda o:o not in dead and o!=here and o!=upcoming)):
+                for k in range(start,MAX_ADVANTAGEOUS_RUN_TICKS+1):
+                    found=landers(k,wanted)
+                    if found:
+                        break
+                else:
+                    continue
                 break
+            else:
+                record(dict(key=json.dumps(['scan']),A=None),None,None,None,lower,number,'unreached')
+                return
+            nodes=[child['decisionNode'] for _,child,_ in found]
+            for item,child,reason in found:
+                enqueue(item,child,reason,landed)
+            N=min(ticks(child) for _,child,_ in found)
+            kept.extend(dict(key=json.dumps(['scan',lands(child)]),total=ticks(child),A=ticks(child)-k,
+                             nodes=[child['decisionNode']]) for _,child,_ in found)
+            record(dict(key=json.dumps(['scan',target]),A=N-k),k,N,N,lower,number,'kept',nodes)
+            if k+1<=MAX_ADVANTAGEOUS_RUN_TICKS:
+                reached=sorted({lands(child) for _,child,_ in found})
+                reserve(nodes,kind='scan',target=target,dead=dead if target=='next' else sorted(set(dead)|set(reached)),
+                        start=k+1,lower=N,kept=kept,landed=landed,round=number+1)
+            round_(dead,lower,N,kept,number,landed,landings,widen=False)
+
+        kind=search['kind'] if search else None
+        if kind=='next':
+            take_entry(search['entry'],search['start'],search['N'],search['round'],[])
+        elif kind=='dominated':
+            for held in search['entries']:
+                take_entry(held['entry'],held['start'],search['N'],search['round'],[])
+        elif kind=='scan':
+            scan(search['dead'],search['start'],search['lower'],search['kept'],search['round'],search['landed'],[])
+        else:
+            if kind=='widen':
+                landings,lower,kept,landed,number=search['landings'],search['lower'],search['kept'],search['landed'],search['round']
+                dead=sorted(set(search['dead'])|{source(landings,search['dead'])[1]})
+            else:
+                landings,lower,landed,number,dead=e['landings'],0,[],0,[]
+                entries={entry['key']:entry for entry in run_policy['candidates'](program) if entry['via'] is None}
+                arrival=min((l['ticks'] for l in landings if l['owner']==upcoming),default=None)
+                kept=[dict(key=key,total=A,A=A,nodes=nodes) for key,nodes in e['reached'].items() if key in entries
+                      for A in [arrival if key==json.dumps(['anchor',upcoming]) else entries[key]['A']]]
+            found=source(landings,dead)
+            if found is None:
+                scan(dead,0,lower,kept,number,landed,landings)
+            else:
+                round_(dead,lower,found[0],kept,number,landed,landings)
         for found in effects:
             commit(found)
         for parent,choice,child in queued:
             queue_child(parent,choice,child)
-        state.setdefault('minimumRunLevels',[]).extend(levels)
-        for target,start,nodes in reserves:
-            reserve=digest([node,'minimumRunTicks',target,start])
-            if reserve in state['alternatives']:
+        state.setdefault('minimumRunCandidates',[]).extend(log)
+        for fields,watch in reserves:
+            key=digest([node,'minimumRunTicks',fields])
+            if key in state['alternatives']:
                 continue
             held=copy.deepcopy(program)
-            held.pop('needsNodeSolve',None)
-            held.update(minimumRunSearch=dict(node=node,target=target,start=start),decisionNode=reserve,decisionParent=node)
-            state['alternatives'][reserve]=dict(programs=[held],restored=[],next=0,watch=list(nodes))
-            state['decisionParents'][reserve]=node
+            for field in ('needsNodeSolve','minimumRunSearch'):
+                held.pop(field,None)
+            held.update(minimumRunSearch=fields,decisionNode=key,decisionParent=node)
+            state['alternatives'][key]=dict(programs=[held],restored=[],next=0,watch=watch)
+            state['decisionParents'][key]=node
 
     def update(reason='running'):
         report.update(termination=reason, expandedPrefixes=expanded, totalExpandedPrefixes=state['expanded'],
@@ -414,7 +571,7 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
                 e = dict(program=program, kind=len(settings['types']) if search else 0, cursor=0)
                 if search is None and run_policy is not None and run_policy['ordinary'](program):
                     # Ordinary decision: the types yield jump-now children; minimum_runs adds run ticks.
-                    e['reached'] = {}
+                    e.update(reached={}, landings=[])
                 state['expansion'] = e
                 expanded += 1
                 state['expanded'] += 1
@@ -462,6 +619,11 @@ def persistent_programs(scene, *, settings, report, continuation=None, deadline=
                 if 'reached' in e:
                     for target in target_keys(e['program'],child):
                         e['reached'].setdefault(target,[]).append(child['decisionNode'])
+                    landed=run_policy['owner'](child['terminalSupport']) if child['profile']['grounded'][-1] and child.get('terminalSupport') else None
+                    if landed not in (None,run_policy['owner'](e['program']['terminalSupport'])):
+                        # N for minimum_runs: this decision's jump-now landings on other blocks.
+                        e['landings'].append(dict(ticks=child['profile']['airtime']-e['program']['profile']['airtime'],
+                                                  owner=landed,node=child['decisionNode']))
             for field in ('choice','child','fullProgram','projected','proposalChecked'):e.pop(field,None)
             update()
         state['exhausted'] = True

@@ -202,7 +202,7 @@ def append_choice(program, choice, *, max_inputs=200):
     result = dict(initial=copy.deepcopy(program['initial']), profile=profile, ladderEvents=events,
                   movementUnits=units, terminal='open', terminalSupport=choice.get('terminalSupport'),
                   interactions=program['interactions'] + int(choice.get('interaction', False)), trace=trace)
-    for key in ('threshold', 'guideSeedYaw', 'repairState', 'solveScope', 'committedThrough', 'settledThrough'):
+    for key in ('threshold', 'guideSeedYaw', 'repairState', 'solveScope', 'committedThrough', 'settledThrough', 'walkOffs'):
         if key in program:
             if key == 'repairState':
                 scope=program[key].get('context', {}).get('scope') or {}
@@ -260,6 +260,8 @@ def truncate_program(program, ticks):
         result['guideSeedYaw'] = result['guideSeedYaw'][:ticks]
     if 'settledThrough' in result:
         result['settledThrough'] = min(result['settledThrough'], ticks)
+    if 'walkOffs' in result:
+        result['walkOffs'] = [w for w in result['walkOffs'] if w['offset'] < ticks]
     return result
 
 

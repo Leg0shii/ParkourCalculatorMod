@@ -151,8 +151,11 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
     reference_yaw = initial_guess(route, plan, None)
     reference = validate(prepare(dict(model, yaw=reference_yaw)), reference_yaw)['positions']
     active = set(scope['solidIndices'])
+    walk_offs = program.get('walkOffs', [])
+    # A carried walk-off face selection replaces the generic floor checks on its support at its tick.
     checks = [c for c in floor_checks(scene, [scene['startBlock'], scene['goalBlock']], profiles, envelopes=envelopes)
-              if c['block']['solidIndex'] in active and c['offset'] < scope['through']]
+              if c['block']['solidIndex'] in active and c['offset'] < scope['through']
+              and not any(c['offset'] == w['offset'] and c['block']['solidIndex'] in w['solids'] for w in walk_offs)]
     signature = checkpoint.required_signature if checkpoint is not None else (
         scoped_adapter.corridor.signature if hasattr(scoped_adapter, 'corridor') and not partial_corridor else ())
     adapter_identity=getattr(scoped_adapter,'corridor',None).to_dict() if hasattr(scoped_adapter,'corridor') else None
@@ -161,7 +164,8 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
     saved_repair=program.get('repairState',{})
     saved_policy=(saved_repair.get('context',{}).get('scope') or {}).get('scope',{}).get('solvePolicy')
     variants = ConstraintVariants(route, profiles[0], plan, scene['collisionScene'], envelopes, scope,
-        segment_solids=segment_solids(scene, program, profiles[0], scope['through'], service), checks=checks, gates=scoped_adapter.gates, signature=signature,
+        segment_solids=segment_solids(scene, program, profiles[0], scope['through'], service), checks=checks, walk_offs=walk_offs,
+        gates=scoped_adapter.gates, signature=signature,
         state=saved_repair.get('constraintGeneration') if saved_policy==policy else None, deadline=scoped.deadline, reference=reference,
         settled=program.get('settledThrough', 0),
         # Conflict-driven: obstacles join the generator only once a solve hits them.

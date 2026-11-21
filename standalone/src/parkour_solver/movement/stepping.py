@@ -147,7 +147,7 @@ def _sequence_allowed(context, initial, event, jumping, rows, support=None):
 
 
 def open_stepping_choices(context):
-    from parkour_solver.reachability.service import candidate_blocks, interaction_allowed
+    from parkour_solver.reachability.service import candidate_blocks, interaction_allowed, walk_off_allowed
     from parkour_solver.movement.program import scalar_initial
     from parkour_solver.movement.normal import choice_approaches, feet_allowed, first_descent, named_choice
     initial = scalar_initial(context['state'])
@@ -204,6 +204,9 @@ def open_stepping_choices(context):
                 continue
             if not interaction_allowed(context, box_for(lower, context), landing, jumping=jumping,
                                        label=dict(owner=lower['id'], role='lower landing')):
+                continue
+            if (initial['onGround'] and not jumping and lower['top'] < initial['position'] and
+                    not walk_off_allowed(context, [box_for(lower, context)], label=dict(owner=lower['id'], role='lower landing'))):
                 continue
             y = trace['position'][landing]
             for lower_rows, lower_regions in top_choices(context, lower, landing, 'case:lower_landing', jumping=jumping):

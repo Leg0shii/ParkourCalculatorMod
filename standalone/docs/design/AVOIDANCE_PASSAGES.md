@@ -130,6 +130,17 @@ Each rectangle is its own family, so the switch climb never mixes them, and a
 rectangle is screened jointly with every later item. A repair source refines one
 solved branch and adds no region items.
 
+## Run-off walk-off items
+
+A run-off's creation screen chooses which face of its launch block it leaves by and
+carries that choice on the program (`walkOffs`, [obstacle relevance](OBSTACLE_RELEVANCE.md#run-off-walk-off-faces)).
+The node solve does not treat leaving the launch block as a generic floor check:
+`search/engine.py` drops the floor checks on the selection's solids at its tick, and
+`ConstraintVariants` adds one `walk_off` item per selection between `settled` and
+`through`, with one option per carried face. One face is a fixed row in effect; a
+diagonal tie's two faces branch. These items never join conflict-driven obstacles or
+the switch climb, and choose their exact rows (`kind='walk_off'`).
+
 ## Conflict-driven obstacles in anchor search
 
 Anchor search (`search/engine.py`) gives `ConstraintVariants` an obstacle set,
@@ -204,7 +215,7 @@ confirms the kept candidates when the loop ends, and a point it rejected is neve
 saved as a fallback. The family state and held variants persist in the repair
 snapshot (version 3), so a resumed climb solves nothing twice.
 
-Constraint generation uses policy19/state11 and repair avoidancePolicy14 with assembly13. The DFS context
+Constraint generation uses policy20/state11 and repair avoidancePolicy14 with assembly13. The DFS context
 fingerprints the new policy. Old raw generator cursors reject; reproduce an old
 run with its original source and inputs. Source-era scene fields
 `maxContactBranches`, `maxPassageCandidates`, `maxBlockagesPerObstacle`,
@@ -230,7 +241,8 @@ holds the other choices (user decisions, 2026-11-18 and 2026-11-19).
   at a grounded `through`) chooses its side family `dict(kind='cluster',
   clusterId, begin, end, sides)` (the same side keys the climb's `family` uses);
 - a `contact_region` item chooses its exact rows (`kind='region'`, `surface`,
-  `offset`); a contact check chooses its exact rows (`kind='contact'`).
+  `offset`); a contact check chooses its exact rows (`kind='contact'`), and so does
+  a walk-off item (`kind='walk_off'`, `solids`, `offset`).
 
 Each variant carries `branchChoices` (those choices, canonically sorted) and
 `branchKey`. The decision check (`search/dfs.py` node evaluation) computes the

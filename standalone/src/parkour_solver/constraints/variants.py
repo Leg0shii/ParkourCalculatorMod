@@ -13,7 +13,7 @@ from parkour_solver.search.identity import digest
 from parkour_solver.spatial.surfaces import scene_geometry
 
 
-GENERATION_POLICY = 19
+GENERATION_POLICY = 20
 STATE_VERSION = 11
 
 
@@ -49,9 +49,12 @@ class ConstraintVariants:
 
     def __init__(self, route, profile, plan, geometry, envelopes, scope, *, checks=(), gates=(), signature=(), state=None,
                  deadline=None, reference=None, route_guards=None, owners=None, budget=None, cancel_event=None,
-                 segment_solids=None, objective=None, settled=0, obstacles=None):
+                 segment_solids=None, objective=None, settled=0, obstacles=None, walk_offs=()):
         """`settled`: the branch keeps exact rows before this tick, so obstacle stretches ending by it
         and contact checks before it get no item.
+
+        `walk_offs`: run-off launch-support face selections the creation screen carried (program['walkOffs']),
+        each one item over its options; the caller drops the floor checks they replace.
 
         `obstacles`: None enumerates every obstacle cluster on every stretch, screening partial
         combinations with the disk relaxation. A list of [stretch begin, solid index] pairs enumerates
@@ -63,7 +66,7 @@ class ConstraintVariants:
         self.arguments = dict(route=route, profile=profile, plan=plan, geometry=geometry, envelopes=envelopes,
             scope=scope, checks=checks, gates=gates, signature=signature, deadline=deadline, reference=reference,
             route_guards=route_guards, owners=owners, budget=budget, cancel_event=cancel_event,
-            segment_solids=segment_solids, objective=objective, settled=settled)
+            segment_solids=segment_solids, objective=objective, settled=settled, walk_offs=walk_offs)
         self.obstacles = None if obstacles is None else sorted(map(list, obstacles))
         self.settled = settled
         self.route, self.profile, self.plan = route, profile, plan
@@ -77,7 +80,7 @@ class ConstraintVariants:
             envelope=interaction_context_key(envelopes), owners=owners,
             segmentSolids=None if segment_solids is None else sorted(segment_solids.items()),
             routeGuards=route_guards.context if route_guards is not None else None,
-            settled=settled, **({} if obstacles is None else dict(obstacles=self.obstacles))))
+            settled=settled, walkOffs=list(walk_offs), **({} if obstacles is None else dict(obstacles=self.obstacles))))
         if state is not None and (state.get('version') != STATE_VERSION or state.get('context') != context):
             raise ValueError('Incompatible constraint-generation continuation (policy%d/state%d)'
                              % (GENERATION_POLICY, STATE_VERSION))
@@ -95,6 +98,9 @@ class ConstraintVariants:
         items = ([dict(routeGuard=True)] if route_guards is not None else [])
         items.extend(dict(rows=c['options'], role='contact_region', surface=c['surface'], owner=c['owner'], offset=c['offset'])
                      for c in profile.get('regionChoices', []) if c['offset'] <= self.through)
+        # One option is a fixed row in effect; two (a diagonal tie) branch, without family climbs or conflict joins.
+        items.extend(dict(rows=[[row] for row in w['options']], role='walk_off', solids=w['solids'], offset=w['offset'])
+                     for w in walk_offs if settled <= w['offset'] < self.through)
         # Temporal order is a traversal preference. All items share the original
         # model; neither overlap nor scene order declares independent subproblems.
         self.geometry, self.scope_indices = scene_geometry(geometry), scope['solidIndices']
@@ -303,6 +309,8 @@ class ConstraintVariants:
         rows = digest(canonical_rows(option['rows']))
         if item.get('role') == 'contact_region':
             return dict(kind='region', surface=item['surface'], offset=item['offset'], rows=rows)
+        if item.get('role') == 'walk_off':
+            return dict(kind='walk_off', solids=item['solids'], offset=item['offset'], rows=rows)
         if 'identity' in item:
             return dict(kind='contact', **item['identity'], rows=rows)
         return None

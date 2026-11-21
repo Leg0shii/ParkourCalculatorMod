@@ -26,9 +26,11 @@ everything not being worked on is in the [deferred-work register](DEFERRED_WORK.
   best with the exact rows of settled stretches, and hold the others as
   alternatives restored when the branch dies. On the relaxed backend each
   decision optimizes toward the next required anchor, alarmed candidates are
-  confirmed once at the end of the repair loop, and an obstacle gets passages
-  only once a solve hits it
-  ([controls](../research/encounter-groups/README.md)).
+  confirmed once at the end of the repair loop, an obstacle gets passages
+  only once a solve hits it, and an ordinary decision builds only minimum run
+  ticks: before advantageous jumps faster than its fastest jump-now landing, and
+  before run-offs and step-ups onto other blocks, a run-off leaving its launch
+  block by an open face ([controls](../research/encounter-groups/README.md)).
 - Merged as PR #3 (`perf/early-passage-screen`): it adds
   [geometry-driven avoidance passages](design/AVOIDANCE_PASSAGES.md) on obstacle
   clusters (touching blocks are one obstacle; [evidence](../research/obstacle-clusters/README.md)), screening of

@@ -92,7 +92,8 @@ def corner_rows(box, first, second, x_direction, z_escape):
 
 
 def case_profile(source_y, target_y, event, *, max_inputs=200, jump_at_start=True, jump_after=None,
-                 initial_velocity=REST_CARRY, initial_ground=True, constraints=(), contacts=(), finish_at=None):
+                 initial_velocity=REST_CARRY, initial_ground=True, constraints=(), contacts=(), finish_at=None,
+                 threshold=.005):
     event = copy.deepcopy(event)
     n = finish_at if finish_at is not None else max_inputs
     at = event['input']
@@ -110,7 +111,7 @@ def case_profile(source_y, target_y, event, *, max_inputs=200, jump_at_start=Tru
     trace = trace_ladder_schedule(dict(position=source_y,velocity=initial_velocity,onGround=initial_ground),
         [False]*(n+1),[False]*n,[any(c['axis']!='Y' and c['offset']==t for c in contacts) for t in range(n)],
         jump=impulses,contacts=[contact],target_top=None if finish_at is not None else target_y,
-        min_landing_state=min(n,at+2))
+        min_landing_state=min(n,at+2),threshold=threshold)
     if trace['status']=='invalid' or not trace['onGround'][-1] or abs(trace['position'][-1]-target_y)>1e-8:
         return None
     event.setdefault('type','ceiling' if event['case']=='grind' else 'stepping')

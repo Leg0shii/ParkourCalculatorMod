@@ -321,6 +321,54 @@ class AnchorPolicyTests(unittest.TestCase):
         for case in ('normal_step','blip','blip_up','corner_blip_up'):
             self.assertEqual(targets(child(caseEvents=[dict(input=1,case=case,boxes=[solid('optional')])])),set())
 
+    def test_advantageous_candidates_match_the_generators_airtimes(self):
+        from parkour_solver.movement.generation import generate_choices
+        from parkour_solver.movement.program import append_choice, boundary_state
+        from parkour_solver.reachability.service import block_table
+        from parkour_solver.search.anchors.policy import advantageous_candidates, advantageous_targets
+        # From start (top 2): low is a run-off with roof over it, slab a step-up, lid a low ceiling, goal a jump.
+        s=prepare_scene(dict(version=1, sceneModel='collision_boxes', geometryBounds=[-10,-8,-10,20,12,10],
+            initial=dict(position=[1,2,1], velocity=[0,-.0784000015258789,0], yaw=-90),
+            startBlock='start', goalBlock='goal', maxWallHits=0, maxContactCombinations=0,
+            blocks=[dict(id='start', boxes=[[0,1,0,2,2,2]]), dict(id='low', boxes=[[2,0,0,3,1.5,4]]),
+                    dict(id='roof', boxes=[[2,3.5,2,3,4.5,4]]), dict(id='slab', boxes=[[-1,1,0,0,2.5,2]]),
+                    dict(id='lid', boxes=[[0,3.9,0,1,4.9,1]]), dict(id='goal', boxes=[[6,2,0,7,3,2]])]))
+        types=['normal','ceiling','stepping']
+        root=empty_program(s['initial'],threshold=0.);root['terminalSupport']='start'
+        def children(p):
+            context=dict(mode='open',scene=s,program=p,state=boundary_state(p),maxInputs=40,threshold=0.,interactionGate=None)
+            return [(c,child) for kind in types for c in generate_choices(kind,context)
+                    for child in [append_choice(p,c)] if child is not None]
+        def landed(child):
+            return child['profile']['grounded'][-1] and child.get('terminalSupport') is not None
+        def built(base,key):
+            """Airtime from base of the generators' fastest jump with this key (ceilings/grinds through their landing)."""
+            moves=[child for c,child in children(base) if c['profile']['jump'][0] and
+                   tuple(key) in advantageous_targets(s,base,child,'goal')]
+            ends=[c for m in moves for c in ([m] if landed(m) else [c for _,c in children(m) if landed(c)])]
+            return min(c['profile']['airtime'] for c in ends)-base['profile']['airtime']
+        def fastest(owner, jump):
+            return min(child['profile']['airtime'] for c,child in children(root)
+                       if c['profile']['jump'][0]==jump and landed(child) and child.get('terminalSupport')==owner)
+        table=lambda owner:block_table(s,owner,{})
+        entries={e['key']:e for e in advantageous_candidates(s,table,'start',2.,'goal',types,0.)}
+        for key,e in entries.items():
+            kind,target=json.loads(key)
+            with self.subTest(key=key):
+                # A run-off's walk-off input and a step-up's step input are run ticks, not airtime.
+                if kind=='landing':
+                    # A run-off competes with the jump-now landing on the same block, whatever follows either.
+                    self.assertEqual((e['A'],e['limit'],e['via']),(fastest(target,False)-1,fastest(target,True),target))
+                elif kind=='step':
+                    self.assertEqual((e['A'],'limit' in e,e['via']),(fastest(target,False)-1,False,target))
+                else:
+                    self.assertEqual(e['via'],None)
+                    self.assertEqual(e['A'],2 if kind in ('slab_boost','corner_jump_cancel') else built(root,[kind,target]))
+        self.assertEqual(set(entries),{'["anchor", "goal"]','["ceiling", "lid"]','["grind", "lid"]','["slab_boost", "slab"]',
+                                       '["corner_jump_cancel", "slab"]','["landing", "low"]','["step", "slab"]'})
+        self.assertEqual({json.loads(e['key'])[0] for e in advantageous_candidates(s,table,'start',2.,'goal',['normal'],0.)},
+                         {'anchor','landing'})
+
     def test_hard_structure_excludes_setup_hop_runoff_and_zero_jump_finish(self):
         s=scene();p=history(s,['mid'])
         self.assertTrue(single_jump_structure(s,p,0,'start','mid',complete=True))

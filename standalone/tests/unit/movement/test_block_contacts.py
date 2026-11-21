@@ -1,11 +1,12 @@
 import copy
+import math
 import unittest
 
 from parkour_solver.constraints.contacts import avoid_contact_rows, contact_conflicts, floor_checks
 from parkour_solver.movement.profiles import ordinary_jump_profile, runoff_profile, stair_jump_profile
 from parkour_solver.search.support_profiles import compile_block_path
 from parkour_solver.scene.normalize import prepare_scene
-from parkour_solver.scene.route import schedule
+from parkour_solver.scene.route import HALF_WIDTH, schedule
 
 
 def descending_scene():
@@ -223,6 +224,138 @@ class ExposedTopTests(unittest.TestCase):
         self.assertEqual({(r['mode'], r['cmp'], r['rhs']) for r in rows},
                          {('X', 'LE', region[0] - 1e-6), ('X', 'GE', region[2] + 1e-6),
                           ('Z', 'LE', region[1] - 1e-6), ('Z', 'GE', region[3] + 1e-6)})
+
+
+def boxes_request(initial, velocity, yaw, **blocks):
+    return dict(version=1, sceneModel='collision_boxes', geometryBounds=[-10,-6,-10,20,12,10],
+                initial=dict(position=initial, velocity=velocity, yaw=yaw), startBlock='start', goalBlock='goal',
+                maxWallHits=0, maxContactCombinations=0, blocks=[dict(id=k, boxes=[v]) for k, v in blocks.items()],
+                movementSearch=dict(types=['normal'], maxInputs=30))
+
+
+class WalkOffFaceTests(unittest.TestCase):
+    def faces(self, landing, x=(-9., 9.), z=(-9., 9.), **blocks):
+        """walk_off_faces at tick 1 after landing on `start` (top 1) at tick 0, under a box envelope at state 1."""
+        from parkour_solver.constraints.contacts import walk_off_faces
+        scene = prepare_scene(boxes_request([1, 1, 1], [0, -.0784000015258789, 0], 0, start=[0, 0, 0, 2, 1, 2],
+                                            goal=[8, -1, 8, 9, 0, 9], **blocks))
+        solids = scene['collisionScene']['solids']
+        start = next(b for b in scene['blocks'] if b['id'] == 'start')
+        program = dict(profile=dict(grounded=[True, True], ladderTicks=[False, False], position=[1, 1], contactEvents=[
+            dict(offset=0, role='landing', boxes=[solids[start['solidIndex']]])]))
+        state = dict(X=list(x), Z=list(z))
+        envelopes = dict(states=[state]*2, phases=[dict(Y=dict(state, Y=[-math.inf, math.inf]))]*2)
+        faces = walk_off_faces(scene, program, 1, envelopes, [solids[b['solidIndex']] for b in scene['blocks']
+                                                               if b['id'] == landing])
+        if faces is not None:
+            faces['faces'] = [(r['mode'], r['cmp']) for r in faces['options']]
+            faces['ids'] = sorted(b['id'] for b in scene['blocks'] if b['solidIndex'] in faces['solids'])
+        return faces
+
+    def test_faces_follow_the_landing_direction_and_skip_blocked_ones(self):
+        beyond = dict(low=[4, -1, 1, 6, 0, 3])
+        self.assertEqual(self.faces('low', **beyond)['faces'], [('X', 'GE'), ('Z', 'GE'), ('Z', 'LE')])
+        self.assertEqual(self.faces('low', wall=[2, 0, 0, 3, 3, 2], **beyond)['faces'], [('Z', 'GE'), ('Z', 'LE')])
+        self.assertEqual(self.faces('low', wall=[2, 0, 0, 3, 3, 1], **beyond)['faces'],
+                         [('X', 'GE'), ('Z', 'GE'), ('Z', 'LE')])
+        walls = dict(east=[2, 0, -1, 3, 3, 3], north=[-1, 0, 2, 3, 3, 3], south=[-1, 0, -1, 3, 3, 0])
+        self.assertEqual(self.faces('low', **walls, **beyond)['faces'], [('X', 'LE')])
+        self.assertEqual(self.faces('low', west=[-1, 0, -1, 0, 3, 3], **walls, **beyond)['faces'], [])
+        diagonal = dict(low=[3, -1, 3, 5, 0, 5])
+        faces = self.faces('low', **diagonal)
+        self.assertEqual((faces['faces'], faces['diagonal']), ([('X', 'GE'), ('Z', 'GE')], True))
+        self.assertEqual(self.faces('low', east=walls['east'], north=walls['north'], **diagonal)['faces'],
+                         [('X', 'LE'), ('Z', 'LE')])
+        faces = self.faces('floor', x=(-1., 3.2), z=(-1., 2.6), floor=[-2, -1, -2, 4, 0, 4])
+        self.assertEqual((faces['faces'], faces['diagonal']), ([('Z', 'LE'), ('X', 'GE'), ('X', 'LE'), ('Z', 'GE')], False))
+        self.assertEqual(self.faces('low', x=(.5, 1.5), z=(.5, 1.5), **beyond)['faces'], [])
+
+    def test_the_support_is_the_launch_component_and_must_tile_a_rectangle(self):
+        north = dict(low=[0, -1, 3, 2, 0, 5])
+        self.assertEqual(self.faces('low', far=[3, 0, 0, 4, 1, 2], **north)['ids'], ['start'])
+        faces = self.faces('low', ext=[2, 0, 0, 3, 1, 2], **north)
+        self.assertEqual((faces['ids'], faces['region'][2]), (['ext', 'start'], 3+HALF_WIDTH))
+        self.assertIsNone(self.faces('low', ext=[2, 0, 0, 3, 1, 1], **north))
+
+    def test_runoff_scene_walks_off_once_the_edge_is_reachable(self):
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.movement.normal import normal_choices
+        from parkour_solver.movement.program import append_choice, boundary_state, empty_program
+        from parkour_solver.reachability.service import InteractionGate
+        scene = prepare_scene(boxes_request([.5, 1, .5], [.25, -.0784000015258789, 0], -90, start=[-2, 0, -2, 1, 1, 2],
+                                            middle=[1, -1, -2, 4, 0, 2], goal=[6, -1, -1, 7, 0, 1]))
+        start = next(b['solidIndex'] for b in scene['blocks'] if b['id'] == 'start')
+        with PythonCompiler() as compiler:
+            gate = InteractionGate(scene, compiler)
+            def choices(program, gated=True, **match):
+                context = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=30,
+                               threshold=0., interactionGate=gate if gated else None)
+                return [c for c in normal_choices(context) if all(c.get(k) == v for k, v in match.items())
+                        and not c['profile']['jump'][0]]
+            program, generated = empty_program(scene['initial'], threshold=0.), []
+            for k in range(4):
+                generated.append([append_choice(program, c) for c in choices(program, terminalSupport='middle')])
+                if k == 1:
+                    ungated, = [append_choice(program, c) for c in choices(program, False, terminalSupport='middle')]
+                program = append_choice(program, choices(program, False, terminalSupport='start')[0])
+            self.assertEqual([len(g) for g in generated], [0, 0, 0, 1])
+            self.assertEqual(sorted(e['input'] for e in gate.exclusions if e['proof']['reason'] == 'launch_support_not_left'),
+                             [0, 1, 2])
+            self.assertEqual(gate.check_program(ungated)['reason'], 'launch_support_not_left')
+            runoff, = generated[3]
+            self.assertIsNone(gate.check_program(runoff))
+            selection, = runoff['walkOffs']
+            row, = selection['options']
+            self.assertEqual((selection['offset'], selection['solids'], row['mode'], row['cmp'], row['offset']),
+                             (3, [start], 'X', 'GE', 3))
+
+    def test_stepping_flight_cases_from_a_run_off_wait_for_the_edge_too(self):
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.movement.normal import normal_choices
+        from parkour_solver.movement.stepping import open_stepping_choices
+        from parkour_solver.movement.program import append_choice, boundary_state, empty_program
+        from parkour_solver.reachability.service import InteractionGate
+        request = dict(boxes_request([.5, 1, .5], [.25, -.0784000015258789, 0], -90, start=[-2, 0, -2, 1, 1, 2],
+                                     middle=[1, -1, -2, 2, 0, 2], slab=[2, -1, -2, 3, .5, 2], goal=[8, -1, -1, 9, 0, 1]),
+                       movementSearch=dict(types=['normal', 'stepping'], maxInputs=30))
+        scene = prepare_scene(request)
+        with PythonCompiler() as compiler:
+            gate = InteractionGate(scene, compiler)
+            program, offered = empty_program(scene['initial'], threshold=0.), []
+            for k in range(4):
+                context = lambda g: dict(mode='open', scene=scene, program=program, state=boundary_state(program),
+                                         maxInputs=30, threshold=0., interactionGate=g)
+                offered.append([bool([c for c in open_stepping_choices(context(g)) if not c['profile']['jump'][0]])
+                                for g in (None, gate)])
+                program = append_choice(program, next(c for c in normal_choices(context(None))
+                                                      if c.get('terminalSupport') == 'start' and c['profile']['airtime'] == 1))
+            self.assertEqual(offered, [[True, False]]*3+[[True, True]])
+            self.assertEqual(sorted(e['input'] for e in gate.exclusions
+                                    if e['proof']['reason'] == 'launch_support_not_left' and e['owner'] == 'middle'), [0, 1, 2])
+
+    def test_a_diagonal_tie_carries_both_facing_faces(self):
+        from parkour_solver.bridge.python_compiler import PythonCompiler
+        from parkour_solver.movement.normal import normal_choices
+        from parkour_solver.movement.program import append_choice, boundary_state, empty_program
+        from parkour_solver.reachability.service import InteractionGate
+        scene = prepare_scene(boxes_request([.5, 1, .5], [0, -.0784000015258789, 0], -45, start=[-2, 0, -2, 1, 1, 1],
+                                            corner=[1.5, -1, 1.5, 4, 0, 4], goal=[7, -1, 7, 8, 0, 8]))
+        with PythonCompiler() as compiler:
+            gate = InteractionGate(scene, compiler)
+            program = empty_program(scene['initial'], threshold=0.)
+            def choices(support):
+                context = dict(mode='open', scene=scene, program=program, state=boundary_state(program), maxInputs=30,
+                               threshold=0., interactionGate=None)
+                return [c for c in normal_choices(context) if c.get('terminalSupport') == support and not c['profile']['jump'][0]]
+            for _ in range(4):
+                program = append_choice(program, choices('start')[0])
+            runoff = append_choice(program, choices('corner')[0])
+            self.assertIsNone(gate.check_program(runoff))
+            selection, = runoff['walkOffs']
+            self.assertEqual([(r['mode'], r['cmp']) for r in selection['options']], [('X', 'GE'), ('Z', 'GE')])
+            analysis = gate.analyze(runoff)
+            for row in selection['options']:
+                self.assertNotEqual(gate.relaxation(runoff, analysis, scene['objective'], [row])['outcome'], 'infeasible')
 
 
 class BlockTableTests(unittest.TestCase):
