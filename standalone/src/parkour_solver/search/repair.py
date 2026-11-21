@@ -100,6 +100,8 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         repair_sources.extend(copy.deepcopy(resume_state.get('repairSources', [])))
         seen.update(resume_state.get('seen', []))
     resumed_branches = 0
+    # Branches the current conflict-driven generator emitted; superseded when its obstacle set grows.
+    generated = set(resume_state.get('generatedBranches', [])) if exact_resume else set()
     reference_yaw = copy.deepcopy(resume_state.get('referenceWarmYaw')) if resuming else None
     hit_pool = wall_hit_options(route, profiles, geometry, solid_blocks, motion_bound, max_wall_candidates) \
         if geometry is not None and max_wall_hits else {'options': [], 'generated': 0, 'candidateDrops': 0}
@@ -259,6 +261,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
             referenceWarmYaw=copy.deepcopy(reference_yaw), interactionChoices=copy.deepcopy(choices),
             interactionAlternatives=copy.deepcopy(choice_alternatives),
             constraintGeneration=copy.deepcopy(getattr(variant_source, 'state', None)),
+            **(dict(generatedBranches=sorted(generated)) if getattr(variant_source, 'conflict_driven', False) else {}),
             attemptLog=copy.deepcopy((resume_state.get('attemptLog', []) if exact_resume else [])+inner_attempts),
             contactLog=copy.deepcopy((resume_state.get('contactLog', []) if exact_resume else [])+attempts))
 
@@ -456,6 +459,29 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
         best_result = dict(status='feasible', best=copy.deepcopy(point), termination='validated_incumbent',
                            minimumProven=False)
 
+    def grow(collision):
+        """Conflict-driven avoidance: a solve hit an obstacle; enumerate it from now on.
+
+        The generator restarts over the larger obstacle set, so families and switch climbs stay joint over
+        every obstacle hit so far. The old generator's unsolved branches lack the new obstacle's rows and
+        are dropped (the new generator emits them refined); accepted points stay. A hit on an enumerated
+        obstacle or a settled stretch has no repair."""
+        nonlocal variant_source, source_exhausted, generated
+        key = variant_source.obstacle_key(collision['solidIndex'], collision['tick'])
+        if key is None or key in variant_source.obstacles:
+            attempts[-1]['termination'] = 'settled_obstacle_hit' if key is None else 'enumerated_obstacle_hit'
+            return
+        attempts[-1]['termination'] = 'obstacle_added'
+        variant_source = variant_source.with_obstacles(variant_source.obstacles+[key])
+        source_exhausted = False
+        stale = [entry for entry in queue if branch_key(entry[2], entry[3], entry[4]) in generated]
+        for entry in stale:
+            queue.remove(entry)
+            seen.discard(branch_key(entry[2], entry[3], entry[4]))
+        heapq.heapify(queue)
+        generated = set()
+        families.clear()
+
     termination = 'contact_search_exhausted'
     while queue or not source_exhausted or repair_sources:
         if settling is not None:
@@ -546,6 +572,7 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                        route.get('hitEvents', []), reference_yaw or route.get('warmYaw'), variant.get('selectedPassages', []),
                        dict(family=variant['family'], switches=variant['switches'],
                             **branch_meta(variant)) if 'family' in variant else None)
+                generated.add(branch_key(variant['rows'], variant.get('passages', []), route.get('hitEvents', [])))
             if not queue:
                 continue
         # Generation can consume the remaining budget. Leave the next branch
@@ -694,6 +721,9 @@ def solve_contact_branches(route, profiles, checks, compiler, *, seconds, candid
                     attempts[-1]['status'] = 'unknown'
                     if 'solidIndex' not in checked:
                         attempts[-1]['termination'] = checked['reason']
+                        continue
+                    if getattr(variant_source, 'conflict_driven', False):
+                        grow(checked)
                         continue
                     plan = result['best']['plan']
                     # Save construction inputs before any interruptible preparation.

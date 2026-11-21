@@ -34,7 +34,7 @@ Global hard-jump latches live outside frames and survive backtracking. Policy3 e
 | `screen_program` in `search.movement` | Necessary-condition checks for a discrete proposal; numerical unknown is not proof of death. The open-family eligibility gate and full-proposal screen share the reachability query. |
 | `solve_scope`, `solve_identity`, `validation_prefix` in `search.identity` | Scope geometry/checks, identify exact physical/context problem and align validation. Identity changes when actual model/scope changes. |
 | `reachable_envelopes`, `interaction_reachability` in `reachability.intervals` | Conservative p/v and collision-phase bounds; answer ruled out or not ruled out. The latter does not prove an interaction feasible. |
-| `ConstraintVariants` in `constraints.variants` | Choose concrete phase covers and propagate accumulated rows before preparing downstream domains; one shared builder serves upfront generation and collision repair, with a durable lazy frontier. |
+| `ConstraintVariants` in `constraints.variants` | Choose concrete phase covers and propagate accumulated rows before preparing downstream domains; one shared builder serves conflict-driven generation (obstacles only once hit) and collision repair, with a durable lazy frontier. |
 | `evaluate_program` in `search.engine` | Compile program; validate scalar vertical schedule; scope adapter; obtain coefficients/reach bounds; select fixed alternatives; call contact solver; record physical acceptance. Partial/checkpoint success is not a terminal route. |
 | `solve_contact_branches` in `search.repair` | Inner search for concrete geometry/contact/constraint alternatives of one program. Saves repair state, lazy collision-repair sources, logs, guesses and accepted candidate. “Repair” does not mean IPOPT chooses discrete decisions. |
 | `retain_two_goals`, `protections` in `search.compat.time_progress` | Existing time/progress/state helpers; the current DFS does not run their former global peer-retention pass. |
@@ -51,8 +51,8 @@ Global hard-jump latches live outside frames and survive backtracking. Policy3 e
 segments. It conditions conservative envelopes on each concrete choice before
 preparing downstream domains; all applicable obstacles still share the full
 numerical model. Known support-entry geometry, already-owned clear-side bridges
-and named-probe uncertainty remain distinct. Upfront and collision repair use the
-same builder. Switch counts are descriptive; local repair/retention caps are
+and named-probe uncertainty remain distinct. Anchor search adds an obstacle only once a
+solve hits it; collision repair uses the same builder. Switch counts are descriptive; local repair/retention caps are
 removed. See [the avoidance contract](design/AVOIDANCE_PASSAGES.md).
 
 Physical anchor search gives its DFS the remaining session deadline and global

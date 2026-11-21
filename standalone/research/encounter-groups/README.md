@@ -160,3 +160,31 @@ Extended case, 16:51:29 PST, measurement only: 387 requests (71 IPOPT infeasible
 143 node checks (134 feasible, 2.68 requests per check), 428 expanded, deepest
 request 69 ticks, 61 held alternatives with none restored; the search ends in the
 B4 -> B22 frame.
+
+## Conflict-driven avoidance A/B, 2026-11-20
+
+Phase 4 step 3b chose between enumerating every obstacle up front and adding an
+obstacle only once a solve hits it ([design](../../docs/design/AVOIDANCE_PASSAGES.md#conflict-driven-obstacles-in-anchor-search)).
+[`avoidance-ab/ab_calls.py`](avoidance-ab/ab_calls.py) ran every fresh
+`evaluate_program` call both ways on the same inputs. The disk content cache and IPOPT
+confirmations were cleared before each run, and the up-front result drove the search.
+Source: `7c7960cf` plus the step 3b change behind a temporary `PKC_AVOIDANCE` switch,
+which was removed before commit, so the harness needs that source to rerun.
+[`analyze_ab.py`](avoidance-ab/analyze_ab.py) applies the per-call criteria.
+
+| Case (search seconds) | Calls | Wall s (conflict / up-front) | Clarabel solves | IPOPT | Requests |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Extended (600) | 85 (82 node, 3 anchor) | 22.567 / 35.213 | 208 / 466 | 43 / 43 | 202 / 191 |
+| 4-anchor (300) | 12 | 1.861 / 2.167 | 40 / 68 | 1 / 1 | 19 / 16 |
+
+The best relaxed objective was equal within 1e-6 on every call with a point. Every
+call where up-front finished agreed on feasibility. Two calls differed only in
+their infeasible label (`oracle_rejected` against `exhausted`), and on three,
+up-front was `suspended` where conflict finished `exhausted`.
+Ten extended calls were slower, the worst by 0.141 s; one tied at 3 Clarabel
+solves. Four held fewer distinct branch choices, because obstacles that no solve
+touched get none; the user accepted this ([extended](avoidance-ab/extended-ab-2-analysis.txt),
+[4-anchor](avoidance-ab/physical-ab-2-analysis.txt)). The
+[first extended run](avoidance-ab/extended-ab-1-off-by-one-analysis.txt) mapped a
+collision to its movement's start state and lost 11 feasible checks. The fix maps
+the collision to the state the movement ends in.

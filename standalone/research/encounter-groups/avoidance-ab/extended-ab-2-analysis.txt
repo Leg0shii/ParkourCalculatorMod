@@ -1,0 +1,40 @@
+calls                        85
+calls:anchor                 3
+calls:node                   82
+conflict.clarabelSolves      208
+conflict.ipopt               43
+conflict.obstaclesHit        31
+conflict.requests            202
+conflict.seconds             22.567
+upfront.clarabelSolves       466
+upfront.ipopt                43
+upfront.requests             191
+upfront.seconds              35.213
+
+seconds: 10 calls fail
+   (14, 'node', 69, 0.351, 0.492)
+   (70, 'node', 78, 0.065, 0.136)
+   (35, 'node', 76, 0.302, 0.352)
+   (76, 'node', 79, 0.363, 0.413)
+   (28, 'node', 75, 0.061, 0.108)
+   (44, 'node', 77, 0.328, 0.373)
+   (3, 'node', 52, 0.25, 0.271)
+   (50, 'node', 77, 0.107, 0.127)
+   (49, 'node', 77, 0.125, 0.142)
+   (13, 'node', 68, 0.095, 0.111)
+
+alternatives: 4 calls fail
+   (6, 'node', 62, 2, 1, 1)
+   (9, 'node', 63, 2, 1, 1)
+   (62, 'node', 78, 2, 1, 0)
+   (74, 'node', 79, 2, 1, 0)
+
+verdict: 5 calls fail
+   (8, 'node', 66, 'oracle_rejected', 'exhausted')
+   (18, 'node', 72, 'exhausted', 'oracle_rejected')
+   (45, 'node', 77, 'suspended', 'exhausted')
+   (53, 'node', 77, 'suspended', 'exhausted')
+   (69, 'node', 78, 'suspended', 'exhausted')
+
+clarabel: 1 calls fail
+   (28, 'node', 75, 3, 3)

@@ -1,7 +1,8 @@
 # Geometry-driven avoidance passages
 
 The avoidance generator assigns meaningful collision-phase covers within selected
-landing segments. Upfront generation and collision repair use one implementation.
+landing segments. Anchor search generates them conflict-driven (below); legacy
+collision repair uses the same implementation over every obstacle.
 See [measurements and validation](../../research/geometry-passages/README.md) and the
 [discussion with concrete B6 examples](../../research/early-passage-screen/B6_QUESTIONS_AND_ANSWERS.md).
 
@@ -129,6 +130,29 @@ Each rectangle is its own family, so the switch climb never mixes them, and a
 rectangle is screened jointly with every later item. A repair source refines one
 solved branch and adds no region items.
 
+## Conflict-driven obstacles in anchor search
+
+Anchor search (`search/engine.py`) gives `ConstraintVariants` an obstacle set,
+initially empty, so contact checks, contact regions and route guards are
+enumerated up front but obstacle clusters are not. A decision check or anchor leg
+first solves its program without avoidance rows. When an accepted point's scene
+replay hits a solid, the repair loop (`search/repair.py` `grow`) adds it to the set
+as `[stretch begin, solid]` and restarts the generator over the larger set. The
+stretch is the one holding the state the colliding movement ends in, so a movement
+into a landing belongs to the stretch that landing starts. That stretch's cluster
+around the solid then gets its passages, families and switch ticks. Families and the
+switch climb therefore stay joint over every obstacle hit so far. The old generator's
+unsolved branches are dropped, since the new one emits them refined, and accepted
+points stay. A hit on a settled stretch, or on an obstacle already in the set, has
+no repair. Obstacles no solve touches never get items: the optimum without them
+bounds every variant, so they can be ignored safely (user, 2026-11-20). Partial
+combinations are screened by intervals only, because every branch is solved and the
+solve is the relaxation check. The set and the emitted branches persist
+(`constraintGeneration.obstacles`, `generatedBranches`). A per-call A/B on the
+extended control took 22.6 s against 35.2 s for up-front enumeration, with 208
+Clarabel solves against 466 and equal best relaxed objectives
+([evidence](../../research/encounter-groups/README.md)).
+
 ## Unknown probes and shared collision repair
 
 Named step/grind phases come from both the profile and shared model metadata.
@@ -136,7 +160,8 @@ Their internal Y probes remain uncertain. Keep the selected prerequisites and
 let the existing named-case scene replay judge them; rejected uncertain repair
 work remains unresolved rather than acquiring an absence certificate.
 
-The automatic path generates avoidance before NLP. Legacy collision-driven repair
+Legacy collision-driven repair (callers without an initial generator, such as the
+finalization's re-solve of a fixed branch)
 uses `ConstraintVariants.for_plan` after an observed mismatch. It builds bounds
 with the real compiler and selected vertical schedule for that fixed allocation,
 then assigns every applicable box jointly. It uses the same phase builder and
@@ -179,7 +204,7 @@ confirms the kept candidates when the loop ends, and a point it rejected is neve
 saved as a fallback. The family state and held variants persist in the repair
 snapshot (version 3), so a resumed climb solves nothing twice.
 
-Constraint generation uses policy18/state11 and repair avoidancePolicy14 with assembly13. The DFS context
+Constraint generation uses policy19/state11 and repair avoidancePolicy14 with assembly13. The DFS context
 fingerprints the new policy. Old raw generator cursors reject; reproduce an old
 run with its original source and inputs. Source-era scene fields
 `maxContactBranches`, `maxPassageCandidates`, `maxBlockagesPerObstacle`,

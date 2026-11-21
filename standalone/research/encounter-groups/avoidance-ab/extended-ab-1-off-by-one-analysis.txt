@@ -1,0 +1,70 @@
+calls                        85
+calls:anchor                 3
+calls:node                   82
+conflict.clarabelSolves      175
+conflict.ipopt               28
+conflict.obstaclesHit        21
+conflict.requests            156
+conflict.seconds             17.604
+upfront.clarabelSolves       466
+upfront.ipopt                43
+upfront.requests             191
+upfront.seconds              35.817
+
+seconds: 12 calls fail
+   (31, 'node', 76, 0.1, 0.369)
+   (74, 'node', 79, 0.774, 0.95)
+   (76, 'node', 79, 0.351, 0.437)
+   (70, 'node', 78, 0.063, 0.135)
+   (35, 'node', 76, 0.302, 0.354)
+   (44, 'node', 77, 0.332, 0.384)
+   (25, 'node', 74, 1.148, 1.193)
+   (3, 'node', 52, 0.25, 0.276)
+   (49, 'node', 77, 0.127, 0.147)
+   (13, 'node', 68, 0.095, 0.113)
+   (33, 'node', 76, 0.108, 0.113)
+   (18, 'node', 72, 0.058, 0.059)
+
+verdict: 15 calls fail
+   (8, 'node', 66, 'oracle_rejected', 'exhausted')
+   (12, 'node', 67, 'feasible', 'exhausted')
+   (14, 'node', 69, 'feasible', 'exhausted')
+   (15, 'node', 69, 'feasible', 'exhausted')
+   (17, 'node', 72, 'feasible', 'exhausted')
+   (18, 'node', 72, 'exhausted', 'oracle_rejected')
+   (19, 'node', 73, 'feasible', 'exhausted')
+   (21, 'node', 70, 'feasible', 'exhausted')
+   (27, 'node', 75, 'feasible', 'exhausted')
+   (38, 'node', 76, 'feasible', 'exhausted')
+   (45, 'node', 77, 'suspended', 'exhausted')
+   (48, 'node', 77, 'feasible', 'exhausted')
+
+bestRelaxed: 11 calls fail
+   (12, 'node', 67, [67, 1095.3000010119058], None, 'one side has none')
+   (14, 'node', 69, [69, 1094.1907638541084], None, 'one side has none')
+   (15, 'node', 69, [69, 1094.6187543874892], None, 'one side has none')
+   (17, 'node', 72, [72, 1094.3383904942239], None, 'one side has none')
+   (19, 'node', 73, [73, 1095.3000010119142], None, 'one side has none')
+   (20, 'node', 73, [73, 1095.3000010119106], None, 'one side has none')
+   (21, 'node', 70, [70, 1094.4412212349207], None, 'one side has none')
+   (27, 'node', 75, [75, 1094.6187543870428], None, 'one side has none')
+   (38, 'node', 76, [76, 338.28515599669043], None, 'one side has none')
+   (48, 'node', 77, [77, 1094.6187543874241], None, 'one side has none')
+   (61, 'node', 78, [78, 1094.618754387083], None, 'one side has none')
+
+alternatives: 13 calls fail
+   (12, 'node', 67, 1, 0, 0)
+   (14, 'node', 69, 1, 0, 0)
+   (15, 'node', 69, 1, 0, 0)
+   (17, 'node', 72, 1, 0, 0)
+   (19, 'node', 73, 1, 0, 0)
+   (20, 'node', 73, 1, 0, 0)
+   (21, 'node', 70, 2, 0, 0)
+   (27, 'node', 75, 1, 0, 0)
+   (38, 'node', 76, 1, 0, 0)
+   (48, 'node', 77, 1, 0, 0)
+   (61, 'node', 78, 1, 0, 0)
+   (62, 'node', 78, 2, 1, 0)
+
+clarabel: 1 calls fail
+   (28, 'node', 75, 3, 3)

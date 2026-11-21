@@ -1,0 +1,16 @@
+calls                        12
+calls:anchor                 6
+calls:node                   4
+calls:terminal               2
+conflict.clarabelSolves      40
+conflict.ipopt               1
+conflict.obstaclesHit        3
+conflict.requests            19
+conflict.seconds             1.861
+upfront.clarabelSolves       68
+upfront.ipopt                1
+upfront.requests             16
+upfront.seconds              2.167
+
+seconds: 1 calls fail
+   (10, 'node', 55, 0.055, 0.057)

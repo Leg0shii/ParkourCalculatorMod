@@ -13,7 +13,7 @@ from parkour_solver.search.identity import digest
 from parkour_solver.spatial.surfaces import scene_geometry
 
 
-GENERATION_POLICY = 18
+GENERATION_POLICY = 19
 STATE_VERSION = 11
 
 
@@ -49,9 +49,23 @@ class ConstraintVariants:
 
     def __init__(self, route, profile, plan, geometry, envelopes, scope, *, checks=(), gates=(), signature=(), state=None,
                  deadline=None, reference=None, route_guards=None, owners=None, budget=None, cancel_event=None,
-                 segment_solids=None, objective=None, settled=0):
+                 segment_solids=None, objective=None, settled=0, obstacles=None):
         """`settled`: the branch keeps exact rows before this tick, so obstacle stretches ending by it
-        and contact checks before it get no item."""
+        and contact checks before it get no item.
+
+        `obstacles`: None enumerates every obstacle cluster on every stretch, screening partial
+        combinations with the disk relaxation. A list of [stretch begin, solid index] pairs enumerates
+        only the clusters holding those solids on those stretches (conflict-driven: the repair loop
+        adds an obstacle once a solve hits it, `with_obstacles`) and screens with intervals only, since
+        every branch is solved anyway."""
+        if state is not None and 'obstacles' in state:
+            obstacles = state['obstacles']
+        self.arguments = dict(route=route, profile=profile, plan=plan, geometry=geometry, envelopes=envelopes,
+            scope=scope, checks=checks, gates=gates, signature=signature, deadline=deadline, reference=reference,
+            route_guards=route_guards, owners=owners, budget=budget, cancel_event=cancel_event,
+            segment_solids=segment_solids, objective=objective, settled=settled)
+        self.obstacles = None if obstacles is None else sorted(map(list, obstacles))
+        self.settled = settled
         self.route, self.profile, self.plan = route, profile, plan
         # Relaxation screens optimize the configured progress objective at the plan horizon.
         self.objective = objective
@@ -63,7 +77,7 @@ class ConstraintVariants:
             envelope=interaction_context_key(envelopes), owners=owners,
             segmentSolids=None if segment_solids is None else sorted(segment_solids.items()),
             routeGuards=route_guards.context if route_guards is not None else None,
-            settled=settled))
+            settled=settled, **({} if obstacles is None else dict(obstacles=self.obstacles))))
         if state is not None and (state.get('version') != STATE_VERSION or state.get('context') != context):
             raise ValueError('Incompatible constraint-generation continuation (policy%d/state%d)'
                              % (GENERATION_POLICY, STATE_VERSION))
@@ -93,7 +107,12 @@ class ConstraintVariants:
             # space is free for the stretch, and dropping it can split a touching cluster.
             basis = (sorted(set(self.scope_indices) & set(reachable[begin])) if begin in reachable
                      else list(self.scope_indices))
+            if self.obstacles is not None:
+                # A solve that hit a solid proves the stretch reaches it.
+                basis = sorted(set(basis) | {s for b, s in self.obstacles if b == begin and s in self.scope_indices})
             for c in self.geometry.clusters(basis):
+                if self.obstacles is not None and not any(b == begin and s in c.members for b, s in self.obstacles):
+                    continue
                 item = dict(clusterId=c.id, basis=basis, members=list(c.members), names=[names[i] for i in c.members],
                             begin=begin, end=end, owner='+'.join(sorted({names[i] for i in c.members})))
                 items.append(item)
@@ -104,6 +123,7 @@ class ConstraintVariants:
             version=STATE_VERSION, context=context, items=items, exclusions=[], screenExclusions=[],
             pending=[dict(item=0, rows=self.route_rows, passages=[], choices=[])], seen=[], partialSeen=[], emitted=0,
             exhausted=False, reference=copy.deepcopy(reference), preparationSteps=0, duplicateVariants=0,
+            **({} if self.obstacles is None else dict(obstacles=self.obstacles)),
             metrics={}, uncertainInteractions=[], timings=dict(preparationSeconds=0., variantGenerationSeconds=0.,
                                      conditionalAnalysisSeconds=0.))
         self.state.setdefault('encounterLog', [])
@@ -114,6 +134,24 @@ class ConstraintVariants:
         self.analysis_cache = {}
         self.preparation_cache = {}
         self._active_envelopes = None
+
+    @property
+    def conflict_driven(self):
+        return self.obstacles is not None
+
+    def obstacle_key(self, solid, tick):
+        """[stretch begin, solid] for a solve that hit `solid` on movement `tick`; None on a settled stretch.
+
+        Rows constrain states, and the movement ends in state tick+1 (a landing's first state when it lands)."""
+        state = tick+1
+        for begin, end in landing_segments(self.profile, self.through):
+            if begin <= state < end or state == end == self.through:
+                return [begin, solid] if end > self.settled else None
+        return None
+
+    def with_obstacles(self, obstacles):
+        """A fresh generator over these obstacles (same inputs, no saved state)."""
+        return ConstraintVariants(**self.arguments, obstacles=obstacles)
 
     def metric(self, name, count=1):
         metrics = self.state['metrics']
@@ -158,7 +196,7 @@ class ConstraintVariants:
         started = time.monotonic()
         try:
             self.metric('analysisMisses')
-            result = condition_envelopes(self.envelopes, rows, objective=self.objective)
+            result = condition_envelopes(self.envelopes, rows, refine=self.obstacles is None, objective=self.objective)
             # A cache is disposable acceleration, not a retained-alternative cap.
             if len(self.analysis_cache) >= 128:
                 self.analysis_cache.pop(next(iter(self.analysis_cache)))

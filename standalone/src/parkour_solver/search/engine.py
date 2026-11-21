@@ -164,6 +164,8 @@ def evaluate_program(scene, program, compiler, adapter, work, motion_bound, *, c
         segment_solids=segment_solids(scene, program, profiles[0], scope['through'], service), checks=checks, gates=scoped_adapter.gates, signature=signature,
         state=saved_repair.get('constraintGeneration') if saved_policy==policy else None, deadline=scoped.deadline, reference=reference,
         settled=program.get('settledThrough', 0),
+        # Conflict-driven: obstacles join the generator only once a solve hits them.
+        obstacles=[],
         owners=owners, budget=scoped.check, cancel_event=cancel_event,
         objective=route.get('guideObjective', route['objective']),
         route_guards=scoped_adapter.constraint_guards(program['profile'],envelopes,scope,scoped.deadline)

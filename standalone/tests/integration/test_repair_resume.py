@@ -114,6 +114,42 @@ class RepairResumeTests(RepairHarness, unittest.TestCase):
         self.assertTrue(second['repairResume']['exact'])
         self.assertEqual(second['repairState']['repairSources'][0]['state']['cursor'], 1)
 
+    def conflict_driven(self, repeat_hit):
+        # The first generator emits the bare branch and one more; once solid 1 is hit, the new generator
+        # emits one branch with a row for it, which clears it unless repeat_hit.
+        requests=[]
+        def solve(request,*args,**kwargs):
+            requests.append([r['rhs'] for r in request['constraints']])
+            return outcome(10.-len(request['constraints']))
+        def clipped(*args,**kwargs):
+            return dict(feasible=bool(requests[-1]) and not repeat_hit,solidIndex=1,tick=0,reason='scene_collision')
+        class Source:
+            conflict_driven=True
+            def __init__(self,obstacles):
+                self.obstacles,self.state=obstacles,dict(obstacles=obstacles)
+                rows=[[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=5.)]] if obstacles else [[],[dict(leg=0,offset=1,mode='X',cmp='GE',rhs=1.)]]
+                self.emitted=iter([dict(rows=r,selectedPassages=[],score=i) for i,r in enumerate(rows)])
+            def __iter__(self):return self
+            def __next__(self):return next(self.emitted)
+            def obstacle_key(self,solid,tick):return [0,solid]
+            def with_obstacles(self,obstacles):return Source(obstacles)
+        with patch('parkour_solver.search.repair.check_geometry',side_effect=clipped):
+            result=self.invoke(route(),solve,lambda *a:dict(accepted=True),geometry=dict(solids=[]),
+                               initial_variants=Source([]),work=SearchWork(10))
+        return result,requests
+
+    def test_a_hit_obstacle_restarts_generation_with_it_and_the_old_branches_are_not_solved(self):
+        result,requests=self.conflict_driven(False)
+        self.assertEqual(requests,[[],[5.]])
+        self.assertEqual(result['best']['candidate']['objective'],9.)
+        self.assertEqual(result['repairState']['constraintGeneration']['obstacles'],[[0,1]])
+        self.assertEqual([a['termination'] for a in result['contactAttempts']][0],'obstacle_added')
+
+    def test_a_hit_on_an_enumerated_obstacle_has_no_repair(self):
+        result,requests=self.conflict_driven(True)
+        self.assertEqual((requests,result['best']),([[],[5.]],None))
+        self.assertEqual([a['termination'] for a in result['contactAttempts']],['obstacle_added','enumerated_obstacle_hit'])
+
     def test_worker_interruption_restores_the_inflight_branch(self):
         checkpoints=[]
         def interrupted(*args,**kwargs):raise RuntimeError('synthetic interruption')
