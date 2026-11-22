@@ -87,7 +87,6 @@ public final class ImGuiImpl {
         bindMinecraftFramebuffer();
 
         platform.newFrame();
-        ImGui.newFrame();
         // the platform layer feeds the polled cursor pos into ImGui during newFrame, so the
         // off-screen override below has to run AFTER it to win.
         if (!FabricParkourCalculator.isUiFocused()) {
@@ -97,6 +96,7 @@ public final class ImGuiImpl {
                 io.setMouseDown(i, false);
             }
         }
+        ImGui.newFrame();
     }
 
     private static void applyPendingScale() {
@@ -129,8 +129,8 @@ public final class ImGuiImpl {
         ImGui.destroyContext();
     }
 
-    public static void keyCallback(int scancode, int action) {
-        platform.keyCallback(scancode, action);
+    public static void keyCallback(int scancode, int keycode, int action) {
+        platform.keyCallback(scancode, keycode, action);
     }
 
     public static void charCallback(int codepoint) {

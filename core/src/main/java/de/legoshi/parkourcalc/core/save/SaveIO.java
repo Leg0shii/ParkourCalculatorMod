@@ -129,15 +129,10 @@ public final class SaveIO {
         sb.append(rows.size()).append('#').append(h)
                 .append('#').append(startPos.x).append(',').append(startPos.y).append(',').append(startPos.z)
                 .append('#').append(startVel.x).append(',').append(startVel.y).append(',').append(startVel.z)
-                .append('#').append(startYaw).append('#').append(startPitch).append('#');
-        SaveFile.Resume res = toSaveResume(resume);
-        if (res != null) sb.append(COMPACT_GSON.toJson(res));
-        sb.append('#');
-        List<SaveFile.BlockOverride> overrides = toSaveBlockOverrides(inputData.getBlockOverrides());
-        if (overrides != null) sb.append(COMPACT_GSON.toJson(overrides));
-        sb.append('#');
-        SaveFile.AngleSolver solver = toSaveAngleSolver(angleSolver);
-        if (solver != null) sb.append(COMPACT_GSON.toJson(solver));
+                .append('#').append(startYaw).append('#').append(startPitch)
+                .append('#').append(Long.toHexString(StructuralHash.of(toSaveResume(resume))))
+                .append('#').append(Long.toHexString(StructuralHash.of(toSaveBlockOverrides(inputData.getBlockOverrides()))))
+                .append('#').append(Long.toHexString(StructuralHash.of(toSaveAngleSolver(angleSolver))));
         return sb.toString();
     }
 

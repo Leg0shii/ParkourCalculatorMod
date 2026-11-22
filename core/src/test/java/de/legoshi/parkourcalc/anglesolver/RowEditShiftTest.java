@@ -48,6 +48,22 @@ public class RowEditShiftTest {
     }
 
     @Test
+    public void rowsAddedToAnEmptyTasKeepTheStartAndPutTheGoalOnTheLastRow() {
+        AngleSolverState s = new AngleSolverState();
+        s.onRowsInserted(0, 5, 5);
+        assertEquals(0, s.getStartTick());
+        assertEquals(4, s.getLandingTick());
+    }
+
+    @Test
+    public void rowsAppendedToAFilledTasLeaveStartAndGoal() {
+        AngleSolverState s = seeded();
+        s.onRowsInserted(10, 3, 13);
+        assertEquals(2, s.getStartTick());
+        assertEquals(8, s.getLandingTick());
+    }
+
+    @Test
     public void removeDropsTheRowsDataAndSlidesTheRest() {
         AngleSolverState s = seeded();
         s.onRowsRemoved(Arrays.asList(5, 3)); // descending, like InputData.removeRows

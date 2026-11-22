@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleConsumer;
@@ -226,8 +225,8 @@ public final class AngleSolverTable {
     // ---- row-edit forwarding (gh-89): InputOverlay reports row edits so the per-tick solver data
     // (constraints, overrides, start/landing) follows its rows. Plain delegates to the model.
 
-    public void onRowsInserted(int index, int count) {
-        state.onRowsInserted(index, count);
+    public void onRowsInserted(int index, int count, int rowCount) {
+        state.onRowsInserted(index, count, rowCount);
     }
 
     public TickConstraints snapshotTick(int row) {
@@ -1069,7 +1068,8 @@ public final class AngleSolverTable {
         }
         if (c.isRange()) {
             ImGui.setNextItemWidth(numW);
-            valueField(c, "##lo", c.getLo(), c::setLo);
+            valueField(c, "##lo", c.getTypedLo(), c::setLo);
+            if (ImGui.isItemDeactivated()) c.orderRange();
             ImGui.sameLine();
             ThemeManager.pushTextColor(ThemeManager.textMutedColor());
             ImGui.alignTextToFramePadding();
@@ -1077,7 +1077,8 @@ public final class AngleSolverTable {
             ThemeManager.popTextColor();
             ImGui.sameLine();
             ImGui.setNextItemWidth(numW);
-            valueField(c, "##hi", c.getHi(), c::setHi);
+            valueField(c, "##hi", c.getTypedHi(), c::setHi);
+            if (ImGui.isItemDeactivated()) c.orderRange();
         } else {
             ImGui.setNextItemWidth(numW);
             valueField(c, "##v", c.getValue(), c::setValue);
@@ -1099,7 +1100,7 @@ public final class AngleSolverTable {
 
     /** Locale-independent replacement for inputDouble, whose native printf renders comma decimals under some C locales (gh-124). */
     private void numberField(String id, double value, DoubleConsumer apply) {
-        numBuf.set(String.format(Locale.ROOT, "%." + ConstraintText.precision() + "f", value));
+        numBuf.set(ConstraintText.exact(value));
         if (ImGui.inputText(id, numBuf, ImGuiInputTextFlags.CharsDecimal)) {
             try {
                 apply.accept(Double.parseDouble(numBuf.get().trim()));

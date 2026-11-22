@@ -83,7 +83,6 @@ public final class ImGuiImpl {
         bindMinecraftFramebuffer();
 
         imGuiGlfw.newFrame();
-        ImGui.newFrame();
         // imGuiGlfw feeds the polled cursor pos into ImGui during newFrame, so the
         // off-screen override below has to run AFTER it to win.
         if (!FabricParkourCalculator.isUiFocused()) {
@@ -93,6 +92,7 @@ public final class ImGuiImpl {
                 io.setMouseDown(i, false);
             }
         }
+        ImGui.newFrame();
     }
 
     private static void applyPendingScale() {

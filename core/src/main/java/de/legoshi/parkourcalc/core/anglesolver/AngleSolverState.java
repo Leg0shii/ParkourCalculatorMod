@@ -500,6 +500,17 @@ public final class AngleSolverState {
 
     /** Rows inserted at {@code index}: constraints/overrides and the start/landing flags at or past
      *  it slide down with their rows. */
+    public void onRowsInserted(int index, int count, int rowCount) {
+        if (count <= 0) return;
+        if (rowCount == count) {
+            startTick = 0;
+            landingTick = count - 1;
+            objectiveTick = -1;
+            return;
+        }
+        onRowsInserted(index, count);
+    }
+
     public void onRowsInserted(int index, int count) {
         if (count <= 0) return;
         remapTicks(t -> t >= index ? t + count : t);

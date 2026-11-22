@@ -172,6 +172,21 @@ public final class Constraint {
         return Math.max(lo, hi);
     }
 
+    public double getTypedLo() {
+        return lo;
+    }
+
+    public double getTypedHi() {
+        return hi;
+    }
+
+    public void orderRange() {
+        if (lo <= hi) return;
+        double t = lo;
+        lo = hi;
+        hi = t;
+    }
+
     public void setHi(double hi) {
         this.hi = whole(field, hi);
     }

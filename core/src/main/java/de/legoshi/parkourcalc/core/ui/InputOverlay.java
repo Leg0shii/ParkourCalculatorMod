@@ -353,7 +353,7 @@ public final class InputOverlay {
     }
 
     private void solverRowsInserted(int index, int count) {
-        if (angleSolver != null) angleSolver.onRowsInserted(index, count);
+        if (angleSolver != null) angleSolver.onRowsInserted(index, count, data.size());
     }
 
     private boolean isSolverActive() {

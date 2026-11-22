@@ -17,9 +17,13 @@ final class ImGuiSdlPlatform {
 
     private static final int MOUSE_BUTTONS = 5;
     private static final int SCANCODE_COUNT = 512;
+    private static final int LETTER_KEYCODE_A = 'a';
+    private static final int LETTER_KEYCODE_Z = 'z';
+    private static final int UNMAPPED_LETTER_OFFSET = 256;
     private static final Object TEXT_INPUT_OWNER = new Object();
 
     private final boolean[] mouseJustPressed = new boolean[MOUSE_BUTTONS];
+    private final int[] keyIndexOfScancode = new int[SCANCODE_COUNT];
     private long lastFrameNanos;
 
     void init() {
@@ -61,6 +65,9 @@ final class ImGuiSdlPlatform {
                 return Minecraft.getInstance().keyboardHandler.getClipboard();
             }
         });
+        for (int i = 0; i < SCANCODE_COUNT; i++) {
+            keyIndexOfScancode[i] = i;
+        }
         lastFrameNanos = 0L;
     }
 
@@ -115,13 +122,25 @@ final class ImGuiSdlPlatform {
         }
     }
 
-    void keyCallback(int scancode, int action) {
+    void keyCallback(int scancode, int keycode, int action) {
         if (scancode < 0 || scancode >= SCANCODE_COUNT) return;
         if (action == InputConstants.PRESS) {
-            ImGui.getIO().setKeysDown(scancode, true);
+            int index = layoutKeyIndex(scancode, keycode);
+            keyIndexOfScancode[scancode] = index;
+            ImGui.getIO().setKeysDown(index, true);
         } else if (action == InputConstants.RELEASE) {
-            ImGui.getIO().setKeysDown(scancode, false);
+            ImGui.getIO().setKeysDown(keyIndexOfScancode[scancode], false);
         }
+    }
+
+    private static int layoutKeyIndex(int scancode, int keycode) {
+        if (keycode >= LETTER_KEYCODE_A && keycode <= LETTER_KEYCODE_Z) {
+            return InputConstants.KEY_A + (keycode - LETTER_KEYCODE_A);
+        }
+        if (scancode >= InputConstants.KEY_A && scancode <= InputConstants.KEY_Z) {
+            return scancode + UNMAPPED_LETTER_OFFSET;
+        }
+        return scancode;
     }
 
     void charCallback(int codepoint) {

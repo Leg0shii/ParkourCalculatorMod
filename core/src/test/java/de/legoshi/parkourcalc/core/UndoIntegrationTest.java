@@ -1,9 +1,11 @@
 package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.SaveIO;
+import de.legoshi.parkourcalc.core.sim.BlockOverride;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
@@ -245,6 +247,43 @@ public class UndoIntegrationTest {
         rig.controller.applySnapshotJson(s1);
         String s3 = snapshot(rig);
         assertEquals(s1, s3);
+    }
+
+    @Test
+    public void signatureFollowsInPlaceEditsAndSurvivesARoundTrip() throws Exception {
+        Rig rig = new Rig(Files.createTempDirectory("pkc-undo-sig"));
+        rig.data.getRows().add(new InputRow());
+        rig.solver.addConstraint(3);
+        String base = signature(rig);
+        assertEquals(base, signature(rig));
+
+        Constraint c = rig.solver.tickConstraintsOrNull(3).getConstraints().get(0);
+        double value = c.getValue();
+        c.setValue(value + 0.5);
+        String edited = signature(rig);
+        assertFalse(base.equals(edited));
+        c.setValue(value);
+        assertEquals(base, signature(rig));
+
+        rig.solver.setLandingTick(7);
+        String landing = signature(rig);
+        assertFalse(base.equals(landing));
+
+        rig.data.getBlockOverrides().add(new BlockOverride(1, 4, 0, 64, 0, "minecraft:stone", "minecraft:air"));
+        String overrides = signature(rig);
+        assertFalse(landing.equals(overrides));
+
+        rig.controller.applySnapshotJson(snapshot(rig));
+        assertEquals(stateAfterRows(overrides), stateAfterRows(signature(rig)));
+    }
+
+    private static String stateAfterRows(String signature) {
+        return signature.substring(signature.indexOf('#', signature.indexOf('#') + 1));
+    }
+
+    private static String signature(Rig rig) {
+        return SaveIO.undoSignature(rig.data, rig.runner.getStartPosition(), rig.runner.getStartVelocity(),
+                rig.runner.getStartYaw(), rig.runner.getStartPitch(), rig.runner.getStartResumeState(), rig.solver);
     }
 
     private static String snapshot(Rig rig) {

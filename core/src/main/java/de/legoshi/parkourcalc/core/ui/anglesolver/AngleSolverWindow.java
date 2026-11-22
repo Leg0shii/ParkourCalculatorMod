@@ -958,7 +958,7 @@ public final class AngleSolverWindow implements RenderInterface {
                 if (runTicks.isRunning()) runTicks.cancel();
                 else engine.stopAndUseBest();
             }
-            if (ImGui.isItemHovered()) ImGui.setTooltip("Stop the search and keep the best solution found so far.");
+            TooltipUtil.onHover("Stop the search and keep the best solution found so far.");
         } else if (teleportBlocked) {
             Controls.disabledButton("Solve");
         } else if (Controls.primaryButton("Solve")) {
@@ -971,7 +971,7 @@ public final class AngleSolverWindow implements RenderInterface {
             applySurfaceState.run();
         }
         if (ImGui.isItemHovered()) {
-            ImGui.setTooltip("Capture each tick's surface state (ground + medium) from the simulation into the overrides, for the solve range (H).");
+            TooltipUtil.wrappedTooltip("Capture each tick's surface state (ground + medium) from the simulation into the overrides, for the solve range (H).");
         }
         if (teleportBlocked) {
             ThemeManager.pushTextColor(ThemeManager.warningColor());
@@ -1131,7 +1131,7 @@ public final class AngleSolverWindow implements RenderInterface {
         }
         ThemeManager.popTextColor();
         if (tooltip != null && ImGui.isMouseHoveringRect(origin.x, origin.y, origin.x + rowW, origin.y + lineH)) {
-            ImGui.setTooltip(tooltip);
+            TooltipUtil.wrappedTooltip(tooltip);
         }
         ThemeManager.bottomPaddedSeparator();
     }

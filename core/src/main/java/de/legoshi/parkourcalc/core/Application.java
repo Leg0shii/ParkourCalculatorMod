@@ -136,7 +136,7 @@ public final class Application {
         this.startDragController = new StartDragController(runner, boxController, selection,
                 saveController::markDirty, this::runSimulation, SimulationRunner.DEFAULT_DRAG_TOLERANCE);
         // Start box is the "Start" anchor: draggable to reposition, and tap-selectable as path index 0.
-        this.dragController = new BoxDragController(boxController, startDragController, this::commitStartTap);
+        this.dragController = new BoxDragController(boxController, startDragController);
         this.selectController = new BoxSelectController(this::pickWorld, this::commitWorldTap);
         this.blockPickController = new BoxSelectController(this::pickBlockOverride, this::commitWorldTap, true);
         this.yawGizmo = new YawGizmoController(
@@ -701,17 +701,11 @@ public final class Application {
             constraintSelection.focus(pick.index, pick.constraintIndices);
             return;
         }
-        if (pick.index <= 0) return;
+        if (pick.index < 0) return;
         if (pick.index >= boxController.size() - 1) return;
         selection.selectOnly(pick.index + 1);
         selection.requestScrollIntoView();
         constraintSelection.clear();
-    }
-
-    private void commitStartTap() {
-        if (boxController.size() == 0) return;
-        selection.selectOnly(boxController.size() >= 2 ? 1 : 0);
-        selection.requestScrollIntoView();
     }
 
     private void handleStartYawChange(float yaw) {

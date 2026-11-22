@@ -2,8 +2,12 @@ package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.perf.Perf;
+import de.legoshi.parkourcalc.core.ui.theme.Modal;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.flag.ImGuiConfigFlags;
+import imgui.flag.ImGuiPopupFlags;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +47,17 @@ public class OverlayManager implements RenderInterface {
             } else if (allowDetached) {
                 overlay.renderDetached(io);
             }
+        }
+        escapeClosesPopups(io);
+        Modal.endFrame();
+    }
+
+    private void escapeClosesPopups(ImGuiIO io) {
+        boolean popupOpen = uiOpen && ImGui.isPopupOpen("", ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel);
+        if (popupOpen && !Modal.anyFocused()) {
+            io.addConfigFlags(ImGuiConfigFlags.NavEnableKeyboard);
+        } else {
+            io.removeConfigFlags(ImGuiConfigFlags.NavEnableKeyboard);
         }
     }
 }
